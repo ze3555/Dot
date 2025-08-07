@@ -16,16 +16,13 @@ export function setupDotCoreMenu() {
     const dotRect = dot.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
 
-    // По умолчанию — снизу и по центру DotCore
     let left = dotRect.left + dotRect.width / 2 - menuRect.width / 2;
     let top = dotRect.bottom + 8;
 
-    // Коррекция: если не влезает справа/слева
     const padding = 8;
     if (left < padding) left = padding;
     if (left + menuRect.width > window.innerWidth - padding)
       left = window.innerWidth - menuRect.width - padding;
-    // Если не влезает вниз — показываем меню выше DotCore
     if (top + menuRect.height > window.innerHeight - padding)
       top = dotRect.top - menuRect.height - 8;
 
@@ -36,30 +33,51 @@ export function setupDotCoreMenu() {
     menu.style.zIndex = 99999;
   }
 
-  // Открытие/закрытие меню по клику на точку
-  dot.addEventListener('click', (e) => {
-    if (document.body.classList.contains('dragging-dotcore')) return; // Блокировка во время drag
-    e.stopPropagation();
-    isOpen = !isOpen;
-    menu.classList.toggle('open', isOpen);
-    if (isOpen) {
-      positionMenu();
-    } else {
+  // === Новый: сброс расширенного состояния
+  function collapseDotCore() {
+    dot.classList.remove('expanded');
+    dot.innerHTML = ""; // Очистка содержимого
+    renderDotCoreIcon(); // Вернуть иконку DOT
+  }
+
+  // === Вставка иконки DOT обратно
+  function renderDotCoreIcon() {
+    const span = document.createElement('span');
+    span.className = "dot-icon";
+    dot.appendChild(span);
+  }
+
+  // === Обработчик кнопки Contacts (id = btn-contacts)
+  const contactsBtn = document.getElementById("btn-contacts");
+  if (contactsBtn) {
+    contactsBtn.addEventListener("click", () => {
+      isOpen = false;
+      menu.classList.remove('open');
       menu.style.display = "";
       menu.style.left = "";
       menu.style.top = "";
       menu.style.position = "";
       menu.style.visibility = "";
       menu.style.zIndex = "";
+
+      dot.classList.add("expanded");
+      dot.innerHTML = `
+        <input type="text" placeholder="Search contacts..." />
+        <button class="add-btn">+</button>
+      `;
+    });
+  }
+
+  // === Сброс состояния при клике вне расширенного DotCore
+  document.addEventListener("click", (e) => {
+    if (
+      dot.classList.contains("expanded") &&
+      !dot.contains(e.target)
+    ) {
+      collapseDotCore();
     }
-  });
 
-  // Перепозиционировать меню при изменении окна/скролле
-  window.addEventListener('resize', () => { if (isOpen) positionMenu(); });
-  window.addEventListener('scroll', () => { if (isOpen) positionMenu(); });
-
-  // Закрытие меню при клике вне области меню и точки
-  document.addEventListener('click', (e) => {
+    // Также закрываем меню если клик вне
     if (
       isOpen &&
       !menu.contains(e.target) &&
@@ -76,7 +94,29 @@ export function setupDotCoreMenu() {
     }
   });
 
-  // Опционально: ESC закрывает меню
+  // === Стандартное открытие/закрытие DotCore-меню
+  dot.addEventListener('click', (e) => {
+    if (document.body.classList.contains('dragging-dotcore')) return;
+    if (dot.classList.contains("expanded")) return;
+
+    e.stopPropagation();
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    if (isOpen) {
+      positionMenu();
+    } else {
+      menu.style.display = "";
+      menu.style.left = "";
+      menu.style.top = "";
+      menu.style.position = "";
+      menu.style.visibility = "";
+      menu.style.zIndex = "";
+    }
+  });
+
+  window.addEventListener('resize', () => { if (isOpen) positionMenu(); });
+  window.addEventListener('scroll', () => { if (isOpen) positionMenu(); });
+
   document.addEventListener('keydown', (e) => {
     if (isOpen && e.key === "Escape") {
       isOpen = false;
@@ -87,6 +127,9 @@ export function setupDotCoreMenu() {
       menu.style.position = "";
       menu.style.visibility = "";
       menu.style.zIndex = "";
+    }
+    if (dot.classList.contains("expanded") && e.key === "Escape") {
+      collapseDotCore();
     }
   });
 }
