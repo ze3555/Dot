@@ -37,11 +37,10 @@ export function renderContactsUI() {
   dot.appendChild(input);
   dot.appendChild(button);
 
-  // Добавить активный класс после короткой паузы (анимация)
-  setTimeout(() => {
-    dot.classList.add("active");
-    input.focus();
-  }, 20);
+  // 👉 Форсировать рендер, чтобы transition работал
+  void dot.offsetWidth;
+  dot.classList.add("active");
+  input.focus();
 
   // 📏 Ограничение по краям экрана
   const bounding = dot.getBoundingClientRect();
@@ -77,7 +76,7 @@ export function renderContactsUI() {
     document.removeEventListener("keydown", handleEscape);
   }
 
-  // Навешиваем слушатели (с паузой чтобы не поймать клик ивента по кнопке)
+  // Навесить слушатели
   setTimeout(() => {
     document.addEventListener("click", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
