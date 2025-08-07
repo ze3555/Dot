@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DOT</title>
+  <link rel="stylesheet" href="./css/index.css" />
+
+  <!-- ✅ Firebase CDN (UMD compat-версии) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- ✅ Инициализация Firebase -->
+  <script type="module" src="./js/firebase/config.js"></script>
+</head>
+
+<body class="theme-dark">
+
+  <!-- TopBar -->
+  <div class="topbar">
+    <div class="dot-core"></div>
+
+    <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
+
+    <div class="dot-core-menu" id="dot-core-menu">
+      <button id="btn-function">Function</button>
+      <button id="btn-theme">Theme</button>
+      <button id="btn-contacts">Contacts</button>
+      <button id="btn-settings">Settings</button>
+    </div>
+  </div>
+
+  <!-- Основная зона -->
+  <main id="main-content">
+    <!-- Контент будет загружен динамически -->
+  </main>
+
+  <!-- Основной JS -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
