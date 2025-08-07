@@ -9,12 +9,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "img/dot192.png",
+      "src": "/img/dot192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "img/dot512.png",
+      "src": "/img/dot512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
