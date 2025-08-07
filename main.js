@@ -4,13 +4,13 @@ import { renderTopbar, renderDotCore } from "./js/ui/core.js";
 import { renderChatUI } from "./js/ui/chat.js";
 import { showLoginModal, hideLoginModal } from "./js/ui/login.js";
 import { setupDotCoreMenu } from "./js/handlers/coreHandlers.js";
-import { initTheme } from "./js/theme/index.js";
+import { initializeThemeOnStart, setupThemeSwitcher } from "./js/handlers/themeHandlers.js"; // импорт нового обработчика
 
 document.addEventListener("DOMContentLoaded", () => {
-  initTheme(); // <-- 1. Подгружаем сохранённую тему до всего остального
-
+  initializeThemeOnStart();   // 1. Инициализация темы — всегда первой
   renderDotCore();
   setupDotCoreMenu();
+  setupThemeSwitcher();       // 2. навешиваем обработчик темы
 
   // Создаём основной контейнер, если нужен
   let main = document.getElementById("main");
@@ -47,5 +47,3 @@ onAuthStateChanged((user) => {
     if (logoutBtn) logoutBtn.style.display = "block";
   }
 });
-
-
