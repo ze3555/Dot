@@ -1,0 +1,175 @@
+.dot-core {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: var(--dot-core-bg, #ffd400);
+  box-shadow: 0 0 18px 0 rgba(0,0,0,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: box-shadow 0.25s, background 0.2s;
+  position: relative;
+  border: 3px solid var(--dot-core-border, #fff);
+  z-index: 10;
+}
+
+.dot-core:hover,
+.dot-core:focus-visible {
+  box-shadow: 0 0 24px 0 rgba(0,0,0,0.28);
+  background: var(--dot-core-bg-hover, #ffe156);
+}
+
+body.theme-dark .dot-core {
+  background: var(--dot-core-bg-dark, #232324);
+  border-color: #161617;
+  box-shadow: 0 0 20px 0 rgba(0,0,0,0.26);
+}
+body.theme-dark .dot-core:hover,
+body.theme-dark .dot-core:focus-visible {
+  background: var(--dot-core-bg-dark-hover, #353538);
+}
+
+/* --- Адаптивное выпадающее меню: фиксированное положение --- */
+.dot-core-menu {
+  display: none;
+  position: fixed; /* теперь всегда fixed, координаты выставляет JS */
+  min-width: 220px;
+  max-width: 96vw;
+  padding: 16px 22px;
+  background: var(--dot-menu-bg, #fff);
+  border-radius: 22px;
+  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
+  border: 2px solid var(--dot-menu-border, #f2f2f2);
+  z-index: 99999;
+  flex-direction: row;
+  gap: 22px;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dot-core-menu.open {
+  display: flex;
+}
+
+body.theme-dark .dot-core-menu {
+  background: var(--dot-menu-bg-dark, #232324);
+  border-color: #232324;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.24);
+  color: #ededed;
+}
+
+/* Кнопки меню */
+.dot-core-menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 1.15rem;
+  color: var(--dot-menu-item-color, #323042);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 12px;
+  transition: background 0.16s, color 0.16s;
+}
+
+.dot-core-menu button:hover,
+.dot-core-menu button:focus-visible {
+  background: var(--dot-menu-item-hover-bg, #f7f7fd);
+  color: var(--dot-menu-item-hover-color, #34307a);
+}
+
+body.theme-dark .dot-core-menu button {
+  color: #ededed;
+}
+body.theme-dark .dot-core-menu button:hover,
+body.theme-dark .dot-core-menu button:focus-visible {
+  background: #2b2b2d;
+  color: #ffd400;
+}
+
+/* --- Мобильная адаптация меню --- */
+@media (max-width: 520px) {
+  .dot-core {
+    width: 40px;
+    height: 40px;
+  }
+  .dot-core-menu {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 90vw;
+    max-width: 98vw;
+    gap: 8px;
+    padding: 14px 4px;
+    border-radius: 16px;
+    font-size: 1.03rem;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.20);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .dot-core-menu button {
+    width: 100%;
+    font-size: 1.08rem;
+    padding: 14px 8px;
+    border-radius: 12px;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 2px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 370px) {
+  .dot-core {
+    width: 32px;
+    height: 32px;
+  }
+  .dot-core-menu {
+    min-width: 98vw;
+    font-size: 0.99rem;
+    padding: 8px 1px;
+    border-radius: 8px;
+  }
+  .dot-core-menu button {
+    padding: 10px 2px;
+    font-size: 0.97rem;
+    min-height: 36px;
+  }
+}
+
+/* --- Тёмная/светлая тема через переменные --- */
+:root {
+  --dot-core-bg: #ffd400;
+  --dot-core-bg-hover: #ffe156;
+  --dot-core-border: #fff;
+  --dot-menu-bg: #fff;
+  --dot-menu-border: #f2f2f2;
+  --dot-menu-item-color: #323042;
+  --dot-menu-item-hover-bg: #f7f7fd;
+  --dot-menu-item-hover-color: #34307a;
+}
+body.theme-dark {
+  --dot-core-bg: #232324;
+  --dot-core-bg-hover: #353538;
+  --dot-core-border: #161617;
+  --dot-menu-bg: #232324;
+  --dot-menu-border: #232324;
+  --dot-menu-item-color: #ededed;
+  --dot-menu-item-hover-bg: #2b2b2d;
+  --dot-menu-item-hover-color: #ffd400;
+}
+body.dragging-dotcore {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+.dot-core.dot-invert {
+  background: #fff !important;
+  border-color: #dedede !important;
+  box-shadow: 0 0 18px 0 rgba(0,0,0,0.15) !important;
+}
+.dot-core {
+  z-index: 2147483647 !important;
+}
