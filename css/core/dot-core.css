@@ -161,3 +161,7 @@ body.theme-dark {
   --dot-menu-item-hover-bg: #2b2b2d;
   --dot-menu-item-hover-color: #ffd400;
 }
+body.dragging-dotcore {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
