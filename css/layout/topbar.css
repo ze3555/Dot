@@ -8,25 +8,6 @@
   z-index: 99;
 }
 
-/* Тёмная тема: фон страницы тёмный → TopBar белый, Dot чёрный */
-.theme-dark .topbar {
-  background-color: #fff;
-}
-
-.theme-dark .dot-core {
-  background-color: #000;
-}
-
-/* Светлая тема: фон страницы светлый → TopBar чёрный, Dot белый */
-.theme-light .topbar {
-  background-color: #000;
-}
-
-.theme-light .dot-core {
-  background-color: #fff;
-}
-
-/* Dot: базовый стиль */
 .dot-core {
   width: 16px;
   height: 16px;
