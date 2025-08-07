@@ -5,21 +5,23 @@ export function setupDotCoreMenu() {
   const menu = document.getElementById('dot-core-menu');
   if (!dot || !menu) return;
 
+  // Защита от повторной инициализации
+  if (menu.dataset.initialized) return;
+  menu.dataset.initialized = "true";
+
   let isOpen = false;
 
   function positionMenu() {
-    // Отображаем меню временно
+    // Временно отобразить для измерения
     menu.style.display = "flex";
     menu.style.visibility = "hidden";
 
-    // Подождать отрисовку и потом считать размеры
     requestAnimationFrame(() => {
       const dotRect = dot.getBoundingClientRect();
       const menuRect = menu.getBoundingClientRect();
 
       let left = dotRect.left + dotRect.width / 2 - menuRect.width / 2;
       let top = dotRect.bottom + 8;
-
       const padding = 8;
 
       if (left < padding) left = padding;
@@ -37,17 +39,33 @@ export function setupDotCoreMenu() {
     });
   }
 
+  function openMenu() {
+    isOpen = true;
+    menu.classList.add("open");
+    positionMenu();
+  }
+
+  function closeMenu() {
+    isOpen = false;
+    menu.classList.remove("open");
+    resetMenuStyles();
+  }
+
+  function resetMenuStyles() {
+    menu.style.display = "none";
+    menu.style.left = "";
+    menu.style.top = "";
+    menu.style.position = "";
+    menu.style.visibility = "";
+    menu.style.zIndex = "";
+  }
+
+  // === События ===
+
   dot.addEventListener("click", (e) => {
     if (document.body.classList.contains("dragging-dotcore")) return;
     e.stopPropagation();
-    isOpen = !isOpen;
-    menu.classList.toggle("open", isOpen);
-
-    if (isOpen) {
-      positionMenu();
-    } else {
-      resetMenuStyles();
-    }
+    isOpen ? closeMenu() : openMenu();
   });
 
   window.addEventListener("resize", () => {
@@ -64,26 +82,21 @@ export function setupDotCoreMenu() {
       !menu.contains(e.target) &&
       !dot.contains(e.target)
     ) {
-      isOpen = false;
-      menu.classList.remove("open");
-      resetMenuStyles();
+      closeMenu();
     }
   });
 
   document.addEventListener("keydown", (e) => {
     if (isOpen && e.key === "Escape") {
-      isOpen = false;
-      menu.classList.remove("open");
-      resetMenuStyles();
+      closeMenu();
     }
   });
 
-  function resetMenuStyles() {
-    menu.style.display = "";
-    menu.style.left = "";
-    menu.style.top = "";
-    menu.style.position = "";
-    menu.style.visibility = "";
-    menu.style.zIndex = "";
-  }
+  // === Поддержка перемещения капсулы (custom event от dotCoreDrag.js) ===
+  document.addEventListener("dotcore:moved", () => {
+    if (isOpen) positionMenu();
+  });
+
+  // Изначально скрыто
+  resetMenuStyles();
 }
