@@ -1,66 +1,43 @@
 // js/ui/contacts.js
-import { addContact } from "../handlers/contactHandlers.js";
-import { setupDotCoreMenu } from "../handlers/coreHandlers.js";
+import { addContact, getContacts } from "../handlers/contactHandlers.js";
 
-export function renderContactsUI() {
-  const dot = document.querySelector(".dot-core");
-  if (!dot) return;
+export async function renderContactsUI() {
+  const container = document.getElementById("main-content");
+  container.innerHTML = ""; // Очистка
 
-  // Удаляем старый ввод, если уже есть
-  const existing = dot.querySelector(".dot-input-container");
-  if (existing) existing.remove();
-
-  // Создаём контейнер для ввода
   const wrapper = document.createElement("div");
-  wrapper.className = "dot-input-container";
+  wrapper.className = "contacts-wrapper";
 
   const input = document.createElement("input");
   input.type = "text";
-  input.placeholder = "Enter UID";
-  input.className = "dot-contact-input";
+  input.placeholder = "Enter user UID to add";
+  input.className = "contacts-input";
 
   const button = document.createElement("button");
-  button.innerHTML = "+";
-  button.className = "dot-add-btn";
+  button.textContent = "Add Contact";
+  button.className = "contacts-add-btn";
 
   button.addEventListener("click", async () => {
     const uid = input.value.trim();
     if (!uid) return;
     await addContact(uid);
     input.value = "";
-    input.focus();
+    await renderContactsUI();
+  });
+
+  const list = document.createElement("ul");
+  list.className = "contacts-list";
+
+  const contacts = await getContacts();
+  contacts.forEach(uid => {
+    const li = document.createElement("li");
+    li.textContent = uid;
+    li.className = "contacts-list-item";
+    list.appendChild(li);
   });
 
   wrapper.appendChild(input);
   wrapper.appendChild(button);
-  dot.appendChild(wrapper);
-
-  // Плавная активация
-  void dot.offsetWidth;
-  dot.classList.add("dot-expanded", "active");
-  input.focus();
-
-  function close() {
-    dot.classList.remove("dot-expanded", "active");
-    wrapper.remove();
-
-    // ❗ Вернуть контроль меню
-    setupDotCoreMenu();
-
-    document.removeEventListener("click", onClickOutside);
-    document.removeEventListener("keydown", onEsc);
-  }
-
-  const onClickOutside = (e) => {
-    if (!dot.contains(e.target)) close();
-  };
-
-  const onEsc = (e) => {
-    if (e.key === "Escape") close();
-  };
-
-  setTimeout(() => {
-    document.addEventListener("click", onClickOutside);
-    document.addEventListener("keydown", onEsc);
-  }, 50);
+  wrapper.appendChild(list);
+  container.appendChild(wrapper);
 }
