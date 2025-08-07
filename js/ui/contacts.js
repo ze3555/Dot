@@ -5,25 +5,18 @@ export function renderContactsUI() {
   const dot = document.querySelector(".dot-core");
   if (!dot) return;
 
-  // Скрыть dot-меню
-  const menu = document.getElementById("dot-core-menu");
-  if (menu) menu.style.display = "none";
-
-  // Очистить и подготовить DOT
+  // Очищаем dot-core и активируем капсульный режим
   dot.innerHTML = "";
   dot.classList.add("dot-expanded");
 
-  // Обёртка
   const wrapper = document.createElement("div");
   wrapper.className = "dot-inner";
 
-  // Ввод
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Enter UID";
   input.className = "dot-contact-input";
 
-  // Кнопка "+"
   const button = document.createElement("button");
   button.innerHTML = "+";
   button.className = "dot-add-btn";
@@ -40,30 +33,29 @@ export function renderContactsUI() {
   wrapper.appendChild(button);
   dot.appendChild(wrapper);
 
-  // 💥 Форс рендер, потом активируем
+  // Применяем анимацию
   void dot.offsetWidth;
   dot.classList.add("active");
   input.focus();
 
-  // ❌ Закрытие
-  function closeDotInput() {
+  // Закрытие
+  function close() {
     dot.classList.remove("dot-expanded", "active");
     dot.innerHTML = "";
-    dot.style.transform = "";
-    document.removeEventListener("click", handleOutsideClick);
-    document.removeEventListener("keydown", handleEscape);
+    document.removeEventListener("click", onClickOutside);
+    document.removeEventListener("keydown", onEsc);
   }
 
-  const handleOutsideClick = (e) => {
-    if (!dot.contains(e.target)) closeDotInput();
+  const onClickOutside = (e) => {
+    if (!dot.contains(e.target)) close();
   };
 
-  const handleEscape = (e) => {
-    if (e.key === "Escape") closeDotInput();
+  const onEsc = (e) => {
+    if (e.key === "Escape") close();
   };
 
   setTimeout(() => {
-    document.addEventListener("click", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("click", onClickOutside);
+    document.addEventListener("keydown", onEsc);
   }, 50);
 }
