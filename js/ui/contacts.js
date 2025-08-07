@@ -6,26 +6,23 @@ export function renderContactsUI() {
   const dot = document.querySelector(".dot-core");
   if (!dot) return;
 
-  // Удаляем предыдущий ввод, если есть
+  // Удаляем старый ввод, если уже есть
   const existing = dot.querySelector(".dot-input-container");
   if (existing) existing.remove();
 
-  // Создаём обёртку
+  // Создаём контейнер для ввода
   const wrapper = document.createElement("div");
   wrapper.className = "dot-input-container";
 
-  // Ввод UID
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Enter UID";
   input.className = "dot-contact-input";
 
-  // Кнопка "+"
   const button = document.createElement("button");
   button.innerHTML = "+";
   button.className = "dot-add-btn";
 
-  // Добавление контакта
   button.addEventListener("click", async () => {
     const uid = input.value.trim();
     if (!uid) return;
@@ -38,17 +35,16 @@ export function renderContactsUI() {
   wrapper.appendChild(button);
   dot.appendChild(wrapper);
 
-  // Плавная капсульная анимация
+  // Плавная активация
   void dot.offsetWidth;
   dot.classList.add("dot-expanded", "active");
   input.focus();
 
-  // Закрытие режима по клику вне или ESC
   function close() {
     dot.classList.remove("dot-expanded", "active");
     wrapper.remove();
 
-    // Восстановить меню
+    // ❗ Вернуть контроль меню
     setupDotCoreMenu();
 
     document.removeEventListener("click", onClickOutside);
