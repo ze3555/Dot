@@ -3,14 +3,16 @@ import { loginAnonymously, loginWithGoogle } from "../firebase/auth.js";
 
 export function showLoginModal() {
   const modal = document.createElement("div");
-  modal.className = "login-modal";
-  modal.innerHTML = `
-    <div class="login-content">
-      <h2>Welcome to DOT</h2>
-      <button class="login-btn" id="anon-login">Continue Anonymously</button>
-      <button class="login-btn" id="google-login">Sign in with Google</button>
-    </div>
-  `;
+ modal.className = "login-modal";
+modal.innerHTML = `
+  <div class="login-content">
+    <h2>Welcome to DOT</h2>
+    <p class="slogan">Everything in one dot</p>
+    <button class="login-btn" id="anon-login">Continue Anonymously</button>
+    <button class="login-btn" id="google-login">Sign in with Google</button>
+  </div>
+`;
+
 
   document.body.appendChild(modal);
 
@@ -27,3 +29,4 @@ export function hideLoginModal() {
   const modal = document.querySelector(".login-modal");
   if (modal) modal.remove();
 }
+
