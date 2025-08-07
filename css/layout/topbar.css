@@ -2,9 +2,17 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 56px; /* или твоя высота */
-  z-index: 100;
+  right: 0;
+  height: 56px; /* или нужная высота */
+  background-color: var(--bg-primary, #121212);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  box-sizing: border-box;
+  user-select: none;
+  /* Добавь если нужно тень */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .logout-btn {
