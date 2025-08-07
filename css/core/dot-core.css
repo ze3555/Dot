@@ -1,7 +1,7 @@
 /* Увеличенная точка DotCore */
 .dot-core {
   width: 90px;         /* Было ~30px */
-  height: 90px;        /* Было ~30px */
+  height: 90px;
   border-radius: 50%;
   background: var(--dot-core-bg, #ffd400);
   box-shadow: 0 0 18px 0 rgba(0,0,0,0.16);
@@ -15,26 +15,24 @@
   z-index: 10;
 }
 
-/* Ховер эффект */
 .dot-core:hover,
 .dot-core:focus-visible {
   box-shadow: 0 0 24px 0 rgba(0,0,0,0.28);
   background: var(--dot-core-bg-hover, #ffe156);
 }
 
-body[data-theme="dark"] .dot-core {
+body.theme-dark .dot-core {
   background: var(--dot-core-bg-dark, #3a3749);
   border-color: #2a2841;
   box-shadow: 0 0 20px 0 rgba(40,30,80,0.25);
 }
-
-body[data-theme="dark"] .dot-core:hover,
-body[data-theme="dark"] .dot-core:focus-visible {
+body.theme-dark .dot-core:hover,
+body.theme-dark .dot-core:focus-visible {
   background: var(--dot-core-bg-dark-hover, #574d86);
 }
 
 /* Горизонтальное выпадающее меню */
-.dot-menu {
+.dot-core-menu {
   display: none;
   position: absolute;
   top: 100%;
@@ -53,59 +51,59 @@ body[data-theme="dark"] .dot-core:focus-visible {
   align-items: center;
 }
 
-.dot-core.active + .dot-menu,
-.dot-menu.open {
+.dot-core.active + .dot-core-menu,
+.dot-core-menu.open {
   display: flex;
 }
 
-body[data-theme="dark"] .dot-menu {
+body.theme-dark .dot-core-menu {
   background: var(--dot-menu-bg-dark, #232132);
   border-color: #2e2b41;
   box-shadow: 0 8px 32px 0 rgba(30,22,52,0.20);
   color: #eee;
 }
 
-/* Элементы меню — иконки/кнопки */
-.dot-menu__item {
+/* Кнопки меню */
+.dot-core-menu button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 1.16rem;
+  gap: 4px;
+  font-size: 1.15rem;
   color: var(--dot-menu-item-color, #323042);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 8px 14px;
   border-radius: 12px;
   transition: background 0.16s, color 0.16s;
 }
 
-.dot-menu__item:hover,
-.dot-menu__item:focus-visible {
+.dot-core-menu button:hover,
+.dot-core-menu button:focus-visible {
   background: var(--dot-menu-item-hover-bg, #f7f7fd);
   color: var(--dot-menu-item-hover-color, #34307a);
 }
 
-body[data-theme="dark"] .dot-menu__item {
+body.theme-dark .dot-core-menu button {
   color: #dedcff;
 }
-body[data-theme="dark"] .dot-menu__item:hover,
-body[data-theme="dark"] .dot-menu__item:focus-visible {
+body.theme-dark .dot-core-menu button:hover,
+body.theme-dark .dot-core-menu button:focus-visible {
   background: #3a3558;
   color: #ffe456;
 }
 
-/* Адаптивность для мобильных */
+/* Адаптивность */
 @media (max-width: 520px) {
   .dot-core {
     width: 54px;
     height: 54px;
   }
-  .dot-menu {
+  .dot-core-menu {
     min-width: 160px;
-    gap: 14px;
+    gap: 10px;
     padding: 10px 8px;
     border-radius: 18px;
     font-size: 1rem;
@@ -117,16 +115,16 @@ body[data-theme="dark"] .dot-menu__item:focus-visible {
     width: 38px;
     height: 38px;
   }
-  .dot-menu {
+  .dot-core-menu {
     min-width: 100px;
-    gap: 6px;
+    gap: 4px;
     padding: 4px 2px;
     border-radius: 10px;
     font-size: 0.92rem;
   }
 }
 
-/* Тёмная/светлая тема через переменные (можно вынести в theme/) */
+/* Тёмная/светлая тема через переменные */
 :root {
   --dot-core-bg: #ffd400;
   --dot-core-bg-hover: #ffe156;
@@ -137,8 +135,7 @@ body[data-theme="dark"] .dot-menu__item:focus-visible {
   --dot-menu-item-hover-bg: #f7f7fd;
   --dot-menu-item-hover-color: #34307a;
 }
-
-body[data-theme="dark"] {
+body.theme-dark {
   --dot-core-bg: #3a3749;
   --dot-core-bg-hover: #574d86;
   --dot-core-border: #2a2841;
