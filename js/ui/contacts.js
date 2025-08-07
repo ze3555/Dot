@@ -2,8 +2,8 @@
 
 import { addContact, getContacts } from "../handlers/contactHandlers.js";
 
-export async function renderContactsUI() {
-  const container = document.getElementById("main-content");
+// Новый: принимает любой контейнер и callback выбора контакта
+export async function renderContactsUI(container, onSelectContact) {
   if (!container) return;
   container.innerHTML = ""; // Очистка перед вставкой
 
@@ -28,7 +28,7 @@ export async function renderContactsUI() {
     if (!uid) return;
     await addContact(uid);
     input.value = "";
-    await renderContactsUI();
+    await renderContactsUI(container, onSelectContact);
   });
 
   // Список контактов
@@ -41,6 +41,11 @@ export async function renderContactsUI() {
       const li = document.createElement("li");
       li.textContent = uid;
       li.className = "contacts-list-item";
+      // Если передан callback — делаем элемент кликабельным
+      if (typeof onSelectContact === "function") {
+        li.style.cursor = "pointer";
+        li.addEventListener("click", () => onSelectContact(uid));
+      }
       list.appendChild(li);
     });
   } catch (err) {
