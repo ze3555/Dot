@@ -62,4 +62,12 @@
   .contacts-drawer.open {
     left: 0;
   }
+  
+}
+
+.dot-in-drawer {
+  /* стили для dot, когда он кнопка добавления контакта */
+  cursor: pointer;
+  filter: hue-rotate(45deg); /* пример изменения цвета */
+  /* можно поменять размер, цвет, иконку */
 }
