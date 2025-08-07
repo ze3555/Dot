@@ -1,31 +1,18 @@
-import { logout } from "../firebase/auth.js";
-import { setTheme, initTheme } from "../theme/index.js"; // добавляем импорт
+// js/ui/core.js
 
 export function renderTopbar(user) {
   const logoutBtn = document.getElementById("logout-btn");
-  const themeBtn = document.getElementById("btn-theme"); // ищем кнопку
+  // Кнопка логаута всегда показывает/прячет по факту авторизации, сам logout делается в main.js или handlers
 
   if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-      await logout();
-    };
-  }
-
-  if (themeBtn) {
-    themeBtn.onclick = () => {
-      const nextTheme = document.body.classList.contains('theme-dark') ? 'light' : 'dark';
-      setTheme(nextTheme);
-    };
+    // Здесь оставляем только логику показа/скрытия
+    logoutBtn.style.display = user ? "block" : "none";
   }
 }
 
-// вызывать при старте
 export function renderDotCore() {
   const dot = document.querySelector(".dot-core");
   if (!dot) return;
 
-  dot.id = "dot-core"; // на всякий случай
-
-  // инициализация темы при загрузке UI
-  initTheme();
+  dot.id = "dot-core"; // если нужен id для доступа из других скриптов
 }
