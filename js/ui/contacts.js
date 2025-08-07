@@ -5,11 +5,11 @@ export function renderContactsUI() {
   const dot = document.querySelector(".dot-core");
   if (!dot) return;
 
-  // Скрыть dot-меню при клике
+  // Скрыть dot-меню
   const menu = document.getElementById("dot-core-menu");
   if (menu) menu.style.display = "none";
 
-  // Очистить DOT и активировать расширенный режим
+  // Очистить DOT и включить расширенный режим
   dot.innerHTML = "";
   dot.classList.add("dot-expanded");
 
@@ -19,11 +19,12 @@ export function renderContactsUI() {
   input.placeholder = "Enter user UID";
   input.className = "dot-contact-input";
 
-  // Плюсик
+  // Плюс-кнопка
   const button = document.createElement("button");
   button.innerHTML = "+";
   button.className = "dot-add-btn";
 
+  // Добавление контакта
   button.addEventListener("click", async () => {
     const uid = input.value.trim();
     if (!uid) return;
@@ -32,7 +33,7 @@ export function renderContactsUI() {
     input.focus();
   });
 
-  // Добавить элементы в DOT
+  // Добавить в капсулу
   dot.appendChild(input);
   dot.appendChild(button);
 
@@ -41,4 +42,30 @@ export function renderContactsUI() {
     input.focus();
     input.scrollIntoView({ behavior: "smooth", block: "center" });
   }, 100);
+
+  // Сворачивание при клике вне DOT
+  const handleOutsideClick = (e) => {
+    if (!dot.contains(e.target)) {
+      dot.classList.remove("dot-expanded");
+      dot.innerHTML = "";
+      document.removeEventListener("click", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    }
+  };
+
+  // Сворачивание по ESC
+  const handleEscape = (e) => {
+    if (e.key === "Escape") {
+      dot.classList.remove("dot-expanded");
+      dot.innerHTML = "";
+      document.removeEventListener("click", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    }
+  };
+
+  // Навешиваем слушатели
+  setTimeout(() => {
+    document.addEventListener("click", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+  }, 50);
 }
