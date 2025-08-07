@@ -1,3 +1,5 @@
+// js/handlers/dotCoreDrag.js
+
 export function enableDotCoreDrag() {
   const dot = document.querySelector('.dot-core');
   const topbar = document.querySelector('.topbar');
@@ -8,7 +10,7 @@ export function enableDotCoreDrag() {
   let dragReady = false;
   let holdTimer = null;
 
-  // --- Изначально точка по центру topbar ---
+  // --- Стартовое положение: по центру topbar ---
   topbar.style.position = "relative";
   dot.style.position = "absolute";
   dot.style.left = "50%";
@@ -16,6 +18,7 @@ export function enableDotCoreDrag() {
   dot.style.transform = "translate(-50%, -50%)";
   dot.style.transition = "top 0.25s, left 0.25s, transform 0.25s";
 
+  // Центрирование в topbar
   function toTopbarCenter() {
     dot.style.position = "absolute";
     dot.style.left = "50%";
@@ -24,22 +27,23 @@ export function enableDotCoreDrag() {
     topbar.appendChild(dot);
   }
 
-  // --- Drag ---
+  // Переводим DotCore в режим drag (fixed, поверх всего)
   function startDrag(clientX, clientY) {
-    // Получаем координаты dot относительно viewport
     const rect = dot.getBoundingClientRect();
     offsetX = clientX - rect.left;
     offsetY = clientY - rect.top;
 
-    // Переводим точку во fixed относительно окна
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
     dot.style.transform = "";
     document.body.appendChild(dot);
+
+    document.body.classList.add('dragging-dotcore'); // Блокируем scroll страницы
     document.body.style.userSelect = "none";
   }
 
+  // --- Drag с задержкой (hold-to-drag) ---
   dot.addEventListener('mousedown', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
@@ -58,11 +62,12 @@ export function enableDotCoreDrag() {
     clearTimeout(holdTimer);
     isDragging = false;
     dragReady = false;
+    document.body.classList.remove('dragging-dotcore');
     document.body.style.userSelect = "";
-    // Оставляем dot где бросили (в fixed)
+    // Точка остаётся там, куда её бросили
   });
 
-  // Тач
+  // --- Тач поддержка ---
   dot.addEventListener('touchstart', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
@@ -84,6 +89,7 @@ export function enableDotCoreDrag() {
     clearTimeout(holdTimer);
     isDragging = false;
     dragReady = false;
+    document.body.classList.remove('dragging-dotcore');
     document.body.style.userSelect = "";
   });
 
