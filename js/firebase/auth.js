@@ -1,32 +1,37 @@
-// js/firebase/auth.js
-import { auth } from "./config.js";
-import {
-  onAuthStateChanged as onAuthChanged,
-  signInAnonymously,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+const provider = new firebase.auth.GoogleAuthProvider();
 
-const provider = new GoogleAuthProvider();
-
+/**
+ * Отслеживание изменения состояния авторизации
+ * @param {function} callback 
+ */
 export function onAuthStateChanged(callback) {
-  onAuthChanged(auth, callback);
+  firebase.auth().onAuthStateChanged(callback);
 }
 
+/**
+ * Анонимный вход
+ */
 export async function loginAnonymously() {
-  await signInAnonymously(auth);
+  await firebase.auth().signInAnonymously();
 }
 
+/**
+ * Вход через Google
+ */
 export async function loginWithGoogle() {
-  await signInWithPopup(auth, provider);
+  await firebase.auth().signInWithPopup(provider);
 }
 
+/**
+ * Выход из аккаунта
+ */
 export async function logout() {
-  await signOut(auth);
+  await firebase.auth().signOut();
 }
 
+/**
+ * Получить текущего пользователя
+ */
 export function getCurrentUser() {
-  return auth.currentUser;
+  return firebase.auth().currentUser;
 }
-
