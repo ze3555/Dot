@@ -1,53 +1,150 @@
-.dot-core-menu {
+/* Увеличенная точка DotCore */
+.dot-core {
+  width: 90px;         /* Было ~30px */
+  height: 90px;        /* Было ~30px */
+  border-radius: 50%;
+  background: var(--dot-core-bg, #ffd400);
+  box-shadow: 0 0 18px 0 rgba(0,0,0,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: box-shadow 0.25s, background 0.2s;
+  position: relative;
+  border: 3px solid var(--dot-core-border, #fff);
+  z-index: 10;
+}
+
+/* Ховер эффект */
+.dot-core:hover,
+.dot-core:focus-visible {
+  box-shadow: 0 0 24px 0 rgba(0,0,0,0.28);
+  background: var(--dot-core-bg-hover, #ffe156);
+}
+
+body[data-theme="dark"] .dot-core {
+  background: var(--dot-core-bg-dark, #3a3749);
+  border-color: #2a2841;
+  box-shadow: 0 0 20px 0 rgba(40,30,80,0.25);
+}
+
+body[data-theme="dark"] .dot-core:hover,
+body[data-theme="dark"] .dot-core:focus-visible {
+  background: var(--dot-core-bg-dark-hover, #574d86);
+}
+
+/* Горизонтальное выпадающее меню */
+.dot-menu {
+  display: none;
   position: absolute;
-  top: 56px; /* ниже TopBar */
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
+  flex-direction: row;
+  gap: 24px;
+  min-width: 260px;
+  padding: 18px 24px;
+  background: var(--dot-menu-bg, #fff);
+  border-radius: 24px;
+  box-shadow: 0 8px 28px 0 rgba(80,80,110,0.12);
+  border: 2px solid var(--dot-menu-border, #f2f2f2);
+  z-index: 100;
+  transition: background 0.2s, color 0.2s;
+  align-items: center;
+}
+
+.dot-core.active + .dot-menu,
+.dot-menu.open {
+  display: flex;
+}
+
+body[data-theme="dark"] .dot-menu {
+  background: var(--dot-menu-bg-dark, #232132);
+  border-color: #2e2b41;
+  box-shadow: 0 8px 32px 0 rgba(30,22,52,0.20);
+  color: #eee;
+}
+
+/* Элементы меню — иконки/кнопки */
+.dot-menu__item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: #fff; /* по умолчанию — белый */
-  box-shadow: 0 6px 24px #0003;
-  z-index: 100;
-  min-width: 160px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-/* Видимое меню */
-.dot-core-menu.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.theme-light .dot-core-menu {
-  background-color: #000;
-  color: #fff;
-}
-
-.dot-core-menu button {
-  all: unset;
-  text-align: center;
-  font-size: 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #eee;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 1.16rem;
+  color: var(--dot-menu-item-color, #323042);
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: background 0.2s;
+  padding: 6px 10px;
+  border-radius: 12px;
+  transition: background 0.16s, color 0.16s;
 }
 
-.theme-light .dot-core-menu button {
-  background: #222;
-  color: #fff;
+.dot-menu__item:hover,
+.dot-menu__item:focus-visible {
+  background: var(--dot-menu-item-hover-bg, #f7f7fd);
+  color: var(--dot-menu-item-hover-color, #34307a);
 }
 
-.dot-core-menu button:hover {
-  background: #ccc;
+body[data-theme="dark"] .dot-menu__item {
+  color: #dedcff;
+}
+body[data-theme="dark"] .dot-menu__item:hover,
+body[data-theme="dark"] .dot-menu__item:focus-visible {
+  background: #3a3558;
+  color: #ffe456;
 }
 
-.theme-light .dot-core-menu button:hover {
-  background: #444;
+/* Адаптивность для мобильных */
+@media (max-width: 520px) {
+  .dot-core {
+    width: 54px;
+    height: 54px;
+  }
+  .dot-menu {
+    min-width: 160px;
+    gap: 14px;
+    padding: 10px 8px;
+    border-radius: 18px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .dot-core {
+    width: 38px;
+    height: 38px;
+  }
+  .dot-menu {
+    min-width: 100px;
+    gap: 6px;
+    padding: 4px 2px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+  }
+}
+
+/* Тёмная/светлая тема через переменные (можно вынести в theme/) */
+:root {
+  --dot-core-bg: #ffd400;
+  --dot-core-bg-hover: #ffe156;
+  --dot-core-border: #fff;
+  --dot-menu-bg: #fff;
+  --dot-menu-border: #f2f2f2;
+  --dot-menu-item-color: #323042;
+  --dot-menu-item-hover-bg: #f7f7fd;
+  --dot-menu-item-hover-color: #34307a;
+}
+
+body[data-theme="dark"] {
+  --dot-core-bg: #3a3749;
+  --dot-core-bg-hover: #574d86;
+  --dot-core-border: #2a2841;
+  --dot-menu-bg: #232132;
+  --dot-menu-border: #2e2b41;
+  --dot-menu-item-color: #dedcff;
+  --dot-menu-item-hover-bg: #3a3558;
+  --dot-menu-item-hover-color: #ffe456;
 }
