@@ -1,5 +1,13 @@
 // firebase/auth.js
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInAnonymously,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { app } from "./config.js";
 
 const auth = getAuth(app);
@@ -17,6 +25,12 @@ export async function loginWithEmail(email, password) {
 
 export async function loginAnonymously() {
   const res = await signInAnonymously(auth);
+  return res.user;
+}
+
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  const res = await signInWithPopup(auth, provider);
   return res.user;
 }
 
