@@ -76,7 +76,7 @@ export function setupDotCoreMenu() {
     if (isOpen) {
       positionMenu();
 
-      // 🔥 Навешиваем обработчик сразу после появления меню
+      // Обработчик кнопки Contacts
       const contactsBtn = document.getElementById("btn-contacts");
       if (contactsBtn) {
         contactsBtn.onclick = () => {
@@ -94,6 +94,14 @@ export function setupDotCoreMenu() {
             <input type="text" placeholder="Search contacts..." />
             <button class="add-btn">+</button>
           `;
+        };
+      }
+
+      // 🔥 Добавлен обработчик кнопки Контакт
+      const contactBtn = document.getElementById("btn-contact");
+      if (contactBtn) {
+        contactBtn.onclick = () => {
+          alert("Контакт нажата"); // или замени на нужную тебе логику
         };
       }
     } else {
@@ -125,3 +133,4 @@ export function setupDotCoreMenu() {
     }
   });
 }
+
