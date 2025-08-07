@@ -2,35 +2,18 @@
 import { logout } from "../firebase/auth.js";
 
 export function renderTopbar(user) {
-  const topbar = document.createElement("div");
-  topbar.className = "top-bar";
+  const logoutBtn = document.getElementById("logout-btn");
 
-  const left = document.createElement("div");
-  left.className = "top-left";
-  left.textContent = user.isAnonymous ? "Anonymous" : user.email || "User";
-
-  const right = document.createElement("div");
-  right.className = "top-right";
-
-  const logoutBtn = document.createElement("button");
-  logoutBtn.className = "logout-btn";
-  logoutBtn.title = "Logout";
-  logoutBtn.innerHTML = "⇦";
-
-  logoutBtn.onclick = async () => {
-    await logout();
-  };
-
-  right.appendChild(logoutBtn);
-
-  topbar.appendChild(left);
-  topbar.appendChild(right);
-
-  document.body.prepend(topbar);
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      await logout();
+    };
+  }
 }
 
 export function renderDotCore() {
-  const dot = document.createElement("div");
-  dot.id = "dot-core";
-  document.body.appendChild(dot);
+  const dot = document.querySelector(".dot-core");
+  if (!dot) return;
+
+  dot.id = "dot-core"; // на всякий случай
 }
