@@ -1,27 +1,14 @@
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion
-} from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-
-const db = getFirestore();
-const auth = getAuth();
-
-/**
- * Получает список контактов текущего пользователя.
- * Если документа нет — создаёт его с пустым массивом list.
- */
 export async function getContacts() {
-  const uid = auth.currentUser.uid;
-  const ref = doc(db, "contacts", uid);
-  const snap = await getDoc(ref);
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error("User not authenticated");
 
-  if (!snap.exists()) {
-    await setDoc(ref, { list: [] }); // создаём, если нет
+  const uid = user.uid;
+  const ref = firebase.firestore().doc(`contacts/${uid}`);
+  const snap = await ref.get();
+
+  // Если документа нет — создать пустой
+  if (!snap.exists) {
+    await ref.set({ list: [] });
     return [];
   }
 
@@ -29,15 +16,20 @@ export async function getContacts() {
   return Array.isArray(data.list) ? data.list : [];
 }
 
-/**
- * Добавляет UID другого пользователя в список контактов текущего пользователя.
- */
 export async function addContact(contactUid) {
-  const uid = auth.currentUser.uid;
-  const ref = doc(db, "contacts", uid);
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error("User not authenticated");
 
-  // Обновление с arrayUnion
-  await updateDoc(ref, {
-    list: arrayUnion(contactUid)
-  });
+  const uid = user.uid;
+  const ref = firebase.firestore().doc(`contacts/${uid}`);
+
+  // Если документа нет — сначала создаём
+  const snap = await ref.get();
+  if (!snap.exists) {
+    await ref.set({ list: [contactUid] });
+  } else {
+    await ref.update({
+      list: firebase.firestore.FieldValue.arrayUnion(contactUid)
+    });
+  }
 }
