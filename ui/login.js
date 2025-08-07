@@ -1,11 +1,12 @@
 // ui/login.js
-import { loginWithEmail, loginAnonymously } from "../firebase/auth.js";
+import { loginWithEmail, loginAnonymously, loginWithGoogle } from "../firebase/auth.js";
 
 const modal = document.getElementById("login-modal");
 const emailInput = document.getElementById("login-email");
 const passwordInput = document.getElementById("login-password");
 const submitBtn = document.getElementById("login-submit");
 const anonBtn = document.getElementById("anon-login");
+const googleBtn = document.getElementById("google-login");
 
 export function showLoginModal() {
   modal.classList.remove("hidden");
@@ -34,5 +35,14 @@ anonBtn?.addEventListener("click", async () => {
     hideLoginModal();
   } catch (err) {
     alert("Anonymous login failed: " + (err.message || err));
+  }
+});
+
+googleBtn?.addEventListener("click", async () => {
+  try {
+    await loginWithGoogle();
+    hideLoginModal();
+  } catch (err) {
+    alert("Google login failed: " + (err.message || err));
   }
 });
