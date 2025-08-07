@@ -1,5 +1,3 @@
-// js/handlers/coreHandlers.js
-
 export function setupDotCoreMenu() {
   const dot = document.querySelector('.dot-core');
   const menu = document.getElementById('dot-core-menu');
@@ -8,7 +6,6 @@ export function setupDotCoreMenu() {
 
   let isOpen = false;
 
-  // === Новая функция: позиционирование меню возле DotCore ===
   function positionMenu() {
     menu.style.display = "flex";
     menu.style.visibility = "hidden";
@@ -33,42 +30,18 @@ export function setupDotCoreMenu() {
     menu.style.zIndex = 99999;
   }
 
-  // === Новый: сброс расширенного состояния
   function collapseDotCore() {
     dot.classList.remove('expanded');
-    dot.innerHTML = ""; // Очистка содержимого
-    renderDotCoreIcon(); // Вернуть иконку DOT
+    dot.innerHTML = "";
+    renderDotCoreIcon();
   }
 
-  // === Вставка иконки DOT обратно
   function renderDotCoreIcon() {
     const span = document.createElement('span');
     span.className = "dot-icon";
     dot.appendChild(span);
   }
 
-  // === Обработчик кнопки Contacts (id = btn-contacts)
-  const contactsBtn = document.getElementById("btn-contacts");
-  if (contactsBtn) {
-    contactsBtn.addEventListener("click", () => {
-      isOpen = false;
-      menu.classList.remove('open');
-      menu.style.display = "";
-      menu.style.left = "";
-      menu.style.top = "";
-      menu.style.position = "";
-      menu.style.visibility = "";
-      menu.style.zIndex = "";
-
-      dot.classList.add("expanded");
-      dot.innerHTML = `
-        <input type="text" placeholder="Search contacts..." />
-        <button class="add-btn">+</button>
-      `;
-    });
-  }
-
-  // === Сброс состояния при клике вне расширенного DotCore
   document.addEventListener("click", (e) => {
     if (
       dot.classList.contains("expanded") &&
@@ -77,7 +50,6 @@ export function setupDotCoreMenu() {
       collapseDotCore();
     }
 
-    // Также закрываем меню если клик вне
     if (
       isOpen &&
       !menu.contains(e.target) &&
@@ -94,7 +66,6 @@ export function setupDotCoreMenu() {
     }
   });
 
-  // === Стандартное открытие/закрытие DotCore-меню
   dot.addEventListener('click', (e) => {
     if (document.body.classList.contains('dragging-dotcore')) return;
     if (dot.classList.contains("expanded")) return;
@@ -104,6 +75,29 @@ export function setupDotCoreMenu() {
     menu.classList.toggle('open', isOpen);
     if (isOpen) {
       positionMenu();
+
+      // ✅ Навешиваем обработчик только когда меню появилось
+      setTimeout(() => {
+        const contactsBtn = document.getElementById("btn-contacts");
+        if (contactsBtn) {
+          contactsBtn.onclick = () => {
+            isOpen = false;
+            menu.classList.remove('open');
+            menu.style.display = "";
+            menu.style.left = "";
+            menu.style.top = "";
+            menu.style.position = "";
+            menu.style.visibility = "";
+            menu.style.zIndex = "";
+
+            dot.classList.add("expanded");
+            dot.innerHTML = `
+              <input type="text" placeholder="Search contacts..." />
+              <button class="add-btn">+</button>
+            `;
+          };
+        }
+      }, 0);
     } else {
       menu.style.display = "";
       menu.style.left = "";
