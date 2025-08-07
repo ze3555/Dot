@@ -24,15 +24,41 @@ export function enableDotCoreDrag() {
     dot.style.top = "50%";
     dot.style.transform = "translate(-50%, -50%)";
     topbar.appendChild(dot);
+    updateDotContrast(dot); // проверить цвет и после возврата
   }
 
+  // --- Контрастность: проверка цвета фона под центром DotCore ---
+  function isDarkBgUnderDot(dot) {
+    const rect = dot.getBoundingClientRect();
+    const x = Math.round(rect.left + rect.width / 2);
+    const y = Math.round(rect.top + rect.height / 2);
+    const elem = document.elementFromPoint(x, y);
+    if (!elem) return false;
+    const bg = window.getComputedStyle(elem).backgroundColor;
+    if (!bg || bg === 'transparent') return false;
+    const rgb = bg.match(/\d+/g);
+    if (!rgb) return false;
+    const [r, g, b] = rgb;
+    const brightness = (299 * r + 587 * g + 114 * b) / 1000;
+    return brightness < 130; // true если тёмный фон
+  }
+
+  function updateDotContrast(dot) {
+    if (isDarkBgUnderDot(dot)) {
+      dot.classList.add('dot-invert');
+    } else {
+      dot.classList.remove('dot-invert');
+    }
+  }
+
+  // --- Drag & Drop с hold ---
   function startDrag(clientX, clientY) {
-    // Получаем позицию dot относительно окна
+    // Координаты dot относительно окна
     const rect = dot.getBoundingClientRect();
     offsetX = clientX - rect.left;
     offsetY = clientY - rect.top;
 
-    // Переводим dot в fixed (поверх всех)
+    // Перевести dot во fixed
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
@@ -40,6 +66,7 @@ export function enableDotCoreDrag() {
     document.body.appendChild(dot);
     document.body.style.userSelect = "none";
     document.body.classList.add('dragging-dotcore');
+    updateDotContrast(dot);
   }
 
   dot.addEventListener('mousedown', (e) => {
@@ -54,6 +81,7 @@ export function enableDotCoreDrag() {
     if (!isDragging || !dragReady) return;
     dot.style.top = (e.clientY - offsetY) + "px";
     dot.style.left = (e.clientX - offsetX) + "px";
+    updateDotContrast(dot);
   });
 
   document.addEventListener('mouseup', () => {
@@ -62,7 +90,8 @@ export function enableDotCoreDrag() {
     dragReady = false;
     document.body.style.userSelect = "";
     document.body.classList.remove('dragging-dotcore');
-    // Dot остаётся где отпустили
+    updateDotContrast(dot);
+    // Dot остаётся где бросили
   });
 
   dot.addEventListener('touchstart', (e) => {
@@ -80,6 +109,7 @@ export function enableDotCoreDrag() {
     const touch = e.touches[0];
     dot.style.top = (touch.clientY - offsetY) + "px";
     dot.style.left = (touch.clientX - offsetX) + "px";
+    updateDotContrast(dot);
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
@@ -88,8 +118,14 @@ export function enableDotCoreDrag() {
     dragReady = false;
     document.body.style.userSelect = "";
     document.body.classList.remove('dragging-dotcore');
+    updateDotContrast(dot);
   });
 
   // Вернуть в центр topbar по двойному клику
   dot.addEventListener('dblclick', toTopbarCenter);
+
+  // Проверяем контраст при инициализации и при ресайзе
+  updateDotContrast(dot);
+  window.addEventListener('resize', () => updateDotContrast(dot));
+  window.addEventListener('scroll', () => updateDotContrast(dot));
 }
