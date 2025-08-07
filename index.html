@@ -6,7 +6,7 @@
   <title>DOT</title>
   <link rel="stylesheet" href="./css/index.css" />
 
-  <!-- ✅ Firebase CDN (compat) -->
+  <!-- ✅ Firebase CDN (UMD compat-версии) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -19,30 +19,24 @@
 
   <!-- TopBar -->
   <div class="topbar">
+    <div class="dot-core"></div>
 
-    <!-- ✅ DOT капсула с встроенным меню -->
-    <div class="dot-core" id="dot-core">
-
-      <!-- Встроенное меню DOT -->
-      <div class="dot-core-menu" id="dot-core-menu">
-        <button id="btn-function">Function</button>
-        <button id="btn-theme">Theme</button>
-        <button id="btn-contacts">Contacts</button>
-        <button id="btn-settings">Settings</button>
-      </div>
-
-    </div>
-
-    <!-- Кнопка выхода -->
     <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
+
+    <div class="dot-core-menu" id="dot-core-menu">
+      <button id="btn-function">Function</button>
+      <button id="btn-theme">Theme</button>
+      <button id="btn-contacts">Contacts</button>
+      <button id="btn-settings">Settings</button>
+    </div>
   </div>
 
   <!-- Основная зона -->
   <main id="main-content">
-    <!-- Контент загружается динамически -->
+    <!-- Контент будет загружен динамически -->
   </main>
 
-  <!-- Главный JS -->
+  <!-- Основной JS -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
