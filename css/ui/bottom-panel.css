@@ -29,3 +29,9 @@
   width: 100%;
   box-sizing: border-box;
 }
+.bottom-panel::after {
+  content: "";
+  display: block;
+  height: 20px;
+  pointer-events: none;
+}
