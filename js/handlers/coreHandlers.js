@@ -76,28 +76,26 @@ export function setupDotCoreMenu() {
     if (isOpen) {
       positionMenu();
 
-      // ✅ Навешиваем обработчик только когда меню появилось
-      setTimeout(() => {
-        const contactsBtn = document.getElementById("btn-contacts");
-        if (contactsBtn) {
-          contactsBtn.onclick = () => {
-            isOpen = false;
-            menu.classList.remove('open');
-            menu.style.display = "";
-            menu.style.left = "";
-            menu.style.top = "";
-            menu.style.position = "";
-            menu.style.visibility = "";
-            menu.style.zIndex = "";
+      // 🔥 Навешиваем обработчик сразу после появления меню
+      const contactsBtn = document.getElementById("btn-contacts");
+      if (contactsBtn) {
+        contactsBtn.onclick = () => {
+          isOpen = false;
+          menu.classList.remove('open');
+          menu.style.display = "";
+          menu.style.left = "";
+          menu.style.top = "";
+          menu.style.position = "";
+          menu.style.visibility = "";
+          menu.style.zIndex = "";
 
-            dot.classList.add("expanded");
-            dot.innerHTML = `
-              <input type="text" placeholder="Search contacts..." />
-              <button class="add-btn">+</button>
-            `;
-          };
-        }
-      }, 0);
+          dot.classList.add("expanded");
+          dot.innerHTML = `
+            <input type="text" placeholder="Search contacts..." />
+            <button class="add-btn">+</button>
+          `;
+        };
+      }
     } else {
       menu.style.display = "";
       menu.style.left = "";
