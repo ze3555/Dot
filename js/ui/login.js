@@ -6,13 +6,14 @@ export function showLoginModal() {
  modal.className = "login-modal";
 modal.innerHTML = `
   <div class="login-content">
-    <h2>Welcome to DOT</h2>
+    <svg class="dot-logo" width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="8" />
+    </svg>
     <p class="slogan">Everything in one dot</p>
     <button class="login-btn" id="anon-login">Continue Anonymously</button>
     <button class="login-btn" id="google-login">Sign in with Google</button>
   </div>
 `;
-
 
   document.body.appendChild(modal);
 
