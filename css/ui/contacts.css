@@ -1,7 +1,5 @@
-/* DOT режим контактов — капсульная анимация */
-
 .dot-expanded {
-  width: 64px; /* Стартовая ширина капсулы */
+  width: 72px;
   height: 36px;
   padding: 0 8px;
   border-radius: 999px;
@@ -14,16 +12,12 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-
-  transition:
-    width 1.1s ease-in-out,
-    padding 1.1s ease-in-out;
+  transition: width 0.9s ease-in-out, padding 0.9s ease-in-out;
 }
 
 .dot-expanded.active {
-  width: 260px; /* Финальная ширина */
+  width: 240px;
   padding: 0 14px;
 }
 
@@ -31,8 +25,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
   width: 100%;
+  gap: 8px;
 }
 
 .dot-contact-input {
@@ -52,9 +46,7 @@
   font-size: 18px;
   cursor: pointer;
   padding: 0 4px;
-  transition: color 0.2s;
 }
-
 .dot-add-btn:hover {
   color: var(--accent-hover, #ffe44c);
 }
