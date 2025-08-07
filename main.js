@@ -1,12 +1,9 @@
 // main.js
-import { initFirebase } from "./js/firebase/config.js";
+import "./js/firebase/config.js"; // просто для инициализации
 import { onAuthStateChanged } from "./js/firebase/auth.js";
 import { renderTopbar, renderDotCore } from "./js/ui/core.js";
 import { renderChatUI } from "./js/ui/chat.js";
 import { showLoginModal, hideLoginModal } from "./js/ui/login.js";
-
-// Инициализация Firebase
-initFirebase();
 
 // Рендер dot-core и main-контейнера
 document.addEventListener("DOMContentLoaded", () => {
