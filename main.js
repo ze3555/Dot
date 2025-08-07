@@ -4,13 +4,16 @@ import { renderTopbar, renderDotCore } from "./js/ui/core.js";
 import { renderChatUI } from "./js/ui/chat.js";
 import { showLoginModal, hideLoginModal } from "./js/ui/login.js";
 import { setupDotCoreMenu } from "./js/handlers/coreHandlers.js";
-import { initializeThemeOnStart, setupThemeSwitcher } from "./js/handlers/themeHandlers.js"; // импорт нового обработчика
+import { initializeThemeOnStart, setupThemeSwitcher } from "./js/handlers/themeHandlers.js";
+import { enableDotCoreDrag } from "./js/handlers/dotCoreDrag.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  initializeThemeOnStart();   // 1. Инициализация темы — всегда первой
-  renderDotCore();
-  setupDotCoreMenu();
-  setupThemeSwitcher();       // 2. навешиваем обработчик темы
+  initializeThemeOnStart();       // 1. Применяем тему
+  renderDotCore();                // 2. Рендер DotCore
+  setupDotCoreMenu();             // 3. Меню DotCore
+  setupThemeSwitcher();           // 4. Переключатель темы
+
+  enableDotCoreDrag();            // 5. Делаем DotCore перетаскиваемым
 
   // Создаём основной контейнер, если нужен
   let main = document.getElementById("main");
