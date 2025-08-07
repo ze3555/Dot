@@ -7,19 +7,28 @@ export function enableDotCoreDrag() {
   let dragReady = false;
   let holdTimer = null;
 
-  // Перевести DotCore в fixed
+  // Центрируем DotCore по умолчанию
   dot.style.position = "fixed";
+  dot.style.top = "50%";
+  dot.style.left = "50%";
+  dot.style.transform = "translate(-50%, -50%)";
+  dot.style.transition = "top 0.25s, left 0.25s, transform 0.25s";
 
-  // ПК мышка
+  // --- Drag с задержкой ---
   dot.addEventListener('mousedown', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
       isDragging = true;
+      // Отключаем transform для корректного drag
       const rect = dot.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
+      // Считаем реальные координаты в документе
+      dot.style.top = rect.top + "px";
+      dot.style.left = rect.left + "px";
+      dot.style.transform = ""; // Отключаем transform!
       document.body.style.userSelect = "none";
-    }, 400); // 400 мс задержка для “hold”
+    }, 400);
   });
 
   document.addEventListener('mousemove', (e) => {
@@ -35,7 +44,6 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = "";
   });
 
-  // Тач-устройства
   dot.addEventListener('touchstart', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
@@ -44,6 +52,9 @@ export function enableDotCoreDrag() {
       const rect = dot.getBoundingClientRect();
       offsetX = touch.clientX - rect.left;
       offsetY = touch.clientY - rect.top;
+      dot.style.top = rect.top + "px";
+      dot.style.left = rect.left + "px";
+      dot.style.transform = "";
       document.body.style.userSelect = "none";
     }, 400);
   });
@@ -61,5 +72,12 @@ export function enableDotCoreDrag() {
     isDragging = false;
     dragReady = false;
     document.body.style.userSelect = "";
+  });
+
+  // --- Вернуть в центр двойным кликом ---
+  dot.addEventListener('dblclick', () => {
+    dot.style.top = "50%";
+    dot.style.left = "50%";
+    dot.style.transform = "translate(-50%, -50%)";
   });
 }
