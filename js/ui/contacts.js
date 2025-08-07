@@ -1,5 +1,4 @@
 // js/ui/contacts.js
-// js/ui/contacts.js
 import { addContact } from "../handlers/contactHandlers.js";
 
 export function renderContactsUI() {
@@ -10,21 +9,22 @@ export function renderContactsUI() {
   const menu = document.getElementById("dot-core-menu");
   if (menu) menu.style.display = "none";
 
-  // Очистить DOT и включить режим input
+  // Очистить DOT и активировать режим
   dot.innerHTML = "";
   dot.classList.add("dot-expanded");
 
-  // Поле ввода
+  // Создать поле ввода
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Enter UID";
   input.className = "dot-contact-input";
 
-  // Плюс-кнопка
+  // Создать кнопку +
   const button = document.createElement("button");
   button.innerHTML = "+";
   button.className = "dot-add-btn";
 
+  // Добавление контакта
   button.addEventListener("click", async () => {
     const uid = input.value.trim();
     if (!uid) return;
@@ -33,10 +33,17 @@ export function renderContactsUI() {
     input.focus();
   });
 
+  // Вставить внутрь DOT
   dot.appendChild(input);
   dot.appendChild(button);
 
-  // 📏 Убедиться, что DOT не вылезает за экран
+  // Добавить активный класс после короткой паузы (анимация)
+  setTimeout(() => {
+    dot.classList.add("active");
+    input.focus();
+  }, 20);
+
+  // 📏 Ограничение по краям экрана
   const bounding = dot.getBoundingClientRect();
   const padding = 12;
   if (bounding.right > window.innerWidth - padding) {
@@ -47,33 +54,30 @@ export function renderContactsUI() {
     dot.style.transform = `translateX(calc(-50% + ${shift}px))`;
   }
 
-  // ⌨️ Фокус
-  setTimeout(() => {
-    input.focus();
-  }, 100);
-
   // ❌ Закрытие по клику вне
   const handleOutsideClick = (e) => {
     if (!dot.contains(e.target)) {
-      dot.classList.remove("dot-expanded");
-      dot.innerHTML = "";
-      dot.style.transform = ""; // сброс сдвига
-      document.removeEventListener("click", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
+      closeDotInput();
     }
   };
 
   // ❌ Закрытие по ESC
   const handleEscape = (e) => {
     if (e.key === "Escape") {
-      dot.classList.remove("dot-expanded");
-      dot.innerHTML = "";
-      dot.style.transform = "";
-      document.removeEventListener("click", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
+      closeDotInput();
     }
   };
 
+  // 💥 Закрытие DOT
+  function closeDotInput() {
+    dot.classList.remove("dot-expanded", "active");
+    dot.innerHTML = "";
+    dot.style.transform = "";
+    document.removeEventListener("click", handleOutsideClick);
+    document.removeEventListener("keydown", handleEscape);
+  }
+
+  // Навешиваем слушатели (с паузой чтобы не поймать клик ивента по кнопке)
   setTimeout(() => {
     document.addEventListener("click", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
