@@ -10,8 +10,16 @@ export function renderTopbar(user) {
   // Подключаем обработчик на кнопку Contacts
   const contactsBtn = document.getElementById("btn-contacts");
   if (contactsBtn) {
-    contactsBtn.addEventListener("click", () => {
-      renderContactsUI();
+    contactsBtn.addEventListener("click", async () => {
+      let wrapper = document.getElementById("contacts-wrapper");
+
+      if (wrapper) {
+        // Переключаем видимость
+        wrapper.classList.toggle("hidden");
+      } else {
+        // Вставляем впервые
+        await renderContactsUI();
+      }
     });
   }
 }
