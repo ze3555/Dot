@@ -1,43 +1,44 @@
 // js/ui/contacts.js
-import { addContact, getContacts } from "../handlers/contactHandlers.js";
+import { addContact } from "../handlers/contactHandlers.js";
 
-export async function renderContactsUI() {
-  const container = document.getElementById("main-content");
-  container.innerHTML = ""; // Очистка
+export function renderContactsUI() {
+  const dot = document.querySelector(".dot-core");
+  if (!dot) return;
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "contacts-wrapper";
+  // Скрыть dot-меню при клике
+  const menu = document.getElementById("dot-core-menu");
+  if (menu) menu.style.display = "none";
 
+  // Очистить DOT и активировать расширенный режим
+  dot.innerHTML = "";
+  dot.classList.add("dot-expanded");
+
+  // Поле ввода
   const input = document.createElement("input");
   input.type = "text";
-  input.placeholder = "Enter user UID to add";
-  input.className = "contacts-input";
+  input.placeholder = "Enter user UID";
+  input.className = "dot-contact-input";
 
+  // Плюсик
   const button = document.createElement("button");
-  button.textContent = "Add Contact";
-  button.className = "contacts-add-btn";
+  button.innerHTML = "+";
+  button.className = "dot-add-btn";
 
   button.addEventListener("click", async () => {
     const uid = input.value.trim();
     if (!uid) return;
     await addContact(uid);
     input.value = "";
-    await renderContactsUI();
+    input.focus();
   });
 
-  const list = document.createElement("ul");
-  list.className = "contacts-list";
+  // Добавить элементы в DOT
+  dot.appendChild(input);
+  dot.appendChild(button);
 
-  const contacts = await getContacts();
-  contacts.forEach(uid => {
-    const li = document.createElement("li");
-    li.textContent = uid;
-    li.className = "contacts-list-item";
-    list.appendChild(li);
-  });
-
-  wrapper.appendChild(input);
-  wrapper.appendChild(button);
-  wrapper.appendChild(list);
-  container.appendChild(wrapper);
+  // Фокус + scroll
+  setTimeout(() => {
+    input.focus();
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 100);
 }
