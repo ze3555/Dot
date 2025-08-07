@@ -1,49 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOT Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DOT App</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <!-- Top Bar -->
+
   <div class="top-bar">
-    <div class="app-title">DOT</div>
-    <div class="corner-icons">
-      <div class="corner-left"></div>
-      <div class="corner-right"></div>
+    <div id="dot-core">●</div>
+    <div class="top-right-actions">
+      <!-- future buttons (logout etc) -->
     </div>
   </div>
 
-  <!-- Core Button Area -->
-  <div class="dot-core-wrapper">
-    <button id="dot-core" class="dot-core">
-      <svg id="dot-core-svg" viewBox="0 0 44 44" width="44" height="44">
-        <circle cx="22" cy="22" r="22" fill="#000" />
-      </svg>
-    </button>
+  <main id="main-content"></main>
+
+  <!-- ЛОГИН-МОДАЛКА -->
+  <div id="login-modal" class="login-modal hidden">
+    <h2>Login</h2>
+
+    <input type="email" id="login-email" placeholder="Email" />
+    <input type="password" id="login-password" placeholder="Password" />
+
+    <button id="login-submit">Login</button>
+    <button id="anon-login">Continue as Guest</button>
+    <button id="google-login">Login with Google</button>
   </div>
 
-  <!-- Chat Window -->
-  <div class="chat-window">
-    <div class="chat-messages" id="chat-messages"></div>
-    <form id="chat-form" autocomplete="off">
-      <input type="text" id="chat-input" class="chat-input" placeholder="Message..." />
-      <button type="submit" class="chat-send-btn hidden" aria-label="Send">Send</button>
-    </form>
-  </div>
-
-  <!-- Login Modal -->
-  <div class="login-modal hidden" id="login-modal">
-    <div class="login-box">
-      <h2>Login</h2>
-      <input type="email" id="login-email" placeholder="Email" />
-      <input type="password" id="login-password" placeholder="Password" />
-      <button id="login-submit">Log In</button>
-    </div>
-  </div>
-
-  <script type="module" src="main.js"></script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
