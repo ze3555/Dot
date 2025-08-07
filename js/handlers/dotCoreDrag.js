@@ -24,23 +24,45 @@ export function enableDotCoreDrag() {
     dot.style.top = "50%";
     dot.style.transform = "translate(-50%, -50%)";
     topbar.appendChild(dot);
-    updateDotContrast(dot); // проверить цвет и после возврата
+    updateDotContrast(dot);
   }
 
-  // --- Контрастность: проверка цвета фона под центром DotCore ---
+  // --- Новый метод: реально определяем фон под центром DotCore, игнорируя саму точку и меню ---
+  function getRealBgElem(x, y, dot) {
+    let elem = document.elementFromPoint(x, y);
+    const hidden = [];
+    // Пропускаем dot-core, меню и вложенное, временно скрывая pointer-events
+    while (
+      elem &&
+      (elem === dot || dot.contains(elem) || elem.id === "dot-core-menu" || elem.closest && elem.closest("#dot-core-menu"))
+    ) {
+      elem.style.pointerEvents = "none";
+      hidden.push(elem);
+      elem = document.elementFromPoint(x, y);
+    }
+    // Возвращаем pointer-events обратно
+    for (const el of hidden) el.style.pointerEvents = "";
+    return elem;
+  }
+
   function isDarkBgUnderDot(dot) {
     const rect = dot.getBoundingClientRect();
     const x = Math.round(rect.left + rect.width / 2);
     const y = Math.round(rect.top + rect.height / 2);
-    const elem = document.elementFromPoint(x, y);
+
+    // Безопасно убираем pointer-events с DotCore только для поиска подложки
+    dot.style.pointerEvents = "none";
+    const elem = getRealBgElem(x, y, dot);
+    dot.style.pointerEvents = "";
+
     if (!elem) return false;
     const bg = window.getComputedStyle(elem).backgroundColor;
     if (!bg || bg === 'transparent') return false;
     const rgb = bg.match(/\d+/g);
     if (!rgb) return false;
-    const [r, g, b] = rgb;
+    const [r, g, b] = rgb.map(Number);
     const brightness = (299 * r + 587 * g + 114 * b) / 1000;
-    return brightness < 130; // true если тёмный фон
+    return brightness < 130;
   }
 
   function updateDotContrast(dot) {
@@ -53,12 +75,10 @@ export function enableDotCoreDrag() {
 
   // --- Drag & Drop с hold ---
   function startDrag(clientX, clientY) {
-    // Координаты dot относительно окна
     const rect = dot.getBoundingClientRect();
     offsetX = clientX - rect.left;
     offsetY = clientY - rect.top;
 
-    // Перевести dot во fixed
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
@@ -91,7 +111,6 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = "";
     document.body.classList.remove('dragging-dotcore');
     updateDotContrast(dot);
-    // Dot остаётся где бросили
   });
 
   dot.addEventListener('touchstart', (e) => {
