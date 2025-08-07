@@ -1,0 +1,13 @@
+@import url("../css/core/dot-core.css");
+@import url("../css/layout/topbar.css");
+@import url("../css/layout/main.css");
+@import url("../css/ui/login-modal.css");
+@import url("../css/theme/light-dark.css");
+
+/* Общие стили */
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #111;
+  color: #fff;
+}
