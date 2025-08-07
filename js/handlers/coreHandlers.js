@@ -1,98 +1,51 @@
-// js/handlers/dotCoreDrag.js
+// js/handlers/coreHandlers.js
 
-export function enableDotCoreDrag() {
+export function setupDotCoreMenu() {
   const dot = document.querySelector('.dot-core');
-  const topbar = document.querySelector('.topbar');
-  if (!dot || !topbar) return;
+  const menu = document.getElementById('dot-core-menu');
+  if (!dot || !menu) return;
 
-  let offsetX = 0, offsetY = 0;
-  let isDragging = false;
-  let dragReady = false;
-  let holdTimer = null;
+  let isOpen = false;
 
-  // --- Стартовое положение: по центру topbar ---
-  topbar.style.position = "relative";
-  dot.style.position = "absolute";
-  dot.style.left = "50%";
-  dot.style.top = "50%";
-  dot.style.transform = "translate(-50%, -50%)";
-  dot.style.transition = "top 0.25s, left 0.25s, transform 0.25s";
+  // === Динамическое позиционирование меню возле DotCore ===
+  function positionMenu() {
+    // Временно показать меню для вычисления размеров
+    menu.style.display = "flex";
+    menu.style.visibility = "hidden";
 
-  // Центрирование в topbar
-  function toTopbarCenter() {
-    dot.style.position = "absolute";
-    dot.style.left = "50%";
-    dot.style.top = "50%";
-    dot.style.transform = "translate(-50%, -50%)";
-    topbar.appendChild(dot);
+    const dotRect = dot.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    // По умолчанию снизу и по центру относительно DotCore
+    let left = dotRect.left + dotRect.width / 2 - menuRect.width / 2;
+    let top = dotRect.bottom + 8;
+
+    // Корректировка, чтобы меню не вышло за экран
+    const padding = 8;
+    if (left < padding) left = padding;
+    if (left + menuRect.width > window.innerWidth - padding)
+      left = window.innerWidth - menuRect.width - padding;
+    if (top + menuRect.height > window.innerHeight - padding)
+      top = dotRect.top - menuRect.height - 8;
+
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+    menu.style.position = "fixed";
+    menu.style.visibility = "visible";
+    menu.style.zIndex = 99999;
   }
 
-  // Переводим DotCore в режим drag (fixed, поверх всего)
-  function startDrag(clientX, clientY) {
-    const rect = dot.getBoundingClientRect();
-    offsetX = clientX - rect.left;
-    offsetY = clientY - rect.top;
+  // Открытие/закрытие меню по клику на DotCore
+  dot.addEventListener('click', (e) => {
+    // Если сейчас происходит drag, блокируем открытие меню
+    if (document.body.classList.contains('dragging-dotcore')) return;
 
-    dot.style.position = "fixed";
-    dot.style.left = rect.left + "px";
-    dot.style.top = rect.top + "px";
-    dot.style.transform = "";
-    document.body.appendChild(dot);
-
-    document.body.classList.add('dragging-dotcore'); // Блокируем scroll страницы
-    document.body.style.userSelect = "none";
-  }
-
-  // --- Drag с задержкой (hold-to-drag) ---
-  dot.addEventListener('mousedown', (e) => {
-    holdTimer = setTimeout(() => {
-      dragReady = true;
-      isDragging = true;
-      startDrag(e.clientX, e.clientY);
-    }, 400);
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging || !dragReady) return;
-    dot.style.top = (e.clientY - offsetY) + "px";
-    dot.style.left = (e.clientX - offsetX) + "px";
-  });
-
-  document.addEventListener('mouseup', () => {
-    clearTimeout(holdTimer);
-    isDragging = false;
-    dragReady = false;
-    document.body.classList.remove('dragging-dotcore');
-    document.body.style.userSelect = "";
-    // Точка остаётся там, куда её бросили
-  });
-
-  // --- Тач поддержка ---
-  dot.addEventListener('touchstart', (e) => {
-    holdTimer = setTimeout(() => {
-      dragReady = true;
-      isDragging = true;
-      const touch = e.touches[0];
-      startDrag(touch.clientX, touch.clientY);
-    }, 400);
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isDragging || !dragReady) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    dot.style.top = (touch.clientY - offsetY) + "px";
-    dot.style.left = (touch.clientX - offsetX) + "px";
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => {
-    clearTimeout(holdTimer);
-    isDragging = false;
-    dragReady = false;
-    document.body.classList.remove('dragging-dotcore');
-    document.body.style.userSelect = "";
-  });
-
-  // --- Вернуть в центр topbar по двойному клику ---
-  dot.addEventListener('dblclick', toTopbarCenter);
-}
+    e.stopPropagation();
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    if (isOpen) {
+      positionMenu();
+    } else {
+      // Сбросить стили
+      menu.style.display = "";
+     
