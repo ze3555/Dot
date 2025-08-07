@@ -8,10 +8,10 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: box-shadow 0.25s, background 0.2s;
+  transition: box-shadow 0.25s, background 0.2s, width 0.3s ease, padding 0.3s ease;
   position: relative;
   border: 3px solid var(--dot-core-border, #fff);
-  z-index: 10;
+  z-index: 2147483647 !important;
 }
 
 .dot-core:hover,
@@ -30,10 +30,51 @@ body.theme-dark .dot-core:focus-visible {
   background: var(--dot-core-bg-dark-hover, #353538);
 }
 
-/* --- Адаптивное выпадающее меню: фиксированное положение --- */
+.dot-core.dot-invert {
+  background: #fff !important;
+  border-color: #dedede !important;
+  box-shadow: 0 0 18px 0 rgba(0,0,0,0.15) !important;
+}
+
+/* === Расширенное состояние .dot-core === */
+.dot-core.expanded {
+  width: 280px;
+  padding: 0 14px;
+  border-radius: 999px;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Внутренний input */
+.dot-core.expanded input[type="text"] {
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--dot-menu-item-color, #323042);
+  font-size: 14px;
+  min-width: 0;
+}
+
+/* Кнопка добавления */
+.dot-core.expanded .add-btn {
+  background: none;
+  border: none;
+  color: var(--dot-menu-item-color, #323042);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+body.theme-dark .dot-core.expanded input[type="text"],
+body.theme-dark .dot-core.expanded .add-btn {
+  color: #ededed;
+}
+
+/* --- Выпадающее меню --- */
 .dot-core-menu {
   display: none;
-  position: fixed; /* теперь всегда fixed, координаты выставляет JS */
+  position: fixed;
   min-width: 220px;
   max-width: 96vw;
   padding: 16px 22px;
@@ -59,7 +100,6 @@ body.theme-dark .dot-core-menu {
   color: #ededed;
 }
 
-/* Кнопки меню */
 .dot-core-menu button {
   display: flex;
   flex-direction: column;
@@ -91,7 +131,7 @@ body.theme-dark .dot-core-menu button:focus-visible {
   color: #ffd400;
 }
 
-/* --- Мобильная адаптация меню --- */
+/* --- Мобильная адаптация --- */
 @media (max-width: 520px) {
   .dot-core {
     width: 40px;
@@ -140,7 +180,7 @@ body.theme-dark .dot-core-menu button:focus-visible {
   }
 }
 
-/* --- Тёмная/светлая тема через переменные --- */
+/* --- Переменные темы --- */
 :root {
   --dot-core-bg: #ffd400;
   --dot-core-bg-hover: #ffe156;
@@ -164,12 +204,4 @@ body.theme-dark {
 body.dragging-dotcore {
   overflow: hidden !important;
   touch-action: none !important;
-}
-.dot-core.dot-invert {
-  background: #fff !important;
-  border-color: #dedede !important;
-  box-shadow: 0 0 18px 0 rgba(0,0,0,0.15) !important;
-}
-.dot-core {
-  z-index: 2147483647 !important;
 }
