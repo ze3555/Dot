@@ -10,19 +10,23 @@ export function enableDotCoreDrag() {
   let dragReady = false;
   let holdTimer = null;
 
-  // --- Функция ограничения координат ---
+  // --- ДЛЯ АНИМАЦИИ ---
+  let animationFrameId = null;
+  let pendingX = null;
+  let pendingY = null;
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
   }
 
-  // --- Исходная позиция: по центру topbar ---
+  // Исходная позиция по центру topbar
   topbar.style.position = "relative";
   dot.style.position = "absolute";
   dot.style.left = "50%";
   dot.style.top = "50%";
   dot.style.transform = "translate(-50%, -50%)";
   dot.style.transition = "top 0.25s, left 0.25s, transform 0.25s";
-  dot.style.zIndex = 2147483647; // Максимальный z-index
+  dot.style.zIndex = 2147483647;
 
   function toTopbarCenter() {
     dot.style.position = "absolute";
@@ -34,7 +38,6 @@ export function enableDotCoreDrag() {
     updateDotContrast(dot);
   }
 
-  // --- Новый метод: реально определяем фон под центром DotCore, игнорируя саму точку и меню ---
   function getRealBgElem(x, y, dot) {
     let elem = document.elementFromPoint(x, y);
     const hidden = [];
@@ -77,7 +80,7 @@ export function enableDotCoreDrag() {
     }
   }
 
-  // --- Drag & Drop с hold ---
+  // Drag & Drop с hold
   function startDrag(clientX, clientY) {
     const rect = dot.getBoundingClientRect();
     offsetX = clientX - rect.left;
@@ -91,7 +94,7 @@ export function enableDotCoreDrag() {
     document.body.appendChild(dot);
     document.body.style.userSelect = "none";
     document.body.classList.add('dragging-dotcore');
-    updateDotContrast(dot);
+    // updateDotContrast(dot); // УБРАНО из движения!
   }
 
   dot.addEventListener('mousedown', (e) => {
@@ -104,20 +107,26 @@ export function enableDotCoreDrag() {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging || !dragReady) return;
-    const dotW = dot.offsetWidth;
-    const dotH = dot.offsetHeight;
-    const minX = 0;
-    const maxX = window.innerWidth - dotW;
-    const minY = 0;
-    const maxY = window.innerHeight - dotH;
-    let newLeft = e.clientX - offsetX;
-    let newTop  = e.clientY - offsetY;
-    newLeft = clamp(newLeft, minX, maxX);
-    newTop  = clamp(newTop,  minY, maxY);
-    dot.style.left = newLeft + "px";
-    dot.style.top  = newTop  + "px";
-    dot.style.zIndex = 2147483647;
-    updateDotContrast(dot);
+    pendingX = e.clientX;
+    pendingY = e.clientY;
+    if (!animationFrameId) {
+      animationFrameId = requestAnimationFrame(() => {
+        const dotW = dot.offsetWidth;
+        const dotH = dot.offsetHeight;
+        const minX = 0;
+        const maxX = window.innerWidth - dotW;
+        const minY = 0;
+        const maxY = window.innerHeight - dotH;
+        let newLeft = pendingX - offsetX;
+        let newTop  = pendingY - offsetY;
+        newLeft = clamp(newLeft, minX, maxX);
+        newTop  = clamp(newTop,  minY, maxY);
+        dot.style.left = newLeft + "px";
+        dot.style.top  = newTop  + "px";
+        dot.style.zIndex = 2147483647;
+        animationFrameId = null;
+      });
+    }
   });
 
   document.addEventListener('mouseup', () => {
@@ -127,7 +136,7 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = "";
     document.body.classList.remove('dragging-dotcore');
     dot.style.zIndex = 2147483647;
-    updateDotContrast(dot);
+    updateDotContrast(dot); // Только тут!
   });
 
   dot.addEventListener('touchstart', (e) => {
@@ -143,20 +152,26 @@ export function enableDotCoreDrag() {
     if (!isDragging || !dragReady) return;
     e.preventDefault();
     const touch = e.touches[0];
-    const dotW = dot.offsetWidth;
-    const dotH = dot.offsetHeight;
-    const minX = 0;
-    const maxX = window.innerWidth - dotW;
-    const minY = 0;
-    const maxY = window.innerHeight - dotH;
-    let newLeft = touch.clientX - offsetX;
-    let newTop  = touch.clientY - offsetY;
-    newLeft = clamp(newLeft, minX, maxX);
-    newTop  = clamp(newTop,  minY, maxY);
-    dot.style.left = newLeft + "px";
-    dot.style.top  = newTop  + "px";
-    dot.style.zIndex = 2147483647;
-    updateDotContrast(dot);
+    pendingX = touch.clientX;
+    pendingY = touch.clientY;
+    if (!animationFrameId) {
+      animationFrameId = requestAnimationFrame(() => {
+        const dotW = dot.offsetWidth;
+        const dotH = dot.offsetHeight;
+        const minX = 0;
+        const maxX = window.innerWidth - dotW;
+        const minY = 0;
+        const maxY = window.innerHeight - dotH;
+        let newLeft = pendingX - offsetX;
+        let newTop  = pendingY - offsetY;
+        newLeft = clamp(newLeft, minX, maxX);
+        newTop  = clamp(newTop,  minY, maxY);
+        dot.style.left = newLeft + "px";
+        dot.style.top  = newTop  + "px";
+        dot.style.zIndex = 2147483647;
+        animationFrameId = null;
+      });
+    }
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
@@ -166,7 +181,7 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = "";
     document.body.classList.remove('dragging-dotcore');
     dot.style.zIndex = 2147483647;
-    updateDotContrast(dot);
+    updateDotContrast(dot); // Только тут!
   });
 
   // Вернуть в центр topbar по двойному клику
