@@ -1,6 +1,6 @@
 /* Увеличенная точка DotCore */
 .dot-core {
-  width: 40px;         /* Было ~30px */
+  width: 40px;
   height: 40px;
   border-radius: 50%;
   background: var(--dot-core-bg, #ffd400);
@@ -22,13 +22,13 @@
 }
 
 body.theme-dark .dot-core {
-  background: var(--dot-core-bg-dark, #3a3749);
-  border-color: #2a2841;
-  box-shadow: 0 0 20px 0 rgba(40,30,80,0.25);
+  background: var(--dot-core-bg-dark, #232324);
+  border-color: #161617;
+  box-shadow: 0 0 20px 0 rgba(0,0,0,0.26);
 }
 body.theme-dark .dot-core:hover,
 body.theme-dark .dot-core:focus-visible {
-  background: var(--dot-core-bg-dark-hover, #574d86);
+  background: var(--dot-core-bg-dark-hover, #353538);
 }
 
 /* Горизонтальное выпадающее меню */
@@ -44,7 +44,7 @@ body.theme-dark .dot-core:focus-visible {
   padding: 18px 24px;
   background: var(--dot-menu-bg, #fff);
   border-radius: 24px;
-  box-shadow: 0 8px 28px 0 rgba(80,80,110,0.12);
+  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
   border: 2px solid var(--dot-menu-border, #f2f2f2);
   z-index: 100;
   transition: background 0.2s, color 0.2s;
@@ -57,10 +57,10 @@ body.theme-dark .dot-core:focus-visible {
 }
 
 body.theme-dark .dot-core-menu {
-  background: var(--dot-menu-bg-dark, #232132);
-  border-color: #2e2b41;
-  box-shadow: 0 8px 32px 0 rgba(30,22,52,0.20);
-  color: #eee;
+  background: var(--dot-menu-bg-dark, #232324);
+  border-color: #232324;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.24);
+  color: #ededed;
 }
 
 /* Кнопки меню */
@@ -87,12 +87,12 @@ body.theme-dark .dot-core-menu {
 }
 
 body.theme-dark .dot-core-menu button {
-  color: #dedcff;
+  color: #ededed;
 }
 body.theme-dark .dot-core-menu button:hover,
 body.theme-dark .dot-core-menu button:focus-visible {
-  background: #3a3558;
-  color: #ffe456;
+  background: #2b2b2d;
+  color: #ffd400;
 }
 
 /* Адаптивность */
@@ -136,12 +136,13 @@ body.theme-dark .dot-core-menu button:focus-visible {
   --dot-menu-item-hover-color: #34307a;
 }
 body.theme-dark {
-  --dot-core-bg: #3a3749;
-  --dot-core-bg-hover: #574d86;
-  --dot-core-border: #2a2841;
-  --dot-menu-bg: #232132;
-  --dot-menu-border: #2e2b41;
-  --dot-menu-item-color: #dedcff;
-  --dot-menu-item-hover-bg: #3a3558;
-  --dot-menu-item-hover-color: #ffe456;
+  --dot-core-bg: #232324;
+  --dot-core-bg-hover: #353538;
+  --dot-core-border: #161617;
+  --dot-menu-bg: #232324;
+  --dot-menu-border: #232324;
+  --dot-menu-item-color: #ededed;
+  --dot-menu-item-hover-bg: #2b2b2d;
+  --dot-menu-item-hover-color: #ffd400;
 }
+
