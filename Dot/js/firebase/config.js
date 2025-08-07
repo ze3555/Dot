@@ -1,15 +1,19 @@
 // js/firebase/config.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBkfA9hXpq3ccp_wnvWGQZo1ZMNSyiVv8Q",
-  authDomain: "dot5-f25ea.firebaseapp.com",
-  projectId: "dot5-f25ea",
-  storageBucket: "dot5-f25ea.appspot.com",
-  messagingSenderId: "841483524783",
-  appId: "1:841483524783:web:dbfe06e7198d84d140d25a"
+  apiKey: "AIzaSyAq2bMRB11Z0ghEjos_9cpXgTbaEbeYebU",
+  authDomain: "dot1-80b37.firebaseapp.com",
+  projectId: "dot1-80b37",
+  storageBucket: "dot1-80b37.appspot.com", // ← исправлено: должно быть .appspot.com
+  messagingSenderId: "839467070924",
+  appId: "1:839467070924:web:a7dce6de55f75cc1fb5969",
+  measurementId: "G-HPS8HVC96W"
 };
 
-export function initFirebase() {
-  initializeApp(firebaseConfig);
-}
+const app = initializeApp(firebaseConfig);
+
+export const db = getFirestore(app);
+export const auth = getAuth(app);
