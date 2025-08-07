@@ -1,4 +1,3 @@
-// js/firebase/db.js
 import { db } from "./config.js";
 import {
   collection,
@@ -7,7 +6,7 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp
-} from "firebase/firestore";
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 // Добавить сообщение
 export async function sendMessage(text, userId) {
