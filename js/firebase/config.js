@@ -1,10 +1,5 @@
 // js/firebase/config.js
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAq2bMRB11Z0ghEjos_9cpXgTbaEbeYebU",
   authDomain: "dot1-80b37.firebaseapp.com",
@@ -15,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-HPS8HVC96W"
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const analytics = getAnalytics(app);
+// Инициализация Firebase глобально
+firebase.initializeApp(firebaseConfig);
+firebase.auth();
+firebase.firestore();
