@@ -1,18 +1,35 @@
-.top-bar {
+.topbar {
   width: 100%;
-  padding: 12px 18px;
+  height: 56px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  background: #111;
-  color: #fff;
-  box-shadow: 0 2px 6px #0003;
   position: relative;
-  z-index: 10;
+  z-index: 99;
 }
 
-.top-right-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+/* Темная тема (по умолчанию) */
+.topbar {
+  background-color: #fff;
+}
+
+/* Светлая тема */
+.theme-light .topbar {
+  background-color: #000;
+}
+
+.dot-core {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+/* Темная тема (фон белый → Dot черный) */
+.dot-core {
+  background-color: #000;
+}
+
+/* Светлая тема (фон черный → Dot белый) */
+.theme-light .dot-core {
+  background-color: #fff;
 }
