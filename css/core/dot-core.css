@@ -128,8 +128,8 @@ body.theme-dark .dot-core-menu button:focus-visible {
 
 @media (max-width: 370px) {
   .dot-core {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
   }
   .dot-core-menu {
     min-width: 98vw;
