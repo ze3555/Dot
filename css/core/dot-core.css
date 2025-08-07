@@ -1,9 +1,53 @@
-.dot-core {
-  width: 16px;
-  height: 16px;
-  color: #000;
+.dot-core-menu {
+  position: absolute;
+  top: 56px; /* ниже TopBar */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #fff; /* по умолчанию — белый */
+  box-shadow: 0 6px 24px #0003;
+  z-index: 100;
+  min-width: 160px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-.theme-light .dot-core {
+/* Видимое меню */
+.dot-core-menu.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.theme-light .dot-core-menu {
+  background-color: #000;
   color: #fff;
+}
+
+.dot-core-menu button {
+  all: unset;
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.theme-light .dot-core-menu button {
+  background: #222;
+  color: #fff;
+}
+
+.dot-core-menu button:hover {
+  background: #ccc;
+}
+
+.theme-light .dot-core-menu button:hover {
+  background: #444;
 }
