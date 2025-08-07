@@ -1,7 +1,6 @@
-/* DOT в режиме ввода контакта — компактная анимация */
+/* DOT в режиме ввода контакта — с анимацией через scaleX */
 
 .dot-expanded {
-  width: 64px;
   height: 36px;
   padding: 0 8px;
   border-radius: 999px;
@@ -13,23 +12,21 @@
   position: fixed;
   top: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(1);
+  transform-origin: center;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 
-  /* 🧘 Мягкая, медленная, стабильная анимация */
+  /* 🧘 Мягкая, масштабируемая анимация */
   transition:
-    width 1s ease-in-out,
-    padding 1s ease-in-out,
-    transform 1s ease-in-out;
+    transform 0.95s ease-in-out,
+    padding 0.95s ease-in-out;
 }
 
-
-
-/* Активная фаза: мягкое расширение */
+/* Активная фаза: плавное расширение через scaleX */
 .dot-expanded.active {
-  width: 220px;
+  transform: translateX(-50%) scaleX(1.6);
   padding: 0 12px;
 }
 
@@ -41,6 +38,7 @@
   outline: none;
   color: white;
   font-size: 14px;
+  min-width: 0;
 }
 
 /* Маленький плюсик */
