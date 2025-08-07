@@ -1,7 +1,7 @@
 /* DOT в режиме ввода контакта — компактная анимация */
 
 .dot-expanded {
-  width: 64px; /* начальная ширина DOT */
+  width: 64px;
   height: 36px;
   padding: 0 8px;
   border-radius: 999px;
@@ -18,12 +18,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 
-  /* 🔥 Плавная трансформация */
+  /* 🐢 Плавная, внятная анимация */
   transition:
-    width 0.25s ease,
-    transform 0.25s ease,
-    padding 0.25s ease;
+    width 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.6s ease,
+    padding 0.6s ease;
 }
+
 
 /* Активная фаза: мягкое расширение */
 .dot-expanded.active {
