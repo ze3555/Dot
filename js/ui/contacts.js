@@ -1,7 +1,7 @@
 // js/ui/contacts.js
 import { addContact, getContacts } from "../handlers/contactHandlers.js";
 
-export async function renderContactsUI() {
+export async function renderContactsUI(initialUid = "") {
   const container = document.getElementById("main-content");
   container.innerHTML = ""; // Очистка
 
@@ -12,6 +12,7 @@ export async function renderContactsUI() {
   input.type = "text";
   input.placeholder = "Enter user UID to add";
   input.className = "contacts-input";
+  input.value = initialUid;
 
   const button = document.createElement("button");
   button.textContent = "Add Contact";
