@@ -97,8 +97,8 @@ body.theme-dark .dot-core-menu button:focus-visible {
 /* --- Мобильная адаптация меню --- */
 @media (max-width: 520px) {
   .dot-core {
-    width: 54px;
-    height: 54px;
+    width: 40px;
+    height: 40px;
   }
   .dot-core-menu {
     flex-direction: column;
