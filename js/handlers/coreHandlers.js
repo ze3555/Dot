@@ -3,21 +3,20 @@
 export function setupDotCoreMenu() {
   const dot = document.querySelector('.dot-core');
   const menu = document.getElementById('dot-core-menu');
-
   if (!dot || !menu) return;
 
   let isOpen = false;
 
-  // === Исправлено: позиционирование меню через rAF ===
   function positionMenu() {
+    // Отображаем меню временно
     menu.style.display = "flex";
     menu.style.visibility = "hidden";
 
+    // Подождать отрисовку и потом считать размеры
     requestAnimationFrame(() => {
       const dotRect = dot.getBoundingClientRect();
       const menuRect = menu.getBoundingClientRect();
 
-      // Центр под капсулой
       let left = dotRect.left + dotRect.width / 2 - menuRect.width / 2;
       let top = dotRect.bottom + 8;
 
@@ -38,12 +37,11 @@ export function setupDotCoreMenu() {
     });
   }
 
-  // Открытие/закрытие меню
-  dot.addEventListener('click', (e) => {
-    if (document.body.classList.contains('dragging-dotcore')) return;
+  dot.addEventListener("click", (e) => {
+    if (document.body.classList.contains("dragging-dotcore")) return;
     e.stopPropagation();
     isOpen = !isOpen;
-    menu.classList.toggle('open', isOpen);
+    menu.classList.toggle("open", isOpen);
 
     if (isOpen) {
       positionMenu();
@@ -52,28 +50,30 @@ export function setupDotCoreMenu() {
     }
   });
 
-  // Обновление позиции при resize/scroll
-  window.addEventListener('resize', () => { if (isOpen) positionMenu(); });
-  window.addEventListener('scroll', () => { if (isOpen) positionMenu(); });
+  window.addEventListener("resize", () => {
+    if (isOpen) positionMenu();
+  });
 
-  // Закрытие по клику вне
-  document.addEventListener('click', (e) => {
+  window.addEventListener("scroll", () => {
+    if (isOpen) positionMenu();
+  });
+
+  document.addEventListener("click", (e) => {
     if (
       isOpen &&
       !menu.contains(e.target) &&
       !dot.contains(e.target)
     ) {
       isOpen = false;
-      menu.classList.remove('open');
+      menu.classList.remove("open");
       resetMenuStyles();
     }
   });
 
-  // Закрытие по ESC
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener("keydown", (e) => {
     if (isOpen && e.key === "Escape") {
       isOpen = false;
-      menu.classList.remove('open');
+      menu.classList.remove("open");
       resetMenuStyles();
     }
   });
