@@ -1,12 +1,10 @@
-/* css/ui/contacts.css */
-
 .contacts-wrapper {
-  padding: 20px;
-  max-width: 600px;
+  padding: 16px;
+  max-width: 480px;
   margin: 0 auto;
   background: var(--bg-secondary, #1e1e1e);
   border-radius: 8px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -20,39 +18,45 @@
   background: var(--input-bg, #2b2b2b);
   color: var(--text-color, #fff);
   outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .contacts-input:focus {
-  border-color: var(--accent-color, #ffd400);
+  border-color: #5e9cff;
+  box-shadow: 0 0 0 2px rgba(94, 156, 255, 0.3);
 }
 
 .contacts-add-btn {
   padding: 10px;
-  background: var(--accent-color, #ffd400);
-  color: #000;
-  border: none;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
   border-radius: 6px;
-  font-weight: bold;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .contacts-add-btn:hover {
-  background: var(--accent-hover, #ffe44c);
+  background: #444;
+  border-color: #666;
 }
 
 .contacts-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .contacts-list-item {
   padding: 8px 12px;
-  background: var(--list-item-bg, #2a2a2a);
+  background: var(--list-item-bg, #252525);
   border: 1px solid var(--border-color, #333);
   border-radius: 6px;
-  margin-bottom: 6px;
-  color: #fff;
-  word-break: break-all;
+  color: #e0e0e0;
+  font-size: 14px;
+  word-break: break-word;
 }
