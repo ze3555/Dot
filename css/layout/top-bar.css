@@ -1,0 +1,18 @@
+.top-bar {
+  width: 100%;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 2px 6px #0003;
+  position: relative;
+  z-index: 10;
+}
+
+.top-right-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
