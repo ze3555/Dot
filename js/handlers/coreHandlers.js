@@ -12,9 +12,10 @@ export function setupDotCoreMenu() {
   let isOpen = false;
 
   function positionMenu() {
-    // Временно отобразить для измерения
+    // Убедимся, что меню временно видно для измерения
     menu.style.display = "flex";
-    menu.style.visibility = "hidden";
+    menu.style.opacity = "0";
+    menu.style.pointerEvents = "none";
 
     requestAnimationFrame(() => {
       const dotRect = dot.getBoundingClientRect();
@@ -34,7 +35,8 @@ export function setupDotCoreMenu() {
       menu.style.left = `${left}px`;
       menu.style.top = `${top}px`;
       menu.style.position = "fixed";
-      menu.style.visibility = "visible";
+      menu.style.opacity = "1";
+      menu.style.pointerEvents = "auto";
       menu.style.zIndex = "99999";
     });
   }
@@ -53,10 +55,11 @@ export function setupDotCoreMenu() {
 
   function resetMenuStyles() {
     menu.style.display = "none";
+    menu.style.opacity = "";
+    menu.style.pointerEvents = "";
     menu.style.left = "";
     menu.style.top = "";
     menu.style.position = "";
-    menu.style.visibility = "";
     menu.style.zIndex = "";
   }
 
@@ -92,7 +95,7 @@ export function setupDotCoreMenu() {
     }
   });
 
-  // === Поддержка перемещения капсулы (custom event от dotCoreDrag.js) ===
+  // === Поддержка перемещения капсулы (cast by dotCoreDrag.js) ===
   document.addEventListener("dotcore:moved", () => {
     if (isOpen) positionMenu();
   });
