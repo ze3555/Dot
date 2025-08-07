@@ -1,15 +1,13 @@
 // js/firebase/auth.js
-import { app } from "./config.js"; // ✅ импорт инициализированного app
+import { auth } from "./config.js";
 import {
-  getAuth,
   onAuthStateChanged as onAuthChanged,
   signInAnonymously,
   signInWithPopup,
   GoogleAuthProvider,
   signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-const auth = getAuth(app); // ✅ используем инициализированное приложение
 const provider = new GoogleAuthProvider();
 
 export function onAuthStateChanged(callback) {
@@ -31,3 +29,4 @@ export async function logout() {
 export function getCurrentUser() {
   return auth.currentUser;
 }
+
