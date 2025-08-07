@@ -3,12 +3,13 @@
 export function setupDotCoreMenu() {
   const dot = document.querySelector('.dot-core');
   const menu = document.getElementById('dot-core-menu');
+  const contactsWrapper = document.getElementById('contacts-wrapper'); // Контейнер поиска контактов
 
   if (!dot || !menu) return;
 
   let isOpen = false;
 
-  // === Новая функция: позиционирование меню возле DotCore ===
+  // === Позиционирование меню возле DotCore ===
   function positionMenu() {
     menu.style.display = "flex";
     menu.style.visibility = "hidden";
@@ -38,55 +39,62 @@ export function setupDotCoreMenu() {
 
   // Открытие/закрытие меню по клику на точку
   dot.addEventListener('click', (e) => {
-    if (document.body.classList.contains('dragging-dotcore')) return; // Блокировка во время drag
+    if (document.body.classList.contains('dragging-dotcore')) return;
     e.stopPropagation();
     isOpen = !isOpen;
     menu.classList.toggle('open', isOpen);
     if (isOpen) {
       positionMenu();
     } else {
-      menu.style.display = "";
-      menu.style.left = "";
-      menu.style.top = "";
-      menu.style.position = "";
-      menu.style.visibility = "";
-      menu.style.zIndex = "";
+      closeMenu();
     }
   });
+
+  function closeMenu() {
+    isOpen = false;
+    menu.classList.remove('open');
+    menu.style.display = "";
+    menu.style.left = "";
+    menu.style.top = "";
+    menu.style.position = "";
+    menu.style.visibility = "";
+    menu.style.zIndex = "";
+  }
 
   // Перепозиционировать меню при изменении окна/скролле
   window.addEventListener('resize', () => { if (isOpen) positionMenu(); });
   window.addEventListener('scroll', () => { if (isOpen) positionMenu(); });
 
-  // Закрытие меню при клике вне области меню и точки
+  // Закрытие меню и contacts по клику вне
   document.addEventListener('click', (e) => {
+    // --- Закрыть меню ---
     if (
       isOpen &&
       !menu.contains(e.target) &&
       !dot.contains(e.target)
     ) {
-      isOpen = false;
-      menu.classList.remove('open');
-      menu.style.display = "";
-      menu.style.left = "";
-      menu.style.top = "";
-      menu.style.position = "";
-      menu.style.visibility = "";
-      menu.style.zIndex = "";
+      closeMenu();
+    }
+    // --- Закрыть contacts ---
+    if (
+      contactsWrapper &&
+      !contactsWrapper.contains(e.target) &&
+      e.target.id !== 'contacts-btn'
+    ) {
+      contactsWrapper.classList.add('hidden');
     }
   });
 
-  // Опционально: ESC закрывает меню
+  // ESC закрывает меню и contacts
   document.addEventListener('keydown', (e) => {
-    if (isOpen && e.key === "Escape") {
-      isOpen = false;
-      menu.classList.remove('open');
-      menu.style.display = "";
-      menu.style.left = "";
-      menu.style.top = "";
-      menu.style.position = "";
-      menu.style.visibility = "";
-      menu.style.zIndex = "";
+    if (isOpen && e.key === "Escape") closeMenu();
+    if (contactsWrapper && !contactsWrapper.classList.contains('hidden') && e.key === "Escape") {
+      contactsWrapper.classList.add('hidden');
     }
+  });
+
+  // Закрывать меню по любой кнопке в меню
+  menu.addEventListener('click', (e) => {
+    if (e.target.closest('button')) closeMenu();
   });
 }
