@@ -1,6 +1,10 @@
 // js/ui/core.js
 import { renderContactsUI } from "./contacts.js";
 
+let isMenuOpen = false;
+let outsideClickListener = null;
+let escKeyListener = null;
+
 export function renderTopbar(user) {
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
@@ -8,25 +12,56 @@ export function renderTopbar(user) {
   }
 
   const dot = document.querySelector(".dot-core");
-  if (!dot) return;
-
   const menu = document.getElementById("dot-core-menu");
-  if (!menu) return;
 
-  // 📌 Клик по DOT открывает/закрывает меню
+  if (!dot || !menu) return;
+
+  // Открытие/закрытие меню по клику на капсулу
   dot.addEventListener("click", () => {
-    const isVisible = menu.classList.contains("visible");
-    menu.classList.toggle("visible", !isVisible);
+    if (isMenuOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
   });
 
-  // 📌 Клик по пункту «Contacts» → скрыть меню и запустить UI
+  // Обработчик клика по пункту «Contacts»
   const contactsBtn = document.getElementById("btn-contacts");
   if (contactsBtn) {
     contactsBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // чтобы клик не прокинулся на dot-core
-      menu.classList.remove("visible");
+      e.stopPropagation(); // не прокидывать на .dot-core
+      closeMenu();
       renderContactsUI();
     });
+  }
+
+  function openMenu() {
+    menu.classList.add("visible");
+    isMenuOpen = true;
+
+    outsideClickListener = (e) => {
+      if (!menu.contains(e.target) && !dot.contains(e.target)) {
+        closeMenu();
+      }
+    };
+
+    escKeyListener = (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+      }
+    };
+
+    setTimeout(() => {
+      document.addEventListener("click", outsideClickListener);
+      document.addEventListener("keydown", escKeyListener);
+    }, 0);
+  }
+
+  function closeMenu() {
+    menu.classList.remove("visible");
+    isMenuOpen = false;
+    document.removeEventListener("click", outsideClickListener);
+    document.removeEventListener("keydown", escKeyListener);
   }
 }
 
