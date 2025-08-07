@@ -6,11 +6,19 @@
   <title>DOT</title>
   <link rel="stylesheet" href="./css/index.css" />
 </head>
-<body class="theme-dark"> <!-- Темная тема по умолчанию -->
+<body class="theme-dark"> <!-- Тёмная тема по умолчанию -->
 
   <!-- TopBar -->
   <div class="topbar">
     <div class="dot-core"></div>
+
+    <!-- Выпадающее меню DOT -->
+    <div class="dot-core-menu" id="dot-core-menu">
+      <button id="btn-function">Function</button>
+      <button id="btn-theme">Theme</button>
+      <button id="btn-contacts">Contacts</button>
+      <button id="btn-settings">Settings</button>
+    </div>
   </div>
 
   <!-- Основная зона -->
@@ -18,7 +26,7 @@
     <!-- Контент будет загружен динамически -->
   </main>
 
-  <!-- Модалка логина вставляется через JS -->
+  <!-- Модалка логина вставляется из JS -->
 
   <script type="module" src="./main.js"></script>
 </body>
