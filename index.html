@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DOT</title>
   <link rel="stylesheet" href="./css/index.css" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+  <!-- Firebase Init -->
+  <script type="module" src="./js/firebase/config.js"></script>
 </head>
-<body class="theme-dark"> <!-- Тёмная тема по умолчанию -->
+<body class="theme-dark">
 
   <!-- TopBar -->
   <div class="topbar">
     <div class="dot-core"></div>
-
-    <!-- Logout (появляется после логина) -->
     <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
-
-    <!-- Выпадающее меню DOT -->
     <div class="dot-core-menu" id="dot-core-menu">
       <button id="btn-function">Function</button>
       <button id="btn-theme">Theme</button>
@@ -29,44 +33,7 @@
     <!-- Контент будет загружен динамически -->
   </main>
 
-  <!-- Модалка логина вставляется из JS -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DOT</title>
-  <link rel="stylesheet" href="./css/index.css" />
-</head>
-<body class="theme-dark"> <!-- Тёмная тема по умолчанию -->
-
-  <!-- TopBar -->
-  <div class="topbar">
-    <div class="dot-core"></div>
-
-    <!-- Logout (появляется после логина) -->
-    <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
-
-    <!-- Выпадающее меню DOT -->
-    <div class="dot-core-menu" id="dot-core-menu">
-      <button id="btn-function">Function</button>
-      <button id="btn-theme">Theme</button>
-      <button id="btn-contacts">Contacts</button>
-      <button id="btn-settings">Settings</button>
-    </div>
-  </div>
-
-  <!-- Основная зона -->
-  <main id="main-content">
-    <!-- Контент будет загружен динамически -->
-  </main>
-
-  <!-- Модалка логина вставляется из JS -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-</body>
-</html>
+  <!-- Основной код -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
