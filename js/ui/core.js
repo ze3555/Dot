@@ -1,27 +1,12 @@
 // js/ui/core.js
-import { renderContactsUI } from "./contacts.js";
+import { setupDotMoveOnInput } from "../handlers/dotMoveHandler.js";
 
 export function renderTopbar(user) {
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.style.display = user ? "block" : "none";
   }
-
-  // Подключаем обработчик на кнопку Contacts
-  const contactsBtn = document.getElementById("btn-contacts");
-  if (contactsBtn) {
-    contactsBtn.addEventListener("click", async () => {
-      let wrapper = document.getElementById("contacts-wrapper");
-
-      if (wrapper) {
-        // Переключаем видимость
-        wrapper.classList.toggle("hidden");
-      } else {
-        // Вставляем впервые
-        await renderContactsUI();
-      }
-    });
-  }
+  // Кнопка контактов и её обработчик полностью убраны
 }
 
 export function renderDotCore() {
@@ -29,4 +14,9 @@ export function renderDotCore() {
   if (!dot) return;
 
   dot.id = "dot-core";
+}
+
+// === Инициализация dot-core "магнитика" ===
+export function setupDotCoreFeatures() {
+  setupDotMoveOnInput();
 }
