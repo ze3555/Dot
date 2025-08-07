@@ -1,3 +1,4 @@
+// js/firebase/auth.js
 import {
   getAuth,
   onAuthStateChanged as onAuthChanged,
@@ -5,7 +6,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
@@ -24,4 +25,8 @@ export async function loginWithGoogle() {
 
 export async function logout() {
   await signOut(auth);
+}
+
+export function getCurrentUser() {
+  return auth.currentUser;
 }
