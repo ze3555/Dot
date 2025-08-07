@@ -10,38 +10,6 @@ body.theme-dark {
   background: #232324;
 }
 
-/* Фиксируем topbar */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 64px; /* высота топбара */
-  background: var(--bg-primary, #121212);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  box-sizing: border-box;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-
-/* Фиксируем bottom-panel */
-.bottom-panel {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px; /* высота нижней панели */
-  background: var(--bg-secondary, #232324);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  box-sizing: border-box;
-  z-index: 1000;
-  box-shadow: 0 -1px 4px rgba(0,0,0,0.3);
-}
-
 /* Основной контент между топбаром и нижней панелью */
 #main-content {
   position: absolute;
