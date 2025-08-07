@@ -1,3 +1,4 @@
+/* ===== DOT CORE BUTTON ===== */
 .dot-core {
   width: 40px;
   height: 40px;
@@ -11,7 +12,7 @@
   transition: box-shadow 0.25s, background 0.2s;
   position: relative;
   border: 3px solid var(--dot-core-border, #fff);
-  z-index: 10;
+  z-index: 100;
 }
 
 .dot-core:hover,
@@ -30,7 +31,7 @@ body.theme-dark .dot-core:focus-visible {
   background: var(--dot-core-bg-dark-hover, #353538);
 }
 
-/* Горизонтальное выпадающее меню */
+/* ===== MENU ===== */
 .dot-core-menu {
   display: none;
   position: absolute;
@@ -45,7 +46,7 @@ body.theme-dark .dot-core:focus-visible {
   border-radius: 24px;
   box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
   border: 2px solid var(--dot-menu-border, #f2f2f2);
-  z-index: 100;
+  z-index: 1000;
   transition: background 0.2s, color 0.2s;
   align-items: center;
 }
@@ -62,7 +63,7 @@ body.theme-dark .dot-core-menu {
   color: #ededed;
 }
 
-/* Кнопки меню */
+/* MENU BUTTONS */
 .dot-core-menu button {
   display: flex;
   flex-direction: column;
@@ -94,12 +95,29 @@ body.theme-dark .dot-core-menu button:focus-visible {
   color: #ffd400;
 }
 
-/* --- Мобильная адаптация меню --- */
+/* ======= АДАПТИВНОСТЬ + МОБИЛЬНОЕ МЕНЮ ======= */
 @media (max-width: 520px) {
+  /* --- ГЛАВНОЕ: Header/topbar должен быть overflow: visible! --- */
+  .topbar,
+  .main-header,
+  header {
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+    padding-top: 32px; /* добавляем запас сверху под dot-core */
+  }
+
   .dot-core {
     width: 54px;
     height: 54px;
+    /* чтобы не вылазил за край экрана */
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
+    z-index: 100;
   }
+
   .dot-core-menu {
     flex-direction: column;
     align-items: stretch;
@@ -144,7 +162,7 @@ body.theme-dark .dot-core-menu button:focus-visible {
   }
 }
 
-/* Тёмная/светлая тема через переменные */
+/* ===== Тёмная/светлая тема через переменные ===== */
 :root {
   --dot-core-bg: #ffd400;
   --dot-core-bg-hover: #ffe156;
