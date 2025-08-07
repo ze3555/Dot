@@ -7,11 +7,10 @@ export function renderTopbar(user) {
     logoutBtn.style.display = user ? "block" : "none";
   }
 
-  // Подключаем обработчик на кнопку Contacts
   const contactsBtn = document.getElementById("btn-contacts");
   if (contactsBtn) {
     contactsBtn.addEventListener("click", () => {
-      renderContactsUI();
+      renderContactsUI(); // Без UID — просто рендерим список
     });
   }
 }
