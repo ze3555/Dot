@@ -3,7 +3,7 @@ html, body {
   padding: 0;
   box-sizing: border-box;
   width: 100vw;
-  height: 50vh; /* важно — чтобы высота была фиксирована */
+  height: 100vh; /* важно — чтобы высота была фиксирована */
   background: #f5f5f5; /* или твой основной цвет */
 }
 body.theme-dark {
