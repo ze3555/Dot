@@ -170,3 +170,6 @@ body.dragging-dotcore {
   border-color: #dedede !important;
   box-shadow: 0 0 18px 0 rgba(0,0,0,0.15) !important;
 }
+.dot-core {
+  z-index: 2147483647 !important;
+}
