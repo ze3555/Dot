@@ -30,10 +30,13 @@ body.theme-dark .dot-core:focus-visible {
   background: var(--dot-core-bg-dark-hover, #353538);
 }
 
-/* --- Адаптивное выпадающее меню: фиксированное положение --- */
+/* --- Выпадающее меню, встроенное в капсулу .dot-core --- */
 .dot-core-menu {
   display: none;
-  position: fixed; /* теперь всегда fixed, координаты выставляет JS */
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   min-width: 220px;
   max-width: 96vw;
   padding: 16px 22px;
@@ -41,14 +44,14 @@ body.theme-dark .dot-core:focus-visible {
   border-radius: 22px;
   box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
   border: 2px solid var(--dot-menu-border, #f2f2f2);
-  z-index: 99999;
+  z-index: 100;
   flex-direction: row;
   gap: 22px;
   align-items: center;
   transition: background 0.2s, color 0.2s;
 }
 
-.dot-core-menu.open {
+.dot-core-menu.visible {
   display: flex;
 }
 
