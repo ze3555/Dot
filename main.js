@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupThemeSwitcher();           // 4. Переключатель темы
   enableDotCoreDrag();            // 5. Перетаскивание DotCore
   setupSwipeDrawer();
-  renderContactsUI(drawer, onSelectContact);
   // Кнопка выхода
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
