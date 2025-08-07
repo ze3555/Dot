@@ -57,11 +57,8 @@ export function setupDotCoreMenu() {
     }
   });
 
-  // Закрытие меню и contacts по клику вне
+  // Закрытие меню по клику вне
   document.addEventListener('click', (e) => {
-    const contactsWrapper = document.getElementById('contacts-wrapper');
-
-    // Закрыть меню
     if (
       isOpen &&
       !menu.contains(e.target) &&
@@ -69,26 +66,12 @@ export function setupDotCoreMenu() {
     ) {
       closeMenu();
     }
-
-    // Закрыть окно контактов
-    if (
-      contactsWrapper &&
-      !contactsWrapper.contains(e.target) &&
-      e.target.id !== 'btn-contacts'
-    ) {
-      contactsWrapper.classList.add('hidden');
-    }
   });
 
-  // ESC закрывает всё
+  // ESC закрывает меню
   document.addEventListener('keydown', (e) => {
-    const contactsWrapper = document.getElementById('contacts-wrapper');
-
-    if (e.key === "Escape") {
-      if (isOpen) closeMenu();
-      if (contactsWrapper && !contactsWrapper.classList.contains('hidden')) {
-        contactsWrapper.classList.add('hidden');
-      }
+    if (e.key === "Escape" && isOpen) {
+      closeMenu();
     }
   });
 
