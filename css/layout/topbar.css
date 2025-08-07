@@ -8,11 +8,6 @@
   z-index: 99;
 }
 
-.dot-core {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
 .logout-btn {
   position: absolute;
   right: 16px;
