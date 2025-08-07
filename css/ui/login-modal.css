@@ -13,6 +13,19 @@
   gap: 12px;
   min-width: 280px;
   z-index: 100;
+  text-align: center;
+}
+
+.login-modal h2 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.login-modal p.slogan {
+  font-size: 14px;
+  color: #ccc;
+  margin-top: -4px;
+  margin-bottom: 12px;
 }
 
 .login-modal input {
@@ -28,16 +41,16 @@
 .login-modal button {
   padding: 10px 14px;
   font-size: 15px;
-  background: #2568ef;
+  background: #000; /* ← заменили синий на чёрный */
   color: #fff;
-  border: none;
+  border: 1px solid #444;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .login-modal button:hover {
-  background: #1d52c4;
+  background: #222; /* тёмнее на ховере */
 }
 
 .login-modal.hidden {
