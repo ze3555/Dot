@@ -176,3 +176,6 @@ body.dragging-dotcore {
 .dot-core {
   z-index: 2147483647 !important;
 }
+#dot-core-menu {
+  display: none; /* обязательно */
+}
