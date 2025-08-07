@@ -1,12 +1,18 @@
 // js/ui/core.js
+import { renderContactsUI } from "./contacts.js";
 
 export function renderTopbar(user) {
   const logoutBtn = document.getElementById("logout-btn");
-  // Кнопка логаута всегда показывает/прячет по факту авторизации, сам logout делается в main.js или handlers
-
   if (logoutBtn) {
-    // Здесь оставляем только логику показа/скрытия
     logoutBtn.style.display = user ? "block" : "none";
+  }
+
+  // Подключаем обработчик на кнопку Contacts
+  const contactsBtn = document.getElementById("btn-contacts");
+  if (contactsBtn) {
+    contactsBtn.addEventListener("click", () => {
+      renderContactsUI();
+    });
   }
 }
 
@@ -14,5 +20,5 @@ export function renderDotCore() {
   const dot = document.querySelector(".dot-core");
   if (!dot) return;
 
-  dot.id = "dot-core"; // если нужен id для доступа из других скриптов
+  dot.id = "dot-core";
 }
