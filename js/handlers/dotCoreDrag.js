@@ -1,33 +1,50 @@
 export function enableDotCoreDrag() {
   const dot = document.querySelector('.dot-core');
-  if (!dot) return;
+  const topbar = document.querySelector('.topbar');
+  if (!dot || !topbar) return;
 
   let offsetX = 0, offsetY = 0;
   let isDragging = false;
   let dragReady = false;
   let holdTimer = null;
 
-  // Центрируем DotCore по умолчанию
-  dot.style.position = "fixed";
-  dot.style.top = "50%";
+  // --- Изначально точка по центру topbar ---
+  topbar.style.position = "relative";
+  dot.style.position = "absolute";
   dot.style.left = "50%";
+  dot.style.top = "50%";
   dot.style.transform = "translate(-50%, -50%)";
   dot.style.transition = "top 0.25s, left 0.25s, transform 0.25s";
 
-  // --- Drag с задержкой ---
+  function toTopbarCenter() {
+    dot.style.position = "absolute";
+    dot.style.left = "50%";
+    dot.style.top = "50%";
+    dot.style.transform = "translate(-50%, -50%)";
+    topbar.appendChild(dot);
+  }
+
+  // --- Drag ---
+  function startDrag(clientX, clientY) {
+    // Получаем координаты dot относительно viewport
+    const rect = dot.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    // Переводим точку во fixed относительно окна
+    dot.style.position = "fixed";
+    dot.style.left = rect.left + "px";
+    dot.style.top = rect.top + "px";
+    dot.style.transform = "";
+    document.body.appendChild(dot);
+    document.body.style.userSelect = "none";
+  }
+
   dot.addEventListener('mousedown', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
       isDragging = true;
-      // Отключаем transform для корректного drag
-      const rect = dot.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-      // Считаем реальные координаты в документе
-      dot.style.top = rect.top + "px";
-      dot.style.left = rect.left + "px";
-      dot.style.transform = ""; // Отключаем transform!
-      document.body.style.userSelect = "none";
+      startDrag(e.clientX, e.clientY);
     }, 400);
   });
 
@@ -42,20 +59,16 @@ export function enableDotCoreDrag() {
     isDragging = false;
     dragReady = false;
     document.body.style.userSelect = "";
+    // Оставляем dot где бросили (в fixed)
   });
 
+  // Тач
   dot.addEventListener('touchstart', (e) => {
     holdTimer = setTimeout(() => {
       dragReady = true;
       isDragging = true;
       const touch = e.touches[0];
-      const rect = dot.getBoundingClientRect();
-      offsetX = touch.clientX - rect.left;
-      offsetY = touch.clientY - rect.top;
-      dot.style.top = rect.top + "px";
-      dot.style.left = rect.left + "px";
-      dot.style.transform = "";
-      document.body.style.userSelect = "none";
+      startDrag(touch.clientX, touch.clientY);
     }, 400);
   });
 
@@ -74,10 +87,6 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = "";
   });
 
-  // --- Вернуть в центр двойным кликом ---
-  dot.addEventListener('dblclick', () => {
-    dot.style.top = "50%";
-    dot.style.left = "50%";
-    dot.style.transform = "translate(-50%, -50%)";
-  });
+  // --- Вернуть в центр topbar по двойному клику ---
+  dot.addEventListener('dblclick', toTopbarCenter);
 }
