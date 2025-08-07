@@ -20,7 +20,7 @@ export async function renderContactsUI(container, onSelectContact) {
 
   // Кнопка добавления
   const button = document.createElement("button");
-  button.textContent = "Add Contact";
+  button.textContent = "@";
   button.className = "contacts-add-btn";
 
   button.addEventListener("click", async () => {
