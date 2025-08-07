@@ -1,20 +1,18 @@
-// main.js
-import "./js/firebase/config.js"; // просто для инициализации
 import { onAuthStateChanged } from "./js/firebase/auth.js";
 import { renderTopbar, renderDotCore } from "./js/ui/core.js";
 import { renderChatUI } from "./js/ui/chat.js";
 import { showLoginModal, hideLoginModal } from "./js/ui/login.js";
+import { setupDotCoreMenu } from "./js/handlers/coreHandlers.js"; // ✅ актуальное имя
 
-// Рендер dot-core и main-контейнера
 document.addEventListener("DOMContentLoaded", () => {
   renderDotCore();
+  setupDotCoreMenu(); // ✅ подключаем меню
 
   const main = document.createElement("div");
   main.id = "main";
   document.body.appendChild(main);
 });
 
-// Слежение за авторизацией
 onAuthStateChanged((user) => {
   const main = document.getElementById("main");
   if (!main) return;
