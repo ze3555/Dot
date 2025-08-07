@@ -1,4 +1,3 @@
-// main.js
 import { onAuthStateChanged, logout } from "./js/firebase/auth.js";
 import { renderTopbar, renderDotCore } from "./js/ui/core.js";
 import { renderChatUI } from "./js/ui/chat.js";
@@ -12,18 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDotCore();                // 2. Рендер DotCore
   setupDotCoreMenu();             // 3. Меню DotCore
   setupThemeSwitcher();           // 4. Переключатель темы
+  enableDotCoreDrag();            // 5. Перетаскивание DotCore
 
-  enableDotCoreDrag();            // 5. Делаем DotCore перетаскиваемым
-
-  // Создаём основной контейнер, если нужен
-  let main = document.getElementById("main");
-  if (!main) {
-    main = document.createElement("div");
-    main.id = "main";
-    document.body.appendChild(main);
-  }
-
-  // Логаут-кнопка
+  // Кнопка выхода
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
@@ -34,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Стейт авторизации и отрисовка UI
 onAuthStateChanged((user) => {
-  const main = document.getElementById("main");
+  const main = document.getElementById("main-content");
   const logoutBtn = document.getElementById("logout-btn");
 
   if (!main) return;
