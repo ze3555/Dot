@@ -1,58 +1,65 @@
-// js/handlers/dotCoreDrag.js
-
 export function enableDotCoreDrag() {
   const dot = document.querySelector('.dot-core');
   if (!dot) return;
 
-  let offsetX = 0, offsetY = 0, isDragging = false;
+  let offsetX = 0, offsetY = 0;
+  let isDragging = false;
+  let dragReady = false;
+  let holdTimer = null;
 
-  // Перевести DotCore в fixed (один раз)
+  // Перевести DotCore в fixed
   dot.style.position = "fixed";
-  // Поставить на стартовую позицию (например, левый верхний угол)
-  // dot.style.top = "16px"; dot.style.left = "16px";
-  // Или оставить стартовую через CSS
 
+  // ПК мышка
   dot.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    // Координаты курсора относительно точки
-    const rect = dot.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    document.body.style.userSelect = "none"; // чтобы не выделялся текст
+    holdTimer = setTimeout(() => {
+      dragReady = true;
+      isDragging = true;
+      const rect = dot.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      document.body.style.userSelect = "none";
+    }, 400); // 400 мс задержка для “hold”
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    // Новое положение точки
+    if (!isDragging || !dragReady) return;
     dot.style.top = (e.clientY - offsetY) + "px";
     dot.style.left = (e.clientX - offsetX) + "px";
   });
 
   document.addEventListener('mouseup', () => {
+    clearTimeout(holdTimer);
     isDragging = false;
+    dragReady = false;
     document.body.style.userSelect = "";
   });
 
-  // Для тач-устройств
+  // Тач-устройства
   dot.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    const touch = e.touches[0];
-    const rect = dot.getBoundingClientRect();
-    offsetX = touch.clientX - rect.left;
-    offsetY = touch.clientY - rect.top;
-    document.body.style.userSelect = "none";
+    holdTimer = setTimeout(() => {
+      dragReady = true;
+      isDragging = true;
+      const touch = e.touches[0];
+      const rect = dot.getBoundingClientRect();
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+      document.body.style.userSelect = "none";
+    }, 400);
   });
 
   document.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
+    if (!isDragging || !dragReady) return;
+    e.preventDefault();
     const touch = e.touches[0];
     dot.style.top = (touch.clientY - offsetY) + "px";
     dot.style.left = (touch.clientX - offsetX) + "px";
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
+    clearTimeout(holdTimer);
     isDragging = false;
+    dragReady = false;
     document.body.style.userSelect = "";
   });
 }
