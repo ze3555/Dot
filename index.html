@@ -19,7 +19,13 @@
   <!-- ✅ Инициализация Firebase -->
   <script type="module" src="./js/firebase/config.js"></script>
 </head>
-
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
 <body class="theme-dark">
 
   <!-- TopBar -->
