@@ -2,16 +2,17 @@
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100vw;
-  height: 60px;
-  padding: 8px 12px;
+  right: 0;
+  height: 60px; /* высота нижней панели */
+  background: var(--bg-secondary, #232324);
   display: flex;
   align-items: center;
-  background: #232324;
-  border-top: 1px solid #2d2d2d;
-  gap: 8px;
-  z-index: 100;
+  padding: 0 16px;
+  box-sizing: border-box;
+  z-index: 1000;
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.3);
 }
+
 .bottom-panel .dot-core {
   width: 36px;
   height: 36px;
