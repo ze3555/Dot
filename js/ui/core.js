@@ -1,5 +1,4 @@
 // js/ui/core.js
-import { renderContactsUI } from "./contacts.js";
 
 export function renderTopbar(user) {
   const logoutBtn = document.getElementById("logout-btn");
@@ -7,13 +6,8 @@ export function renderTopbar(user) {
     logoutBtn.style.display = user ? "block" : "none";
   }
 
-  // Подключаем обработчик на кнопку Contacts
-  const contactsBtn = document.getElementById("btn-contacts");
-  if (contactsBtn) {
-    contactsBtn.addEventListener("click", () => {
-      renderContactsUI();
-    });
-  }
+  // ❌ Удалено: старая привязка renderContactsUI()
+  // Теперь обработка кнопки "Contacts" происходит через coreHandlers.js
 }
 
 export function renderDotCore() {
