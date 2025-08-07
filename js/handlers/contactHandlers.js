@@ -1,38 +1,43 @@
-// js/handlers/contactHandlers.js
-import { db } from "../firebase/config.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  collection,
+  getFirestore,
   doc,
+  getDoc,
   setDoc,
-  getDocs,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+  updateDoc,
+  arrayUnion
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-// Добавить контакт
-export async function addContact(contactUid) {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-  if (!currentUser || !contactUid) return;
+const db = getFirestore();
+const auth = getAuth();
 
-  const contactRef = doc(db, "users", currentUser.uid, "contacts", contactUid);
-  await setDoc(contactRef, {
-    addedAt: serverTimestamp()
-  });
-}
-
-// Получить список контактов
+/**
+ * Получает список контактов текущего пользователя.
+ * Если документа нет — создаёт его с пустым массивом list.
+ */
 export async function getContacts() {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-  if (!currentUser) return [];
+  const uid = auth.currentUser.uid;
+  const ref = doc(db, "contacts", uid);
+  const snap = await getDoc(ref);
 
-  const contactsCol = collection(db, "users", currentUser.uid, "contacts");
-  const snapshot = await getDocs(contactsCol);
-  return snapshot.docs.map(doc => doc.id);
+  if (!snap.exists()) {
+    await setDoc(ref, { list: [] }); // создаём, если нет
+    return [];
+  }
+
+  const data = snap.data();
+  return Array.isArray(data.list) ? data.list : [];
 }
 
-// Можно расширить позже — подписки и т.п.
-export function setupContactHandlers() {
-  // TODO: подписки или init-загрузка
+/**
+ * Добавляет UID другого пользователя в список контактов текущего пользователя.
+ */
+export async function addContact(contactUid) {
+  const uid = auth.currentUser.uid;
+  const ref = doc(db, "contacts", uid);
+
+  // Обновление с arrayUnion
+  await updateDoc(ref, {
+    list: arrayUnion(contactUid)
+  });
 }
