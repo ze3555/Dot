@@ -35,13 +35,15 @@
 }
 .contacts-drawer-backdrop.active { opacity: 1; visibility: visible; }
 
-/* Desktop trigger (left arrow) */
+/* Desktop trigger (left arrow) — ВАЖНО: полноценно стилизован */
 .drawer-trigger {
   position: fixed;
   left: 8px;
   top: calc(var(--topbar-h) + 8px);
-  width: 28px; height: 28px;
-  display: grid; place-items: center;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
   border-radius: 8px;
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
@@ -50,25 +52,36 @@
   cursor: pointer;
   user-select: none;
   z-index: 999;
+  opacity: .95;
+  transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
+.drawer-trigger:hover { opacity: 1; }
+.drawer-trigger:active { transform: scale(.96); }
 
-/* Header: Add contact button — sticky, чтобы всегда под рукой */
+/* Header: Add contact button — sticky, full-width */
 .drawer-add-btn {
   position: sticky;
   top: 0;
   z-index: 2;
+
+  display: block;
+  width: 100%;
+
   appearance: none;
   border-radius: 10px;
   padding: 10px 12px;
   font: inherit;
   line-height: 1;
   cursor: pointer;
+
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-bg);
-  transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+
+  transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
+  opacity: .98;
 }
-.drawer-add-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
+.drawer-add-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); opacity: 1; }
 .drawer-add-btn:active { transform: scale(.985); }
 
 /* Content area */
@@ -109,14 +122,19 @@
 
 /* Footer: logout btn внизу дровера */
 .logout-btn {
+  display: block;
+  width: 100%;
+
   appearance: none;
   border-radius: 10px;
   padding: 10px 12px;
+
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-bg);
+
   cursor: pointer;
-  transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+  transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
 }
 .logout-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
 .logout-btn:active { transform: scale(.985); }
