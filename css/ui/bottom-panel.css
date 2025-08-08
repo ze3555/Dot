@@ -1,5 +1,5 @@
 /* css/ui/bottom-panel.css */
-/* Фиксируем composer внизу, с учётом safe-area. */
+/* Фиксируем composer внизу и ЦЕНТРИРУЕМ Chat Input по горизонтали. */
 
 .bottom-panel {
   position: fixed;
@@ -13,15 +13,24 @@
   min-height: var(--composer-h);
 }
 
+/* Центруем форму и ограничиваем максимальную ширину на десктопе */
 .bottom-panel form {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  gap: 8px;
+
+  /* Центрируем "контейнер" формы */
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* Input */
+/* Chat Input — тянется, но не шире max-width формы */
 #chat-input, .chat-input {
+  flex: 1 1 auto;
+  width: 100%;
+
   background: var(--input-bg);
   color: var(--input-fg);
   border: var(--input-border);
@@ -34,14 +43,18 @@
   outline: none; border-color: currentColor; box-shadow: var(--input-focus-ring);
 }
 
-/* Send button (если видим) */
+/* Кнопка отправки (если когда-нибудь показываем) — прижимается справа */
 .chat-send-btn {
+  flex: 0 0 auto;
+
   appearance: none;
   border-radius: 12px;
   padding: 10px 12px;
+
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-bg);
+
   cursor: pointer;
   transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
 }
