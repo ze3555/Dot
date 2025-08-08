@@ -14,7 +14,6 @@ export function setupSwipeDrawer() {
 
   let isOpen = false;
 
-  // Открытие дровера
   function openDrawer() {
     if (isOpen) return;
 
@@ -33,7 +32,6 @@ export function setupSwipeDrawer() {
     isOpen = true;
   }
 
-  // Закрытие дровера
   function closeDrawer() {
     if (!isOpen) return;
 
@@ -50,7 +48,6 @@ export function setupSwipeDrawer() {
     isOpen = false;
   }
 
-  // Перемещение Dot в дровер
   function moveDotToDrawer() {
     if (!drawer.contains(dot)) {
       drawer.appendChild(dot);
@@ -61,7 +58,6 @@ export function setupSwipeDrawer() {
     }
   }
 
-  // Перемещение Dot обратно вниз
   function moveDotToBottomPanel() {
     if (!bottomPanel.contains(dot)) {
       bottomPanel.appendChild(dot);
@@ -91,20 +87,47 @@ export function setupSwipeDrawer() {
     renderChatUI(uid);
   }
 
-  // ESC → закрытие
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen) closeDrawer();
   });
 
-  // Клик по backdrop
   backdrop.addEventListener("click", closeDrawer);
 
-  // Свайп-открытие слева
   main.addEventListener("touchstart", handleTouchStart, { passive: true });
   main.addEventListener("touchmove", handleTouchMove, { passive: true });
   main.addEventListener("touchend", handleTouchEnd, { passive: true });
 
-  // Swipe detection
+  drawer.addEventListener("touchstart", (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchCurrentX = touchStartX;
+  });
+
+  drawer.addEventListener("touchmove", (e) => {
+    touchCurrentX = e.touches[0].clientX;
+  });
+
+  drawer.addEventListener("touchend", () => {
+    if (touchStartX - touchCurrentX > SWIPE_THRESHOLD) {
+      closeDrawer();
+    }
+  });
+
+  // === ПК: прозрачная стрелка-триггер слева ===
+  if (window.innerWidth >= 768) {
+    const trigger = document.createElement("div");
+    trigger.id = "drawer-trigger";
+    trigger.className = "drawer-trigger";
+    trigger.title = "Contacts";
+    trigger.innerHTML = "&#x25B6;"; // ►
+
+    trigger.onclick = () => {
+      if (!isOpen) openDrawer();
+    };
+
+    document.body.appendChild(trigger);
+  }
+
+  // === Swipe logic ===
   let touchStartX = 0;
   let touchCurrentX = 0;
   const SWIPE_THRESHOLD = 60;
@@ -127,20 +150,4 @@ export function setupSwipeDrawer() {
       openDrawer();
     }
   }
-
-  // Свайп-закрытие внутри drawer
-  drawer.addEventListener("touchstart", (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchCurrentX = touchStartX;
-  });
-
-  drawer.addEventListener("touchmove", (e) => {
-    touchCurrentX = e.touches[0].clientX;
-  });
-
-  drawer.addEventListener("touchend", () => {
-    if (touchStartX - touchCurrentX > SWIPE_THRESHOLD) {
-      closeDrawer();
-    }
-  });
 }
