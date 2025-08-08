@@ -1,4 +1,4 @@
-#chat-form {
+.bottom-panel {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -6,26 +6,36 @@
   background: #0b0b0c;
   border-top: 1px solid #1e1f20;
   padding: 12px 16px calc(35px + env(safe-area-inset-bottom)) 16px;
-  max-width: 740px;
-  margin: 0 auto;
   z-index: 1000;
+  display: flex;
+  justify-content: center;
 }
 
-body.light-theme #chat-form {
+body.light-theme .bottom-panel {
   background: #0b0b0c;
   border-top-color: #1e1f20;
 }
 
-.chat-input {
+/* Вложенная форма */
+#chat-form {
   width: 100%;
+  max-width: 740px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Поле ввода */
+.chat-input {
+  flex: 1 1 auto;
+  font-size: 16px;
+  border: none;
+  outline: none;
   background: #111111;
   color: #ffffff;
-  border: 1px solid #2a2a2b;
-  border-radius: 20px;
   padding: 12px 14px;
-  font-size: 15px;
-  line-height: 1.4;
-  resize: none;
+  border-radius: 20px;
+  border: 1px solid #2a2a2b;
 }
 
 .chat-input::placeholder {
@@ -33,10 +43,10 @@ body.light-theme #chat-form {
   opacity: 0.9;
 }
 
+/* Кнопка DOT */
 .chat-send-btn {
   width: 44px;
   height: 44px;
-  margin-left: 8px;
   border-radius: 50%;
   background: #111111;
   color: #ffffff;
