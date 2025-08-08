@@ -1,48 +1,28 @@
+/* css/core/dot-core.css */
+/* The floating Dot: size/shape/motion only — no hard colors here. */
 .dot-core {
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--dot-core-bg, #ffd400);
-  box-shadow: 0 0 18px 0 rgba(0,0,0,0.16);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
+  position: relative; /* converted to fixed during drag/expand in JS */
+  user-select: none;
   cursor: pointer;
-  transition: box-shadow 0.25s, background 0.2s;
-  position: relative;
-  border: 3px solid var(--dot-core-border, #fff);
-  z-index: 10;
+  border: 1px solid currentColor;
+  background: transparent;             /* color comes from theme/JS */
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
 
-.dot-core:hover,
-.dot-core:focus-visible {
-  box-shadow: 0 0 22px 0 rgba(0,0,0,0.18);
-  outline: none;
+.dot-core.pressed {
+  transform: scale(0.98);
 }
 
-/* Убрано transform: translateY(1px) */
-.dot-core:active { }
-
-body.theme-light .dot-core {
-  background: var(--dot-core-bg, #ffd400);
-  border-color: #fff;
+.dot-core.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 20px rgba(0,0,0,.20);
 }
 
-body.theme-dark .dot-core {
-  background: var(--dot-core-bg-dark, #2f2f33);
-  border-color: #3a3a3e;
-  box-shadow: 0 0 18px 0 rgba(0,0,0,0.2);
-}
-
-body.theme-dark .dot-core:hover,
-body.theme-dark .dot-core:focus-visible {
-  background: var(--dot-core-bg-dark-hover, #353538);
-}
-
-/* Переменные (оставлены только для .dot-core) */
-:root {
-  --dot-core-bg: #ffd400;
-  --dot-core-border: #fff;
-  --dot-core-bg-dark: #2f2f33;
-  --dot-core-bg-dark-hover: #353538;
+.top-bar .dot-core {
+  margin-left: 8px;
 }
