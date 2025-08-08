@@ -1,7 +1,8 @@
 // js/handlers/dotMoveHandler.js
-// Докование DOT в нижнюю панель при фокусе инпута и возврат в сохранённую позицию.
-// Одиночный клик в доке — отправка (с антидребезгом 220мс, чтобы не мешать double-tap из coreHandlers).
-// Двойной клик больше НЕ "домой" — мини-окно открывает coreHandlers.
+// Докование DOT в нижнюю панель при фокусе инпута и возврат:
+//  • при расфокусе — в сохранённую плавающую позицию,
+//  • при dblclick — домой в топбар.
+// Одиночный клик в доке — отправка сообщения.
 
 export function setupDotMoveOnInput() {
   const dot = document.querySelector('.dot-core');
@@ -11,36 +12,34 @@ export function setupDotMoveOnInput() {
 
   ensureBottomActions(bottomPanel);
 
-  // Сохранённая "плавающая" позиция (куда вернуть после дока)
+  // где DOT был до докования (чтобы вернуть)
   let floatState = { parent: null, left: 0, top: 0, has: false };
+  // "домой" режим
+  let homeMode = false;
 
   function captureFloatState() {
     const rect = dot.getBoundingClientRect();
-    floatState = {
-      parent: dot.parentElement,
-      left: rect.left,
-      top: rect.top,
-      has: true
-    };
+    floatState = { parent: dot.parentElement, left: rect.left, top: rect.top, has: true };
   }
 
   function undockToFloat() {
     if (floatState.has) {
-      if (!floatState.parent.contains(dot)) {
-        floatState.parent.appendChild(dot);
-      }
+      if (!floatState.parent.contains(dot)) floatState.parent.appendChild(dot);
       dot.style.position = 'fixed';
       dot.style.left = floatState.left + 'px';
-      dot.style.top = floatState.top + 'px';
+      dot.style.top  = floatState.top + 'px';
       dot.style.transform = 'translate3d(0,0,0)';
     } else {
-      // fallback — в топбар
-      if (!topbar.contains(dot)) topbar.appendChild(dot);
-      dot.style.position = '';
-      dot.style.left = '';
-      dot.style.top = '';
-      dot.style.transform = 'translate3d(0,0,0)';
+      undockToTopbar();
     }
+  }
+
+  function undockToTopbar() {
+    if (!topbar.contains(dot)) topbar.appendChild(dot);
+    dot.style.position = '';
+    dot.style.left = '';
+    dot.style.top = '';
+    dot.style.transform = 'translate3d(0,0,0)';
   }
 
   // Док при фокусе на инпуте
@@ -48,27 +47,24 @@ export function setupDotMoveOnInput() {
     if (!e.target.classList.contains('chat-input')) return;
     captureFloatState();
     if (!bottomPanel.contains(dot)) bottomPanel.appendChild(dot);
-    // Сброс фикс-позиций для грида
+    // сброс фикс-координат, чтобы стать в грид
     dot.style.position = '';
     dot.style.left = '';
     dot.style.top = '';
     dot.style.transform = 'translate3d(0,0,0)';
   });
 
-  // Возврат из дока при потере фокуса всей панели
+  // Возврат при потере фокуса панели
   bottomPanel.addEventListener('focusout', () => {
     setTimeout(() => {
       const active = document.activeElement;
       if (bottomPanel.contains(active)) return;
-      undockToFloat();
+      if (homeMode) undockToTopbar(); else undockToFloat();
     }, 0);
   });
 
-  // ---- Отправка по клику в доке с антидребезгом (ждем, не случился ли double-tap) ----
-  let sendTimer = null;
-  const SEND_DELAY = 220; // мс; синхронизировано с coreHandlers DOUBLE_MS
-
-  function trySendFromDock() {
+  // Клик в доке — отправка
+  dot.addEventListener('click', () => {
     if (!bottomPanel.contains(dot)) return;
     const input = bottomPanel.querySelector('.chat-input');
     if (!input) return;
@@ -77,32 +73,21 @@ export function setupDotMoveOnInput() {
     window.dispatchEvent(new CustomEvent('dot:sendMessage', { detail: { text } }));
     input.value = '';
     input.focus();
-  }
-
-  // Клик по DOT (только в доке) — ставим таймер
-  dot.addEventListener('click', () => {
-    if (!bottomPanel.contains(dot)) return;
-    clearTimeout(sendTimer);
-    sendTimer = setTimeout(() => { trySendFromDock(); sendTimer = null; }, SEND_DELAY);
   });
 
-  // Если coreHandlers распознал double-tap — отменяем pending send
-  window.addEventListener('dot:cancelPendingSend', () => {
-    if (sendTimer) {
-      clearTimeout(sendTimer);
-      sendTimer = null;
-    }
+  // Любое ручное взаимодействие выводит из homeMode
+  dot.addEventListener('pointerdown', () => { homeMode = false; }, { passive: true });
+
+  // Двойной клик — вернуть домой (в топбар)
+  dot.addEventListener('dblclick', () => {
+    homeMode = true;
+    undockToTopbar();
   });
 
-  // Страховки: любой уход фокуса/уход из панели/начало драга — отменить pending send
-  bottomPanel.addEventListener('focusout', () => { if (sendTimer) { clearTimeout(sendTimer); sendTimer = null; } });
-  dot.addEventListener('pointerdown', () => { if (sendTimer) { clearTimeout(sendTimer); sendTimer = null; } }, { passive: true });
-
-  // Инфраструктура нижней панели (плюс под инпутом)
+  // Плюсик под инпутом — наружу событие
   bottomPanel.addEventListener('click', (e) => {
     const btn = e.target.closest('#add-folder-btn');
-    if (!btn) return;
-    window.dispatchEvent(new CustomEvent('dot:addFolder'));
+    if (btn) window.dispatchEvent(new CustomEvent('dot:addFolder'));
   });
 
   function ensureBottomActions(panel) {
