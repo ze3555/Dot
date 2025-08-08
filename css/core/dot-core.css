@@ -149,5 +149,44 @@ body.dot-dock .dot-core:active { transform: scale(.98); }
 @media (prefers-reduced-motion: reduce) {
   body.dot-dock .dot-core { transition: none; }
 }
+/* === DOT: soft glow / visibility ring === */
+/* Базовый мягкий свет + тонкий контур для читаемости на любых фонах */
+.dot-core {
+  /* три слоя: окружающая тень, светящийся ореол, тонкий контур */
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.28),
+    0 0 14px color-mix(in oklab, currentColor 32%, transparent),
+    0 0 0 1px rgba(255,255,255,.06);
+}
 
+/* Ховер/фокус — немного сильнее, чтобы показывать интерактивность */
+.dot-core:hover,
+.dot-core:focus-visible {
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.32),
+    0 0 18px color-mix(in oklab, currentColor 45%, transparent),
+    0 0 0 1px rgba(255,255,255,.10);
+}
+
+/* Док у поля ввода (Send) — подчёркиваем как кнопку */
+body.dot-dock .dot-core {
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.28),
+    0 0 18px color-mix(in oklab, currentColor 42%, transparent),
+    0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* Раскрытый Дот (меню) — ещё чуть ярче, чтобы «держал» внимание */
+.dot-core.dot-expanded,
+.dot-expanded .dot-core {
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.36),
+    0 0 22px color-mix(in oklab, currentColor 55%, transparent),
+    0 0 0 1px rgba(255,255,255,.10);
+}
+
+/* Во время перетаскивания — без скачков, но свет оставляем */
+body.dragging-dotcore .dot-core {
+  transition: none;
+}
 
