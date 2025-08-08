@@ -199,4 +199,7 @@ body.dragging-dotcore {
   transition: all 0.25s ease;
   z-index: 9999;
 }
+/* css/core/dot-core.css — можно в конец файла */
+.dot-core { touch-action: none; will-change: auto; }
+.dot-core.is-dragging { transition: none !important; }
 
