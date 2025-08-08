@@ -126,3 +126,60 @@ body.theme-light .logout-btn:focus-visible {
   background: rgba(0, 0, 0, 0.06);
   border-color: rgba(0, 0, 0, 0.16);
 }
+/* Обёртка — если нужна визуально */
+.contacts-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+/* Поле ввода контакта */
+.contacts-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.contacts-input::placeholder {
+  color: #888;
+  opacity: 0.8;
+}
+
+.contacts-input:focus {
+  border-color: #ffd400;
+  background: #181818;
+}
+
+/* Светлая тема */
+body.theme-light .contacts-input {
+  background: #eee;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+body.theme-light .contacts-input::placeholder {
+  color: #666;
+}
+
+body.theme-light .contacts-input:focus {
+  border-color: #000;
+  background: #fff;
+}
+
+/* Активность dot при фокусе */
+.dot-core.dot-add-mode {
+  z-index: 1001;
+  transition: all 0.25s ease;
+}
+
+.contacts-input.dot-active {
+  border-color: #ffd400;
+  box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.2);
+}
