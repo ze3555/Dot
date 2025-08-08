@@ -1,8 +1,6 @@
 // js/handlers/dotMoveHandler.js
-// DOT докуется в нижнюю панель при фокусе на инпуте и возвращается:
-//  – при расфокусе — в сохранённую плавающую позицию,
-//  – при двойном клике — на топбар.
-// Плюс: мгновенный апдейт автоконтраста при каждом перемещении между зонами.
+// Док/ан-док Дота + мгновенный апдейт автоконтраста.
+// Теперь выставляем И color, И background-color.
 
 export function setupDotMoveOnInput() {
   const dot = document.querySelector('.dot-core');
@@ -106,7 +104,7 @@ export function setupDotMoveOnInput() {
     undockToTopbar();
   });
 
-  // ===== Мини-копия автоконтраста для событий док/ан-док (то же правило ч/б) =====
+  // ===== Автоконтраст — фон и цвет =====
   function updateDotContrast(dotEl) {
     const rect = dotEl.getBoundingClientRect();
     const cx = Math.round(rect.left + rect.width / 2);
@@ -132,6 +130,7 @@ export function setupDotMoveOnInput() {
     const hex = lum < 0.5 ? '#fff' : '#000';
 
     dotEl.style.color = hex;
+    dotEl.style.backgroundColor = hex;
     dotEl.style.setProperty('--dot-core-fg', hex);
     dotEl.style.setProperty('--dot-core-border', hex);
 
