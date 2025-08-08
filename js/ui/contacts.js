@@ -1,5 +1,4 @@
 // js/ui/contacts.js
-
 import { getContacts } from "../handlers/contactHandlers.js";
 
 export async function renderContactsUI(container, onSelectContact) {
@@ -16,15 +15,36 @@ export async function renderContactsUI(container, onSelectContact) {
   input.placeholder = "Enter user UID";
   input.className = "contacts-input";
 
-  // Логика перемещения DOT при фокусе
+  // Перемещаем DOT при фокусе
   input.addEventListener("focus", () => {
     const dot = document.querySelector(".dot-core");
-    if (dot) dot.classList.add("dot-add-mode");
+    if (dot) {
+      const rect = input.getBoundingClientRect();
+      dot.dataset.originalPosition = JSON.stringify({
+        left: dot.style.left,
+        top: dot.style.top,
+        position: dot.style.position,
+        transform: dot.style.transform
+      });
+      dot.style.position = "fixed";
+      dot.style.left = `${rect.right + 8}px`;
+      dot.style.top = `${rect.top + rect.height / 2 - dot.offsetHeight / 2}px`;
+      dot.style.transform = "none";
+      dot.classList.add("dot-add-mode");
+    }
   });
 
+  // Возвращаем DOT при потере фокуса
   input.addEventListener("blur", () => {
     const dot = document.querySelector(".dot-core");
-    if (dot) dot.classList.remove("dot-add-mode");
+    if (dot && dot.dataset.originalPosition) {
+      const pos = JSON.parse(dot.dataset.originalPosition);
+      dot.style.left = pos.left;
+      dot.style.top = pos.top;
+      dot.style.position = pos.position;
+      dot.style.transform = pos.transform;
+      dot.classList.remove("dot-add-mode");
+    }
   });
 
   // Список контактов
@@ -55,7 +75,6 @@ export async function renderContactsUI(container, onSelectContact) {
   container.appendChild(wrapper);
 }
 
-// Автоинициализация при клике на Contacts
 document.addEventListener("DOMContentLoaded", () => {
   const contactsBtn = document.getElementById("btn-contacts");
   if (contactsBtn) {
