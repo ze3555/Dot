@@ -4,9 +4,6 @@
 //   • Mobile/tablet: swipe down starting from the very top area (top bar zone)
 //   • Desktop: press "P" (when not typing in inputs)
 // Depends: Firebase compat (global firebase), ./js/firebase/usernames.js
-// HTML ids: #profile-top, #profile-top-backdrop, #close-profile-top,
-//           #copy-id-btn, #edit-username-btn, #profile-username,
-//           #add-username-input, #add-username-btn
 
 import { normalizeUsername, setMyUsername, addContactByUsername } from "../firebase/usernames.js";
 
@@ -19,23 +16,65 @@ export function setupProfileDrawer() {
   if (wired) return;
   wired = true;
 
-  const drawer = document.getElementById("profile-top");
-  const backdrop = document.getElementById("profile-top-backdrop");
+  // Авто-монтаж DOM-узлов, если их нет в index.html
+  let drawer = document.getElementById("profile-top");
+  let backdrop = document.getElementById("profile-top-backdrop");
+
+  if (!drawer || !backdrop) {
+    const frag = document.createDocumentFragment();
+
+    drawer = document.createElement("aside");
+    drawer.id = "profile-top";
+    drawer.className = "profile-top-drawer";
+    drawer.setAttribute("aria-hidden", "true");
+    drawer.innerHTML = `
+      <div class="profile-grabber" aria-hidden="true"></div>
+      <div class="profile-sheet-scroll">
+        <header class="profile-header">
+          <div class="avatar" aria-hidden="true">P</div>
+          <div class="user-meta">
+            <div class="username-row">
+              <span id="profile-username" class="username-chip">—</span>
+              <button id="edit-username-btn" class="profile-action">Edit</button>
+            </div>
+            <button id="copy-id-btn" class="profile-action subtle">Copy ID</button>
+          </div>
+          <button id="close-profile-top" class="profile-action subtle" aria-label="Close">Close</button>
+        </header>
+
+        <section class="profile-section">
+          <label class="section-title">Contacts</label>
+          <div class="add-username-row">
+            <input id="add-username-input" class="profile-input" type="text"
+                   placeholder="Add by username" autocomplete="off" />
+            <button id="add-username-btn" class="profile-action">Add</button>
+          </div>
+        </section>
+      </div>
+    `;
+
+    backdrop = document.createElement("div");
+    backdrop.id = "profile-top-backdrop";
+    backdrop.className = "profile-top-backdrop";
+
+    frag.appendChild(drawer);
+    frag.appendChild(backdrop);
+    document.body.appendChild(frag);
+  }
+
   const closeBtn = document.getElementById("close-profile-top");
   const copyIdBtn = document.getElementById("copy-id-btn");
   const editUsernameBtn = document.getElementById("edit-username-btn");
   const unameChip = document.getElementById("profile-username");
   const addUsernameBtn = document.getElementById("add-username-btn");
   const addUsernameInput = document.getElementById("add-username-input");
-  const dot = document.querySelector(".dot-core");
   const topBar = document.querySelector(".top-bar");
-
-  if (!drawer || !backdrop) return;
 
   function isOpen() { return drawer.classList.contains("open"); }
   function open() {
     if (isOpen()) return;
     drawer.classList.add("open");
+    backdrop.classList.add("open"); // важно: показываем бэкдроп
     drawer.setAttribute("aria-hidden", "false");
     document.body.classList.add("no-scroll");
     populate();
@@ -43,6 +82,7 @@ export function setupProfileDrawer() {
   function close() {
     if (!isOpen()) return;
     drawer.classList.remove("open");
+    backdrop.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("no-scroll");
   }
@@ -65,7 +105,7 @@ export function setupProfileDrawer() {
     }
   }
 
-  // === Controls ===
+  // Controls
   closeBtn?.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
@@ -106,26 +146,25 @@ export function setupProfileDrawer() {
     }
   });
 
-  // === Triggers ===
+  // Triggers
 
-  // 1) Mobile/tablet: swipe down starting near the very top edge (top bar area).
-  //    We intentionally *do not* use full-screen swipe; it must start in the top zone.
-  const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64)); // ~top bar height
-  const SWIPE_MIN_Y = 60;   // required vertical distance
-  const SWIPE_MAX_X = 40;   // keep mostly vertical
-  const MAX_DURATION = 700; // ms
+  // Mobile/tablet: swipe down from top zone
+  const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64));
+  const SWIPE_MIN_Y = 60;
+  const SWIPE_MAX_X = 40;
+  const MAX_DURATION = 700;
 
   let tStartX = 0, tStartY = 0, tLastX = 0, tLastY = 0, t0 = 0, tracking = false;
 
   function onTouchStart(e) {
-    if (isOpen()) return; // не перехватываем, если уже открыто
+    if (isOpen()) return;
     const t = e.touches?.[0];
     if (!t) return;
 
-    // старт только из верхней зоны или из элемента .top-bar
+    // Старт только из верхней зоны (или по .top-bar), и не на .dot-core (чтобы не конфликтовать с драгом)
     const fromTopZone = t.clientY <= TOP_ZONE_PX || (e.target && e.target.closest(".top-bar"));
     const onDot = e.target && e.target.closest(".dot-core");
-    if (!fromTopZone || onDot) return; // не конфликтуем с драгом Дота
+    if (!fromTopZone || onDot) return;
 
     tracking = true;
     tStartX = tLastX = t.clientX;
@@ -143,10 +182,9 @@ export function setupProfileDrawer() {
     const dx = tLastX - tStartX;
     const dy = tLastY - tStartY;
 
-    // если явное вертикальное движение вниз — блокируем браузерный "резиновый" скролл
     if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) && dy > 0) {
-      // listener зарегистрирован с {passive:false}
-      e.preventDefault();
+      // Низведём резиновый скролл, чтобы жест чувствовался
+      e.preventDefault(); // работает благодаря {passive:false} на touchmove
     }
   }
 
@@ -163,26 +201,20 @@ export function setupProfileDrawer() {
   }
 
   window.addEventListener("touchstart", onTouchStart, { passive: true });
-  // move нужен непассивный, чтобы иметь право preventDefault
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
 
-  // 2) Desktop: press "P" (when not typing in inputs).
+  // Desktop: hotkey "P"
   window.addEventListener("keydown", (e) => {
-    // ignore when typing or with modifiers
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = (e.target && e.target.tagName) || "";
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    // contenteditable?
     if (e.target && /** @type {HTMLElement} */(e.target).isContentEditable) return;
-
     if (e.key === "p" || e.key === "P") {
       e.preventDefault();
       open();
     }
   });
-
-  // (No double-click trigger; Function is reserved for another feature)
 
   // Debug helpers
   window.__profileDrawer = { open, close, populate };
