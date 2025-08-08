@@ -1,8 +1,8 @@
 .drawer-trigger {
   position: fixed;
   left: 0;
-  top: 90%;
-  transform: translateY(-90%);
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 18px;
   opacity: 0.2;
   cursor: pointer;
@@ -24,7 +24,7 @@
   top: 0;
   left: 0;
   width: 170px;
-  max-height: 90vh;
+  max-height: 150vh;
   background: #181818;
   color: #fff;
   box-shadow: 8px 0 32px #0008;
