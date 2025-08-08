@@ -18,10 +18,11 @@
     display: none;
   }
 }
+
 .contacts-drawer {
   position: fixed;
   top: 0;
-  left: -320px;
+  left: 0;
   width: 170px;
   max-height: 50vh;
   background: #181818;
@@ -34,6 +35,7 @@
   will-change: transform;
   overscroll-behavior: contain;
   transform: translateX(-100%);
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 .contacts-drawer.open {
   transform: translateX(0);
@@ -74,7 +76,7 @@
   color: #ffd400;
 }
 
-/* Мобильная адаптация */
+/* Адаптация на мобильных */
 @media (max-width: 440px) {
   .contacts-drawer {
     width: 90vw;
@@ -90,10 +92,6 @@
 }
 
 /* Logout */
-.contacts-drawer {
-  position: relative;
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
-}
 .logout-btn {
   position: absolute;
   left: 16px;
