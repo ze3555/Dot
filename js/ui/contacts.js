@@ -1,149 +1,152 @@
 // js/ui/contacts.js
-import { getContacts } from "../handlers/contactHandlers.js";
+// Renders contacts list inside the left drawer and wires the "+" button to open Profile drawer.
+// Firebase: uses global compat (window.firebase)
 
-export async function renderContactsUI(container, onSelectContact) {
-  if (!container) return;
-  container.innerHTML = "";
+let _unsub = null;
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "contacts-wrapper";
-  wrapper.id = "contacts-wrapper";
+const auth = () => window.firebase?.auth?.();
+const db   = () => window.firebase?.firestore?.();
 
-  // Поле ввода UID
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "Enter user UID";
-  input.className = "contacts-input";
+export function setupContactsUI() {
+  const drawer = document.getElementById("contacts-drawer");
+  if (!drawer) return;
 
-  // Список контактов
-  const list = document.createElement("ul");
-  list.className = "contacts-list";
-
-  // ===== DOT позиционирование справа от инпута =====
-  const dot = document.querySelector(".dot-core");
-
-  function storeOriginalDotPosition() {
-    if (!dot) return;
-    if (!dot.dataset.originalPosition) {
-      dot.dataset.originalPosition = JSON.stringify({
-        left: dot.style.left,
-        top: dot.style.top,
-        position: dot.style.position,
-        transform: dot.style.transform,
-      });
-    }
+  // --- Ensure header with "+" button and list container
+  let header = drawer.querySelector(".contacts-header");
+  if (!header) {
+    header = document.createElement("div");
+    header.className = "contacts-header";
+    // располагаем вверху панели
+    drawer.prepend(header);
   }
 
-  function restoreDotPosition() {
-    if (!dot) return;
-    if (dot.dataset.originalPosition) {
-      const pos = JSON.parse(dot.dataset.originalPosition);
-      dot.style.left = pos.left;
-      dot.style.top = pos.top;
-      dot.style.position = pos.position;
-      dot.style.transform = pos.transform;
-      delete dot.dataset.originalPosition;
-    }
-    dot?.classList.remove("dot-add-mode");
+  let addBtn = header.querySelector(".drawer-add-btn");
+  if (!addBtn) {
+    addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "drawer-add-btn";
+    addBtn.textContent = "+"; // стиль берётся из CSS
+    header.appendChild(addBtn);
   }
 
-  function positionDotNextToInput() {
-    if (!dot || !input.isConnected) return;
+  let list = drawer.querySelector("#contacts-list");
+  if (!list) {
+    list = document.createElement("ul");
+    list.id = "contacts-list";
+    list.className = "contacts-list";
+    // ставим список сразу под header, перед остальным контентом
+    header.insertAdjacentElement("afterend", list);
+  }
 
-    // Сохраняем изначку один раз
-    storeOriginalDotPosition();
-
-    // Вычисляем позицию
-    const rect = input.getBoundingClientRect();
-    // Если высота DOT ещё 0 — попробуем измерить после кадра
-    const ensure = () => {
-      const h = dot.offsetHeight || 32; // дефолт на всякий
-      const top = rect.top + rect.height / 2 - h / 2;
-
-      dot.style.position = "fixed";
-      dot.style.left = `${rect.right + 8}px`;
-      dot.style.top = `${Math.max(0, top)}px`;
-      dot.style.transform = "translate3d(0,0,0)";
-      dot.classList.add("dot-add-mode");
-    };
-
-    // Первый кадр для корректного layout
-    if (dot.offsetHeight === 0) {
-      requestAnimationFrame(ensure);
+  // --- Click: "+" opens Profile drawer (no duplication of fields)
+  addBtn.addEventListener("click", () => {
+    // профиль автосмонтирован в profileHandlers.js
+    if (window.__profileDrawer?.open) {
+      window.__profileDrawer.open();
     } else {
-      ensure();
-    }
-  }
-
-  // При фокусе — закрепляем DOT у инпута
-  input.addEventListener("focus", () => {
-    positionDotNextToInput();
-  });
-
-  // При потере фокуса — возвращаем DOT на место
-  input.addEventListener("blur", () => {
-    restoreDotPosition();
-  });
-
-  // Поддержка при ресайзе/скролле, пока инпут в фокусе
-  const onViewportChange = () => {
-    if (document.activeElement === input) {
-      positionDotNextToInput();
-    }
-  };
-  window.addEventListener("resize", onViewportChange, { passive: true });
-  window.addEventListener("scroll", onViewportChange, { passive: true });
-
-  // Сигнал от дровера: "только что перенесли DOT внутрь — прижми к инпуту"
-  const ensureDotHandler = () => positionDotNextToInput();
-  window.addEventListener("contacts:ensureDotAtInput", ensureDotHandler);
-
-  // Очистка слушателей при повторном рендере
-  wrapper.addEventListener("DOMNodeRemoved", (e) => {
-    if (e.target === wrapper) {
-      window.removeEventListener("resize", onViewportChange);
-      window.removeEventListener("scroll", onViewportChange);
-      window.removeEventListener("contacts:ensureDotAtInput", ensureDotHandler);
+      // запасной вариант — бежим ленивым импортом
+      import("../handlers/profileHandlers.js")
+        .then(m => m.setupProfileDrawer?.())
+        .then(() => window.__profileDrawer?.open?.())
+        .catch(() => {});
     }
   });
 
-  // Заполнение списка контактов
-  try {
-    const contacts = await getContacts();
-    contacts.forEach((uid) => {
-      const li = document.createElement("li");
-      li.textContent = uid;
-      li.className = "contacts-list-item";
-      if (typeof onSelectContact === "function") {
-        li.style.cursor = "pointer";
-        li.addEventListener("click", () => onSelectContact(uid));
-      }
-      list.appendChild(li);
-    });
-  } catch (err) {
-    const li = document.createElement("li");
-    li.textContent = "Failed to load contacts";
-    li.className = "contacts-list-item";
-    list.appendChild(li);
-  }
+  // --- Click: contact item → fire app-level event (router/чат откроет беседу)
+  list.addEventListener("click", (e) => {
+    const item = /** @type {HTMLElement} */(e.target).closest(".contact-item");
+    if (!item) return;
+    const uid = item.getAttribute("data-uid");
+    if (!uid) return;
 
-  wrapper.appendChild(input);
-  wrapper.appendChild(list);
-  container.appendChild(wrapper);
+    const ev = new CustomEvent("open:chat", { detail: { uid } });
+    document.dispatchEvent(ev);
 
-  // Сразу после вставки — прижать DOT к инпуту (без ожидания фокуса)
-  requestAnimationFrame(positionDotNextToInput);
+    // UX: закрываем левый дроуэр (если у вас есть такой хелпер)
+    window.__contactsDrawer?.close?.();
+  });
+
+  // --- Subscribe to current user's contacts
+  resubscribe(list);
+
+  // Also re-wire on auth change
+  auth()?.onAuthStateChanged(() => resubscribe(list));
 }
 
-// Автоинициализация при клике на Contacts (как было)
-document.addEventListener("DOMContentLoaded", () => {
-  const contactsBtn = document.getElementById("btn-contacts");
-  if (contactsBtn) {
-    contactsBtn.addEventListener("click", () => {
-      const container = document.getElementById("main-content");
-      renderContactsUI(container, (uid) => {
-        console.log("Selected contact:", uid);
-      });
-    });
+function resubscribe(listEl) {
+  try { _unsub?.(); } catch {}
+
+  const a = auth();
+  const d = db();
+  const me = a?.currentUser;
+  if (!d || !me) {
+    // empty state
+    renderList(listEl, []);
+    return;
   }
-});
+
+  // без сортировки (чтобы не требовать индексы). при желании можно добавить orderBy('createdAt','desc')
+  const col = d.collection("users").doc(me.uid).collection("contacts");
+  _unsub = col.onSnapshot(async (snap) => {
+    const entries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Hydrate with profile info
+    const enriched = await hydrateUsers(entries.map(x => x.contactUid || x.id));
+    renderList(listEl, enriched);
+  }, (err) => {
+    console.error("[contacts] snapshot error:", err);
+  });
+}
+
+async function hydrateUsers(uids = []) {
+  const d = db(); if (!d || !uids.length) return [];
+  // батчим запросы пользователей (простая последовательность; можно оптимизировать на кеш)
+  const results = await Promise.all(uids.map(async (uid) => {
+    try {
+      const snap = await d.doc(`users/${uid}`).get();
+      const data = snap.exists ? snap.data() : {};
+      return {
+        uid,
+        username: data?.username || data?.usernameLower || "",
+        displayName: data?.displayName || "",
+      };
+    } catch {
+      return { uid, username: "", displayName: "" };
+    }
+  }));
+  return results;
+}
+
+function renderList(listEl, users) {
+  if (!listEl) return;
+
+  if (!users.length) {
+    listEl.innerHTML = `
+      <li class="contacts-empty">No contacts yet</li>
+    `;
+    return;
+  }
+
+  const html = users.map(u => {
+    const name = u.displayName || u.username || shortUid(u.uid);
+    const initial = (name?.[0] || "U").toUpperCase();
+    return `
+      <li class="contact-item" data-uid="${u.uid}">
+        <div class="contact-avatar" aria-hidden="true">${initial}</div>
+        <div class="contact-meta">
+          <div class="contact-name">${escapeHtml(name)}</div>
+        </div>
+      </li>
+    `;
+  }).join("");
+
+  listEl.innerHTML = html;
+}
+
+function shortUid(uid) { return uid ? uid.slice(0, 6) + "…" : "—"; }
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
