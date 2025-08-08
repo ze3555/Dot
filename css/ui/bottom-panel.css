@@ -1,35 +1,103 @@
+/* Нижняя панель чатов: компактная высота + место под строку действий */
 .bottom-panel {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 150px; /* высота нижней панели */
+
+  /* компактная высота под два яруса */
+  height: 100px;
+
   background: var(--bg-secondary, #232324);
-  display: flex;
-  align-items: center;
-  padding-bottom: 20px;
-  box-sizing: border-box;
   z-index: 1000;
   box-shadow: 0 -1px 4px rgba(0,0,0,0.3);
+  box-sizing: border-box;
+
+  /* двухъярусная сетка */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 52px 28px; /* 1) инпут+dot, 2) строка действий */
+  gap: 8px 12px;
+
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px;
 }
 
-.bottom-panel .dot-core {
-  width: 36px;
-  height: 36px;
-  margin-left: 15px;
-  /* те же стили что и в topbar, можно добавить анимацию */
-  transition: transform 0.25s cubic-bezier(.5,.12,.34,1.23), box-shadow 0.18s;
+/* DOT, который переезжает в панель при фокусе */
+.bottom-panel > .dot-core {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
 }
-.chat-input {
-  display: block;
-  width: calc(70% - 32px);
-  padding: 10px 14px;
-  margin-left: 20px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #444);
-  background-color: var(--input-bg, #222);
-  color: var(--text-color, #fff);
-  font-size: 14px;
+
+/* Инпут чата в верхнем ярусе */
+.bottom-panel .chat-input {
+  grid-column: 2;
+  grid-row: 1;
+
+  height: 44px;
+  font-size: 16px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  width: 100%;
   box-sizing: border-box;
-  transition: padding-right 0.25s ease;
+
+  background: var(--input-bg, #fff);
+  color: var(--input-fg, #111);
+}
+
+/* Нижняя тонкая строка действий (под инпутом) */
+.bottom-panel .bottom-actions {
+  grid-column: 1 / -1;
+  grid-row: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+/* Левая группа действий */
+.bottom-panel .bottom-actions .left-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Кнопка добавления папок с чатами */
+.bottom-panel .add-folder-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  background: var(--btn-bg, #2e2e31);
+  color: var(--btn-fg, #fff);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bottom-panel .add-folder-btn:active {
+  transform: translateY(1px);
+}
+
+/* Чуть свободнее на планшетах/десктопе */
+@media (min-width: 768px) {
+  .bottom-panel {
+    grid-template-rows: 56px 30px;
+    height: 104px;
+  }
+  .bottom-panel .add-folder-btn {
+    width: 30px;
+    height: 30px;
+  }
 }
