@@ -20,9 +20,8 @@
   outline: none;
 }
 
-.dot-core:active {
-  transform: translateY(1px);
-}
+/* Убрано transform: translateY(1px) */
+.dot-core:active { }
 
 body.theme-light .dot-core {
   background: var(--dot-core-bg, #ffd400);
