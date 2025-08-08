@@ -1,22 +1,23 @@
 /* css/ui/bottom-panel.css */
-/* Composer bar at the bottom. Colors from theme tokens. */
+/* Фиксируем composer внизу, с учётом safe-area. */
 
 .bottom-panel {
-  position: sticky;
-  bottom: 0;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
   z-index: 999;
-  display: block;
-  padding: 8px 10px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
   background: var(--panel-bg);
   color: var(--panel-fg);
   box-shadow: 0 -1px 8px rgba(0,0,0,0.12);
   border-top: var(--panel-border);
+  min-height: var(--composer-h);
 }
 
 .bottom-panel form {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+  align-items: center;
 }
 
 /* Input */
@@ -28,16 +29,12 @@
   padding: 10px 12px;
   min-height: 36px;
 }
-#chat-input::placeholder, .chat-input::placeholder {
-  color: var(--input-ph);
-}
+#chat-input::placeholder, .chat-input::placeholder { color: var(--input-ph); }
 #chat-input:focus, .chat-input:focus {
-  outline: none;
-  border-color: currentColor;
-  box-shadow: var(--input-focus-ring);
+  outline: none; border-color: currentColor; box-shadow: var(--input-focus-ring);
 }
 
-/* Send button (you keep it hidden via style inline — here is the theme-ready look) */
+/* Send button (если видим) */
 .chat-send-btn {
   appearance: none;
   border-radius: 12px;
@@ -50,25 +47,3 @@
 }
 .chat-send-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
 .chat-send-btn:active { transform: scale(.985); }
-
-/* Bottom actions area (if created by dotMoveHandler) */
-.bottom-actions {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.add-folder-btn {
-  appearance: none;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: currentColor;
-  border-radius: 10px;
-  padding: 6px 10px;
-  line-height: 1;
-  cursor: pointer;
-  transition: opacity .12s ease, transform .12s ease, border-color .12s ease;
-  opacity: .95;
-}
-.add-folder-btn:hover { opacity: 1; }
-.add-folder-btn:active { transform: scale(.985); }
