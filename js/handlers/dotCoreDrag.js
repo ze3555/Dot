@@ -1,9 +1,7 @@
 // js/handlers/dotCoreDrag.js
 //
-// High-perf drag + автоконтраст (ч/б) по фону под центром DOT.
-// – Pointer Events + rAF, transform-only
-// – Во время перетаскивания цвет пересчитывается каждый кадр (с защитой от лишних записей)
-// – На ресайз/скролл/док-события цвет тоже актуализируется
+// High-perf drag + автоконтраст по фону под центром DOT.
+// Теперь выставляем И цвет, И заливку (background-color) под фон.
 //
 // Публичная функция: enableDotCoreDrag()
 
@@ -166,7 +164,7 @@ export function enableDotCoreDrag() {
     }
   }
 
-  // ===== Автоконтраст (чёрный/белый) =====
+  // ===== Автоконтраст (фон и цвет Дота) =====
   function updateDotContrast(dotEl) {
     const rect = dotEl.getBoundingClientRect();
     const cx = Math.round(rect.left + rect.width / 2);
@@ -201,20 +199,21 @@ export function enableDotCoreDrag() {
     if (isDarkBg !== lastIsDarkBg) {
       lastIsDarkBg = isDarkBg;
       if (isDarkBg) {
-        setDotColor(dotEl, '#fff');
+        setDotColorAndFill(dotEl, '#fff'); // на тёмном фоне — белый
       } else {
-        setDotColor(dotEl, '#000');
+        setDotColorAndFill(dotEl, '#000'); // на светлом — чёрный
       }
     }
   }
 
-  function setDotColor(el, hex) {
-    // Унифицировано: и текст/иконка, и бордер через CSS-переменные (если используются)
-    el.style.color = hex; // для currentColor / текстовых иконок
+  function setDotColorAndFill(el, hex) {
+    // Текст/иконки, бордер-переменные и ЗАЛИВКА
+    el.style.color = hex;
+    el.style.backgroundColor = hex;
     el.style.setProperty('--dot-core-fg', hex);
     el.style.setProperty('--dot-core-border', hex);
 
-    // Если внутри есть SVG без currentColor — попробуем подсветить stroke/fill
+    // Если внутри есть SVG без currentColor — подсветим stroke/fill
     try {
       el.querySelectorAll('svg').forEach(svg => {
         svg.style.stroke = 'currentColor';
@@ -247,7 +246,6 @@ export function enableDotCoreDrag() {
       return [r,g,b,1];
     }
     return null;
-    // (named colors не поддерживаем — они редки в проде)
   }
 
   // listeners
