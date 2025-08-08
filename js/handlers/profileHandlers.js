@@ -1,5 +1,8 @@
 // js/handlers/profileHandlers.js
 // Profile Top Drawer: open/close + profile actions (edit username, copy UID, add contact).
+// Triggers:
+//   • Mobile/tablet: swipe down starting from the very top area (top bar zone)
+//   • Desktop: press "P" (when not typing in inputs)
 // Depends: Firebase compat (global firebase), ./js/firebase/usernames.js
 // HTML ids: #profile-top, #profile-top-backdrop, #close-profile-top,
 //           #copy-id-btn, #edit-username-btn, #profile-username,
@@ -24,6 +27,8 @@ export function setupProfileDrawer() {
   const unameChip = document.getElementById("profile-username");
   const addUsernameBtn = document.getElementById("add-username-btn");
   const addUsernameInput = document.getElementById("add-username-input");
+  const dot = document.querySelector(".dot-core");
+  const topBar = document.querySelector(".top-bar");
 
   if (!drawer || !backdrop) return;
 
@@ -60,7 +65,7 @@ export function setupProfileDrawer() {
     }
   }
 
-  // Controls
+  // === Controls ===
   closeBtn?.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
@@ -101,9 +106,83 @@ export function setupProfileDrawer() {
     }
   });
 
-  // Trigger: double-click on Dot only (Function is reserved for another feature)
-  const dot = document.querySelector(".dot-core");
-  dot?.addEventListener("dblclick", () => open());
+  // === Triggers ===
+
+  // 1) Mobile/tablet: swipe down starting near the very top edge (top bar area).
+  //    We intentionally *do not* use full-screen swipe; it must start in the top zone.
+  const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64)); // ~top bar height
+  const SWIPE_MIN_Y = 60;   // required vertical distance
+  const SWIPE_MAX_X = 40;   // keep mostly vertical
+  const MAX_DURATION = 700; // ms
+
+  let tStartX = 0, tStartY = 0, tLastX = 0, tLastY = 0, t0 = 0, tracking = false;
+
+  function onTouchStart(e) {
+    if (isOpen()) return; // не перехватываем, если уже открыто
+    const t = e.touches?.[0];
+    if (!t) return;
+
+    // старт только из верхней зоны или из элемента .top-bar
+    const fromTopZone = t.clientY <= TOP_ZONE_PX || (e.target && e.target.closest(".top-bar"));
+    const onDot = e.target && e.target.closest(".dot-core");
+    if (!fromTopZone || onDot) return; // не конфликтуем с драгом Дота
+
+    tracking = true;
+    tStartX = tLastX = t.clientX;
+    tStartY = tLastY = t.clientY;
+    t0 = Date.now();
+  }
+
+  function onTouchMove(e) {
+    if (!tracking) return;
+    const t = e.touches?.[0];
+    if (!t) return;
+    tLastX = t.clientX;
+    tLastY = t.clientY;
+
+    const dx = tLastX - tStartX;
+    const dy = tLastY - tStartY;
+
+    // если явное вертикальное движение вниз — блокируем браузерный "резиновый" скролл
+    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) && dy > 0) {
+      // listener зарегистрирован с {passive:false}
+      e.preventDefault();
+    }
+  }
+
+  function onTouchEnd() {
+    if (!tracking) return;
+    const dt = Date.now() - t0;
+    const dx = tLastX - tStartX;
+    const dy = tLastY - tStartY;
+
+    if (dy >= SWIPE_MIN_Y && Math.abs(dx) <= SWIPE_MAX_X && dt <= MAX_DURATION) {
+      open();
+    }
+    tracking = false;
+  }
+
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  // move нужен непассивный, чтобы иметь право preventDefault
+  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
+
+  // 2) Desktop: press "P" (when not typing in inputs).
+  window.addEventListener("keydown", (e) => {
+    // ignore when typing or with modifiers
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    // contenteditable?
+    if (e.target && /** @type {HTMLElement} */(e.target).isContentEditable) return;
+
+    if (e.key === "p" || e.key === "P") {
+      e.preventDefault();
+      open();
+    }
+  });
+
+  // (No double-click trigger; Function is reserved for another feature)
 
   // Debug helpers
   window.__profileDrawer = { open, close, populate };
