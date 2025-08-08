@@ -1,6 +1,6 @@
 // js/ui/core.js
 
-export function renderDotButton() {
+export function renderDotCore() {
   const dot = document.createElement('div');
   dot.id = 'dot-core';
 
@@ -29,7 +29,7 @@ export function renderDotButton() {
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
-      dot.style.transition = ''; // вернуть анимации
+      dot.style.transition = ''; // вернуть плавность
     }
   });
 
