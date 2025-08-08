@@ -1,14 +1,12 @@
 // js/handlers/profileHandlers.js
 // Profile Top Drawer: open/close + profile actions (edit username, copy UID, add contact).
-// Triggers:
-//   • Mobile/tablet: swipe down starting from the very top area (top bar zone)
-//   • Desktop: press "P" (when not typing in inputs)
-// Depends: Firebase compat (global firebase), ./js/firebase/usernames.js
+// Triggers: swipe-down from top zone (mobile), "P" hotkey (desktop)
 
 import { normalizeUsername, setMyUsername, addContactByUsername } from "../firebase/usernames.js";
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Lazy getters — чтобы не падать, если firebase ещё не готов
+function $auth() { return window.firebase?.auth(); }
+function $db()   { return window.firebase?.firestore(); }
 
 let wired = false;
 
@@ -16,13 +14,11 @@ export function setupProfileDrawer() {
   if (wired) return;
   wired = true;
 
-  // Авто-монтаж DOM-узлов, если их нет в index.html
+  // === Ensure DOM (auto-mount) ==============================================
   let drawer = document.getElementById("profile-top");
   let backdrop = document.getElementById("profile-top-backdrop");
 
-  if (!drawer || !backdrop) {
-    const frag = document.createDocumentFragment();
-
+  if (!drawer) {
     drawer = document.createElement("aside");
     drawer.id = "profile-top";
     drawer.className = "profile-top-drawer";
@@ -52,29 +48,38 @@ export function setupProfileDrawer() {
         </section>
       </div>
     `;
+    document.body.appendChild(drawer);
+  } else {
+    // Вёрстка есть — добавим кромку, если её нет
+    if (!drawer.querySelector(".profile-grabber")) {
+      const grabber = document.createElement("div");
+      grabber.className = "profile-grabber";
+      grabber.setAttribute("aria-hidden", "true");
+      drawer.prepend(grabber);
+    }
+  }
 
+  if (!backdrop) {
     backdrop = document.createElement("div");
     backdrop.id = "profile-top-backdrop";
     backdrop.className = "profile-top-backdrop";
-
-    frag.appendChild(drawer);
-    frag.appendChild(backdrop);
-    document.body.appendChild(frag);
+    document.body.appendChild(backdrop);
   }
 
-  const closeBtn = document.getElementById("close-profile-top");
-  const copyIdBtn = document.getElementById("copy-id-btn");
-  const editUsernameBtn = document.getElementById("edit-username-btn");
-  const unameChip = document.getElementById("profile-username");
-  const addUsernameBtn = document.getElementById("add-username-btn");
-  const addUsernameInput = document.getElementById("add-username-input");
+  // === Elements & helpers ====================================================
+  const closeBtn = drawer.querySelector("#close-profile-top");
+  const copyIdBtn = drawer.querySelector("#copy-id-btn");
+  const editUsernameBtn = drawer.querySelector("#edit-username-btn");
+  const unameChip = drawer.querySelector("#profile-username");
+  const addUsernameBtn = drawer.querySelector("#add-username-btn");
+  const addUsernameInput = drawer.querySelector("#add-username-input");
   const topBar = document.querySelector(".top-bar");
 
   function isOpen() { return drawer.classList.contains("open"); }
   function open() {
     if (isOpen()) return;
     drawer.classList.add("open");
-    backdrop.classList.add("open"); // важно: показываем бэкдроп
+    backdrop.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
     document.body.classList.add("no-scroll");
     populate();
@@ -88,8 +93,10 @@ export function setupProfileDrawer() {
   }
 
   async function populate() {
-    const user = auth.currentUser;
-    if (!user) return;
+    const auth = $auth();
+    const db = $db();
+    const user = auth?.currentUser;
+    if (!user || !db) return;
     try {
       const snap = await db.doc(`users/${user.uid}`).get();
       const data = snap.exists ? snap.data() : null;
@@ -100,18 +107,16 @@ export function setupProfileDrawer() {
         const initial = (user.displayName?.[0] || uname?.[0] || user.email?.[0] || "U").toUpperCase();
         avatar.textContent = initial;
       }
-    } catch (e) {
-      console.error("populate profile error:", e);
-    }
+    } catch (e) { console.error("populate profile error:", e); }
   }
 
-  // Controls
+  // === Controls ==============================================================
   closeBtn?.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
   copyIdBtn?.addEventListener("click", async () => {
-    const user = auth.currentUser;
+    const user = $auth()?.currentUser;
     if (!user) return;
     try { await navigator.clipboard.writeText(user.uid); toast("ID copied"); }
     catch { prompt("Copy your ID:", user.uid); }
@@ -125,9 +130,7 @@ export function setupProfileDrawer() {
       const u = await setMyUsername(next);
       if (unameChip) unameChip.textContent = u;
       toast("Username updated");
-    } catch (e) {
-      toast(e?.message || "Failed to set username");
-    }
+    } catch (e) { toast(e?.message || "Failed to set username"); }
   });
 
   addUsernameBtn?.addEventListener("click", async () => {
@@ -139,29 +142,22 @@ export function setupProfileDrawer() {
       if (res?.status === "added") { toast("Contact added"); addUsernameInput.value = ""; }
       else if (res?.status === "already") { toast("Already in contacts"); }
       else { toast("Not found"); }
-    } catch (e) {
-      toast(e?.message || "Failed to add");
-    } finally {
-      addUsernameBtn.disabled = false;
-    }
+    } catch (e) { toast(e?.message || "Failed to add"); }
+    finally { addUsernameBtn.disabled = false; }
   });
 
-  // Triggers
-
-  // Mobile/tablet: swipe down from top zone
+  // === Triggers: swipe-down (mobile) + "P" (desktop) =========================
   const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64));
-  const SWIPE_MIN_Y = 60;
-  const SWIPE_MAX_X = 40;
-  const MAX_DURATION = 700;
+  const SWIPE_MIN_Y = 50;  // мягче
+  const SWIPE_MAX_X = 60;  // допускаем диагональ
+  const MAX_DURATION = 800;
 
   let tStartX = 0, tStartY = 0, tLastX = 0, tLastY = 0, t0 = 0, tracking = false;
 
   function onTouchStart(e) {
     if (isOpen()) return;
-    const t = e.touches?.[0];
-    if (!t) return;
+    const t = e.touches?.[0]; if (!t) return;
 
-    // Старт только из верхней зоны (или по .top-bar), и не на .dot-core (чтобы не конфликтовать с драгом)
     const fromTopZone = t.clientY <= TOP_ZONE_PX || (e.target && e.target.closest(".top-bar"));
     const onDot = e.target && e.target.closest(".dot-core");
     if (!fromTopZone || onDot) return;
@@ -171,32 +167,21 @@ export function setupProfileDrawer() {
     tStartY = tLastY = t.clientY;
     t0 = Date.now();
   }
-
   function onTouchMove(e) {
     if (!tracking) return;
-    const t = e.touches?.[0];
-    if (!t) return;
-    tLastX = t.clientX;
-    tLastY = t.clientY;
+    const t = e.touches?.[0]; if (!t) return;
+    tLastX = t.clientX; tLastY = t.clientY;
 
     const dx = tLastX - tStartX;
     const dy = tLastY - tStartY;
-
-    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) && dy > 0) {
-      // Низведём резиновый скролл, чтобы жест чувствовался
-      e.preventDefault(); // работает благодаря {passive:false} на touchmove
-    }
+    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) && dy > 0) e.preventDefault();
   }
-
   function onTouchEnd() {
     if (!tracking) return;
     const dt = Date.now() - t0;
     const dx = tLastX - tStartX;
     const dy = tLastY - tStartY;
-
-    if (dy >= SWIPE_MIN_Y && Math.abs(dx) <= SWIPE_MAX_X && dt <= MAX_DURATION) {
-      open();
-    }
+    if (dy >= SWIPE_MIN_Y && Math.abs(dx) <= SWIPE_MAX_X && dt <= MAX_DURATION) open();
     tracking = false;
   }
 
@@ -204,19 +189,15 @@ export function setupProfileDrawer() {
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
 
-  // Desktop: hotkey "P"
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = (e.target && e.target.tagName) || "";
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (e.target && /** @type {HTMLElement} */(e.target).isContentEditable) return;
-    if (e.key === "p" || e.key === "P") {
-      e.preventDefault();
-      open();
-    }
+    if (e.key === "p" || e.key === "P") { e.preventDefault(); open(); }
   });
 
-  // Debug helpers
+  // Debug
   window.__profileDrawer = { open, close, populate };
 }
 
