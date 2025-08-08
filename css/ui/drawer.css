@@ -1,17 +1,23 @@
 /* css/ui/drawer.css */
-/* Левый дровер: адаптивная сетка, sticky header с кнопкой, нормальные поля. */
+/* Левый дровер: сетка header/content/footer, центр-левый триггер, корректные поля. */
+
+#contacts-drawer,
+#contacts-drawer * {
+  box-sizing: border-box; /* фикс переполнения */
+}
 
 .contacts-drawer {
   position: fixed;
   left: 0;
-  top: var(--topbar-h);        /* ниже топ-бара */
+  top: var(--topbar-h);
   bottom: 0;
   width: min(86vw, 360px);
   transform: translateX(-100%);
   will-change: transform;
   transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
+
   display: grid;
-  grid-template-rows: auto 1fr auto; /* header (btn) / content / footer (logout) */
+  grid-template-rows: auto 1fr auto; /* header / content / footer */
   padding: 12px;
   gap: 12px;
 
@@ -20,6 +26,8 @@
   box-shadow: var(--panel-shadow);
   border-right: var(--panel-border);
   z-index: 1001;
+
+  min-width: 0; /* важно для grid, чтобы дети могли ужиматься */
 }
 .contacts-drawer.open { transform: translateX(0); }
 
@@ -35,16 +43,17 @@
 }
 .contacts-drawer-backdrop.active { opacity: 1; visibility: visible; }
 
-/* Desktop trigger (left arrow) — ВАЖНО: полноценно стилизован */
+/* Desktop trigger — по центру левого края */
 .drawer-trigger {
   position: fixed;
   left: 8px;
-  top: calc(var(--topbar-h) + 8px);
-  width: 28px;
-  height: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 10px;
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
@@ -56,9 +65,10 @@
   transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
 .drawer-trigger:hover { opacity: 1; }
-.drawer-trigger:active { transform: scale(.96); }
+.drawer-trigger:active { transform: translateY(-50%) scale(.96); }
 
-/* Header: Add contact button — sticky, full-width */
+/* Header: Add Contact — sticky, full-width, в корне дровера */
+#contacts-drawer > .drawer-add-btn,
 .drawer-add-btn {
   position: sticky;
   top: 0;
@@ -81,21 +91,26 @@
   transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
   opacity: .98;
 }
+#contacts-drawer > .drawer-add-btn:hover,
 .drawer-add-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); opacity: 1; }
+#contacts-drawer > .drawer-add-btn:active,
 .drawer-add-btn:active { transform: scale(.985); }
 
-/* Content area */
+/* Content */
 .contacts-wrapper {
-  min-height: 0; /* для грид-скролла */
+  min-height: 0;      /* критично для скролла внутри grid */
+  min-width: 0;       /* чтобы дети не выпирали */
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 10px;
   overflow: hidden;
 }
 
-/* Input — на всю ширину, корректная типографика */
+/* Input — больше не вылезает */
 .contacts-input {
+  display: block;
   width: 100%;
+  max-width: 100%;
   border-radius: 10px;
   border: var(--input-border);
   background: var(--input-bg);
@@ -107,7 +122,9 @@
 
 /* List */
 .contacts-list {
-  list-style: none; margin: 0; padding: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -120,19 +137,16 @@
   background: color-mix(in oklab, var(--panel-fg), transparent 93%);
 }
 
-/* Footer: logout btn внизу дровера */
+/* Footer: logout */
 .logout-btn {
   display: block;
   width: 100%;
-
   appearance: none;
   border-radius: 10px;
   padding: 10px 12px;
-
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-bg);
-
   cursor: pointer;
   transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
 }
