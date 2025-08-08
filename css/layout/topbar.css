@@ -1,17 +1,17 @@
 .topbar {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 56px !important;
-  background: var(--bg-primary, #121212) !important;
-  z-index: 10000 !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 16px !important;
-  box-sizing: border-box !important;
-  user-select: none !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  position: fixed;  /* фиксируем сверху */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px; /* или твоя высота */
+  z-index: 1000;
+  background-color: var(--bg-primary, #121212);
+  display: none;
+  align-items: center;
+  padding: 0 16px;
+  box-sizing: border-box;
+  user-select: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 .logout-btn {
   position: absolute;
