@@ -18,6 +18,7 @@ export async function renderContactsUI(container, onSelectContact) {
   // Перемещаем DOT при фокусе
   input.addEventListener("focus", () => {
     const dot = document.querySelector(".dot-core");
+    input.classList.add("dot-active");
     if (dot) {
       const rect = input.getBoundingClientRect();
       dot.dataset.originalPosition = JSON.stringify({
@@ -37,6 +38,7 @@ export async function renderContactsUI(container, onSelectContact) {
   // Возвращаем DOT при потере фокуса
   input.addEventListener("blur", () => {
     const dot = document.querySelector(".dot-core");
+    input.classList.remove("dot-active");
     if (dot && dot.dataset.originalPosition) {
       const pos = JSON.parse(dot.dataset.originalPosition);
       dot.style.left = pos.left;
@@ -75,6 +77,7 @@ export async function renderContactsUI(container, onSelectContact) {
   container.appendChild(wrapper);
 }
 
+// Автоинициализация при клике на Contacts
 document.addEventListener("DOMContentLoaded", () => {
   const contactsBtn = document.getElementById("btn-contacts");
   if (contactsBtn) {
