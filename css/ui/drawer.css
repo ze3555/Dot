@@ -1,66 +1,106 @@
+/* ==== Desktop trigger arrow (стрелка для открытия) ==== */
 .drawer-trigger {
   position: fixed;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
-  opacity: 0.2;
-  cursor: pointer;
-  z-index: 1000;
+  z-index: 1001;
   padding: 4px 8px;
-  transition: opacity 0.2s ease;
+  font-size: 18px;
+  opacity: 0.25;
+  cursor: pointer;
+  transition: opacity .2s ease;
+  user-select: none;
 }
-.drawer-trigger:hover {
-  opacity: 0.6;
-}
+.drawer-trigger:hover { opacity: 0.6; }
+/* Только на десктопе */
 @media (max-width: 767px) {
-  .drawer-trigger {
-    display: none;
-  }
+  .drawer-trigger { display: none; }
 }
 
+/* ==== Contacts Drawer ==== */
 .contacts-drawer {
   position: fixed;
-  top: 0;
   left: 0;
+  top: 64px;            /* под топ-бар */
+  bottom: 60px;         /* над нижней панелью (итого ~70–80% vh) */
   width: 170px;
-  max-height: 150vh;
+
   background: #181818;
   color: #fff;
   box-shadow: 8px 0 32px #0008;
   z-index: 99999;
-  transition: transform 0.32s cubic-bezier(.5,.12,.34,1.23);
+
   display: flex;
   flex-direction: column;
-  will-change: transform;
-  overscroll-behavior: contain;
-  transform: translateX(-100%);
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
-}
-.contacts-drawer.open {
-  transform: translateX(0);
-}
 
+  overscroll-behavior: contain;
+
+  /* slide-in */
+  transform: translateX(-100%);
+  transition: transform 0.32s cubic-bezier(.5,.12,.34,1.23);
+  will-change: transform;
+
+  /* запас снизу под logout и safe area */
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+
+  overflow: hidden; /* скроллим дочерние области */
+}
+.contacts-drawer.open { transform: translateX(0); }
+
+/* ==== Backdrop ==== */
 .contacts-drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(0,0,0,0.22);
   z-index: 99998;
   display: none;
   opacity: 0;
-  transition: opacity 0.22s ease;
+  transition: opacity .22s ease;
 }
-#contacts-backdrop.active {
-  display: block;
-  opacity: 1;
+/* Поддерживаем оба варианта — соседство и .active */
+.contacts-drawer.open + .contacts-drawer-backdrop { display: block; opacity: 1; }
+#contacts-backdrop.active { display: block; opacity: 1; }
+
+/* ==== Контент внутри дроуэра ==== */
+.contacts-drawer .contacts-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;        /* важно для корректного flex-скролла */
+  overflow-y: auto;
+  padding: 12px 12px 0;
+  box-sizing: border-box;
 }
 
+/* Поле ввода — строго ВНУТРИ + запас под .dot-core */
+.contacts-drawer .contacts-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 10px 0;   /* только нижний отступ */
+  padding: 10px 14px;
+  border-radius: 6px;
+
+  border: 1px solid var(--border-color, #444);
+  background-color: var(--input-bg, #222);
+  color: var(--text-color, #fff);
+  font-size: 14px;
+
+  /* место под .dot-core справа всегда */
+  padding-right: 48px;
+  transition: padding-right .25s ease, border-color .2s ease, background .2s ease;
+}
+/* Доп. запас при фокусе (когда JS добавляет .dot-active) */
+.contacts-drawer .contacts-input.dot-active { padding-right: 56px; }
+
+/* Список контактов */
 .contacts-drawer .contacts-list {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 16px 0;
+  padding: 8px 0 16px;
   margin: 0;
   list-style: none;
+  box-sizing: border-box;
 }
 .contacts-drawer .contacts-list-item {
   padding: 12px 18px;
@@ -68,7 +108,7 @@
   font-size: 16px;
   color: #ededed;
   cursor: pointer;
-  transition: background 0.16s;
+  transition: background .16s;
 }
 .contacts-drawer .contacts-list-item:hover,
 .contacts-drawer .contacts-list-item:focus-visible {
@@ -76,22 +116,18 @@
   color: #ffd400;
 }
 
-/* Адаптация на мобильных */
+/* Мобильная ширина */
 @media (max-width: 440px) {
-  .contacts-drawer {
-    width: 90vw;
-    left: auto;
-    right: auto;
-  }
+  .contacts-drawer { width: 90vw; }
 }
 
-/* dot в drawer */
+/* dot в drawer (если используешь как кнопку добавления) */
 .dot-in-drawer {
   cursor: pointer;
   filter: hue-rotate(45deg);
 }
 
-/* Logout */
+/* ==== Logout внизу, ненавязчиво ==== */
 .logout-btn {
   position: absolute;
   left: 16px;
@@ -100,86 +136,27 @@
   font-size: 13px;
   line-height: 1;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
   backdrop-filter: blur(6px);
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: background .2s, border-color .2s, color .2s;
 }
 .logout-btn:hover,
 .logout-btn:focus-visible {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
   outline: none;
 }
-.logout-btn:active {
-  transform: translateY(1px);
-}
+.logout-btn:active { transform: translateY(1px); }
 body.theme-light .logout-btn {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.85);
+  border-color: rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  color: rgba(0,0,0,0.85);
 }
 body.theme-light .logout-btn:hover,
 body.theme-light .logout-btn:focus-visible {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.16);
-}
-/* Обёртка — если нужна визуально */
-.contacts-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-}
-
-/* Поле ввода контакта */
-.contacts-input {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 14px;
-  border: 1px solid #333;
-  border-radius: 12px;
-  background: #111;
-  color: #fff;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-}
-
-.contacts-input::placeholder {
-  color: #888;
-  opacity: 0.8;
-}
-
-.contacts-input:focus {
-  border-color: #ffd400;
-  background: #181818;
-}
-
-/* Светлая тема */
-body.theme-light .contacts-input {
-  background: #eee;
-  color: #000;
-  border: 1px solid #ccc;
-}
-
-body.theme-light .contacts-input::placeholder {
-  color: #666;
-}
-
-body.theme-light .contacts-input:focus {
-  border-color: #000;
-  background: #fff;
-}
-
-/* Активность dot при фокусе */
-.dot-core.dot-add-mode {
-  z-index: 1001;
-  transition: all 0.25s ease;
-}
-
-.contacts-input.dot-active {
-  border-color: #ffd400;
-  box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.2);
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.16);
 }
