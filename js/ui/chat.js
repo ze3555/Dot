@@ -5,48 +5,48 @@ import { getCurrentUser } from "../firebase/auth.js";
 let unsubscribe = null;
 
 export async function renderChatUI() {
-  const main = document.getElementById("main");
+  const main = document.getElementById("main-content");
   if (!main) return;
 
+  // Только окно сообщений; форма уже есть в index.html (bottom-panel)
   main.innerHTML = `
     <div class="chat-window">
-      <div class="chat-messages" id="chat-messages"></div>
-      <form id="chat-form" autocomplete="off">
-        <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." />
-        <button type="submit" class="chat-send-btn" aria-label="Send" style="opacity: 0; pointer-events: none;">
-          Send
-        </button>
-      </form>
+      <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
     </div>
   `;
 
-  const user = await getCurrentUser();
-  const userId = user?.uid || "anonymous";
-
-  const messagesEl = document.getElementById("chat-messages");
-
   // Подписка на сообщения
-  if (unsubscribe) unsubscribe();
+  if (unsubscribe) { try { unsubscribe(); } catch {} }
   unsubscribe = subscribeToMessages((messages) => {
-    messagesEl.innerHTML = "";
-    for (const msg of messages) {
-      const div = document.createElement("div");
-      div.className = "chat-message";
-      if (msg.user === userId) div.classList.add("from-me");
-      div.textContent = msg.text;
-      messagesEl.appendChild(div);
-    }
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+    const box = document.getElementById("chat-messages");
+    if (!box) return;
+    box.innerHTML = messages.map(m => `
+      <div class="chat-message">
+        <div class="msg-text"></div>
+      </div>
+    `).join("");
+
+    // Заполняем текст отдельно (экранируем)
+    const nodes = box.querySelectorAll(".chat-message .msg-text");
+    messages.forEach((m, i) => {
+      nodes[i].textContent = m.text || "";
+    });
+
+    box.scrollTop = box.scrollHeight;
   });
 
-  // Отправка
+  // Отправка через already-existing #chat-form
   const form = document.getElementById("chat-form");
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const input = document.getElementById("chat-input");
-    const text = input.value.trim();
-    if (!text) return;
-    await sendMessage(text, userId);
-    input.value = "";
-  };
+  const input = document.getElementById("chat-input");
+  if (form && input) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const user = getCurrentUser();
+      const uid = user?.uid || "anon";
+      await sendMessage(text, uid);
+      input.value = "";
+    };
+  }
 }
