@@ -44,7 +44,6 @@ export async function renderContactsUI(container, onSelectContact) {
 
   // Собираем всё вместе
   wrapper.appendChild(input);
-  wrapper.appendChild(button);
   wrapper.appendChild(list);
   container.appendChild(wrapper);
 }
