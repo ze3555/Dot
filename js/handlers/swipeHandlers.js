@@ -7,32 +7,27 @@ export function setupSwipeDrawer() {
   const drawer = document.getElementById("contacts-drawer");
   const backdrop = document.getElementById("contacts-backdrop");
   const main = document.getElementById("main-content");
-  const dot = document.querySelector(".dot-core");
-  const bottomPanel = document.querySelector(".bottom-panel");
 
-  if (!drawer || !backdrop || !main || !dot || !bottomPanel) return;
+  if (!drawer || !backdrop || !main) return;
 
   let isOpen = false;
 
+  // === Open / Close ==========================================================
   function openDrawer() {
     if (isOpen) return;
 
     drawer.innerHTML = "";
     renderContactsUI(drawer, handleSelectContact);
 
+    // Добавляем «молочную» кнопку Add Contact в шапку дровера
+    addDrawerAddBtn();
+
+    // Плавное появление
     backdrop.style.display = "block";
     drawer.style.display = "flex";
-
     requestAnimationFrame(() => {
       drawer.classList.add("open");
       backdrop.classList.add("active");
-    });
-
-    moveDotToDrawer();
-
-    // Сразу попросим контакты‑UI прижать DOT к инпуту
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new CustomEvent("contacts:ensureDotAtInput"));
     });
 
     isOpen = true;
@@ -44,100 +39,51 @@ export function setupSwipeDrawer() {
     drawer.classList.remove("open");
     backdrop.classList.remove("active");
 
+    // Дождаться конца анимации
     setTimeout(() => {
       drawer.style.display = "none";
       backdrop.style.display = "none";
       drawer.innerHTML = "";
     }, 250);
 
-    moveDotToBottomPanel();
     isOpen = false;
   }
 
-  function moveDotToDrawer() {
-    if (!drawer.contains(dot)) {
-      drawer.appendChild(dot);
-      dot.classList.add("dot-in-drawer");
-      dot.classList.remove("dot-in-bottom-panel");
-      dot.title = "Add Contact";
-      dot.onclick = openAddContactModal;
-    }
-  }
+  // === Drawer header button ==================================================
+  function addDrawerAddBtn() {
+    const btn = document.createElement("button");
+    btn.className = "drawer-add-btn"; // стили задашь в CSS
+    btn.textContent = "Add Contact";
+    btn.title = "Add new contact";
+    btn.type = "button";
+    btn.addEventListener("click", openAddContactModal);
 
-  function moveDotToBottomPanel() {
-    if (!bottomPanel.contains(dot)) {
-      bottomPanel.appendChild(dot);
-      dot.classList.add("dot-in-bottom-panel");
-      dot.classList.remove("dot-in-drawer");
-      dot.title = "Send Message";
-      dot.onclick = sendMessageFromInput;
-    }
-  }
-
-  function sendMessageFromInput() {
-    const input = bottomPanel.querySelector(".chat-input");
-    if (!input) return;
-    const text = input.value.trim();
-    if (!text) return;
-    window.dispatchEvent(new CustomEvent("dot:sendMessage", { detail: { text } }));
-    input.value = "";
+    // Вставляем кнопу в начало контента дровера
+    drawer.prepend(btn);
   }
 
   function openAddContactModal() {
-    console.log("Открытие модалки добавления контакта");
-    // TODO: Реальная логика добавления контакта
+    // TODO: подключи свою реальную логику добавления контакта
+    console.log("Open Add Contact modal");
   }
 
+  // === Contacts select =======================================================
   function handleSelectContact(uid) {
     closeDrawer();
     renderChatUI(uid);
   }
 
-  // Закрытия
+  // === Close interactions ====================================================
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen) closeDrawer();
   });
   backdrop.addEventListener("click", closeDrawer);
 
-  // Touch: открыть слева
-  main.addEventListener("touchstart", handleTouchStart, { passive: true });
-  main.addEventListener("touchmove", handleTouchMove, { passive: true });
-  main.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-  // Touch: закрыть свайпом влево внутри дровера
-  drawer.addEventListener("touchstart", (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchCurrentX = touchStartX;
-  });
-  drawer.addEventListener("touchmove", (e) => {
-    touchCurrentX = e.touches[0].clientX;
-  });
-  drawer.addEventListener("touchend", () => {
-    if (touchStartX - touchCurrentX > SWIPE_THRESHOLD) {
-      closeDrawer();
-    }
-  });
-
-  // Десктоп: прозрачная стрелка-триггер слева
-  if (window.innerWidth >= 768) {
-    const trigger = document.createElement("div");
-    trigger.id = "drawer-trigger";
-    trigger.className = "drawer-trigger";
-    trigger.title = "Contacts";
-    trigger.innerHTML = "&#x25B6;"; // ►
-
-    trigger.onclick = () => {
-      if (!isOpen) openDrawer();
-    };
-
-    document.body.appendChild(trigger);
-  }
-
-  // === Swipe logic (общий)
+  // === Touch: swipe from left to open =======================================
   let touchStartX = 0;
   let touchCurrentX = 0;
-  const SWIPE_THRESHOLD = 60;
-  const SWIPE_ZONE = 24;
+  const SWIPE_THRESHOLD = 60; // px
+  const SWIPE_ZONE = 24;      // px от левого края
 
   function handleTouchStart(e) {
     if (isOpen) return;
@@ -146,12 +92,50 @@ export function setupSwipeDrawer() {
     touchStartX = x;
     touchCurrentX = x;
   }
+
   function handleTouchMove(e) {
     touchCurrentX = e.touches[0].clientX;
   }
+
   function handleTouchEnd() {
     if (touchCurrentX - touchStartX > SWIPE_THRESHOLD) {
       openDrawer();
     }
+  }
+
+  main.addEventListener("touchstart", handleTouchStart, { passive: true });
+  main.addEventListener("touchmove", handleTouchMove, { passive: true });
+  main.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+  // === Touch: swipe left inside drawer to close =============================
+  let drawerStartX = 0;
+  let drawerCurrentX = 0;
+
+  drawer.addEventListener("touchstart", (e) => {
+    drawerStartX = e.touches[0].clientX;
+    drawerCurrentX = drawerStartX;
+  });
+  drawer.addEventListener("touchmove", (e) => {
+    drawerCurrentX = e.touches[0].clientX;
+  });
+  drawer.addEventListener("touchend", () => {
+    if (drawerStartX - drawerCurrentX > SWIPE_THRESHOLD) {
+      closeDrawer();
+    }
+  });
+
+  // === Desktop trigger (transparent arrow on the left) ======================
+  if (window.innerWidth >= 768) {
+    const trigger = document.createElement("div");
+    trigger.id = "drawer-trigger";
+    trigger.className = "drawer-trigger"; // стилизуй в CSS
+    trigger.title = "Contacts";
+    trigger.innerHTML = "&#x25B6;"; // ►
+
+    trigger.addEventListener("click", () => {
+      if (!isOpen) openDrawer();
+    });
+
+    document.body.appendChild(trigger);
   }
 }
