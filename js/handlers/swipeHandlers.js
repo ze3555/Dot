@@ -1,158 +1,125 @@
+
 // js/handlers/swipeHandlers.js
+// Left contacts drawer: edge-swipe only (from left edge), horizontal, below top-bar.
+// Adds a simple gesture lock to avoid conflicts with profile drawer.
 
-import { renderContactsUI } from "../ui/contacts.js";
-import { renderChatUI } from "../ui/chat.js";
-import { addContact } from "./contactHandlers.js";
+let wired = false;
 
-export function setupSwipeDrawer() {
+export function setupSwipeHandlers() {
+  if (wired) return;
+  wired = true;
+
   const drawer = document.getElementById("contacts-drawer");
-  const backdrop = document.getElementById("contacts-backdrop");
-  const main = document.getElementById("main-content");
+  const backdrop =
+    document.getElementById("contacts-backdrop") ||
+    document.getElementById("contacts-drawer-backdrop") ||
+    document.querySelector(".contacts-drawer-backdrop");
 
-  if (!drawer || !backdrop || !main) return;
+  if (!drawer || !backdrop) return;
 
-  let isOpen = false;
-
-  // === Open / Close ==========================================================
-  function openDrawer() {
-    if (isOpen) return;
-
-    // наполняем контентом
-    drawer.innerHTML = "";
-    renderContactsUI(drawer, handleSelectContact);
-
-    // верхняя кнопка Add Contact
-    addDrawerAddBtn();
-
-    // ВНИМАНИЕ: НЕ устанавливаем drawer.style.display = "flex";
-    // Вся видимость — через классы, как в CSS.
-    requestAnimationFrame(() => {
-      drawer.classList.add("open");
-      backdrop.classList.add("active");
-    });
-
-    isOpen = true;
+  // ---- Open/Close helpers
+  function isOpen() { return drawer.classList.contains("open"); }
+  function open() {
+    if (isOpen()) return;
+    drawer.classList.add("open");
+    backdrop.classList.add("open");
+    document.body.classList.add("no-scroll");
   }
-
-  function closeDrawer() {
-    if (!isOpen) return;
-
+  function close() {
+    if (!isOpen()) return;
     drawer.classList.remove("open");
-    backdrop.classList.remove("active");
+    backdrop.classList.remove("open");
+    document.body.classList.remove("no-scroll");
+  }
 
-    // НЕ трогаем style.display — пусть остаётся по CSS (grid + transform)
-    // Можно через таймаут чистить контент (не обязательно):
+  // Close interactions
+  backdrop.addEventListener("click", close);
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+
+  // ---- Gesture config
+  const topBar = document.querySelector(".top-bar");
+  const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64));
+  const EDGE_ZONE_PX = 20;   // старт только из узкой левой кромки
+  const MIN_SWIPE_X  = 60;   // порог открытия
+  const ANGLE_RATIO  = 1.4;  // |dx| должен быть в 1.4x больше |dy|
+  const MAX_DURATION = 800;  // мс
+
+  let tracking = false, claimed = false;
+  let x0 = 0, y0 = 0, x = 0, y = 0, t0 = 0;
+
+  function cancel() { tracking = claimed = false; }
+
+  function onTouchStart(e) {
+    if (isOpen()) return; // не стартуем, если уже открыто
+    const t = e.touches?.[0]; if (!t) return;
+
+    // Старт ТОЛЬКО из левой кромки и НИЖЕ топ-бара (чтобы не конфликтовать с профилем)
+    const fromLeftEdge = t.clientX <= EDGE_ZONE_PX;
+    const belowTopBar  = t.clientY > TOP_ZONE_PX + 4;
+    if (!fromLeftEdge || !belowTopBar) { cancel(); return; }
+
+    // Игнорируем тач на элементах, где не хотим жестов
+    if (e.target.closest(".dot-core, .profile-top-drawer, .profile-top-backdrop")) { cancel(); return; }
+
+    // Ставим «готовность»
+    tracking = true;
+    claimed = false;
+    x0 = x = t.clientX;
+    y0 = y = t.clientY;
+    t0 = Date.now();
+  }
+
+  function onTouchMove(e) {
+    if (!tracking) return;
+    const t = e.touches?.[0]; if (!t) return;
+    x = t.clientX; y = t.clientY;
+
+    const dx = x - x0;
+    const dy = y - y0;
+
+    // Если пошло явно по вертикали — отменяем распознавание
+    if (!claimed && Math.abs(dy) > Math.abs(dx) * ANGLE_RATIO) { cancel(); return; }
+
+    // Как только двинулись вправо достаточно ощутимо — «забираем» жест
+    if (!claimed && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
+      claimed = true;
+      // Блокируем страницы скролл только после признания жеста
+      e.preventDefault(); // (работает потому что move слушаем с passive:false)
+      // Лочим жест на время распознавания
+      window.__gestureLock = "contacts";
+      document.body.classList.add("gesture-contacts");
+    }
+
+    if (claimed) {
+      // Можно добавить live-следование панели по dx (peek), но пока просто блокируем скролл
+      e.preventDefault();
+    }
+  }
+
+  function onTouchEnd() {
+    if (!tracking) return;
+    const dt = Date.now() - t0;
+    const dx = x - x0;
+    const dy = y - y0;
+
+    if (claimed && dx >= MIN_SWIPE_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DURATION) {
+      open();
+    }
+
+    cancel();
+    // Сбрасываем lock немного позже (даём шанc обработать open/close)
     setTimeout(() => {
-      drawer.innerHTML = "";
-    }, 250);
-
-    isOpen = false;
-  }
-
-  // === Drawer header button ==================================================
-  function addDrawerAddBtn() {
-    const btn = document.createElement("button");
-    btn.className = "drawer-add-btn"; // стилизуется в css/ui/drawer.css
-    btn.textContent = "Add Contact";
-    btn.title = "Add new contact";
-    btn.type = "button";
-    btn.addEventListener("click", openAddContactModal);
-    drawer.prepend(btn); // именно в корень дровера
-  }
-
-  // Реальная логика добавления контакта
-  async function openAddContactModal() {
-    const input = drawer.querySelector(".contacts-input");
-    const uid = (input?.value || "").trim();
-    if (!uid) {
-      input?.focus();
-      input?.classList.add("dot-active");
-      setTimeout(() => input?.classList.remove("dot-active"), 600);
-      return;
-    }
-
-    try {
-      await addContact(uid);
-      if (input) input.value = "";
-      drawer.innerHTML = "";
-      renderContactsUI(drawer, handleSelectContact);
-      addDrawerAddBtn();
-    } catch (err) {
-      console.error("Add contact failed:", err);
-      const btn = drawer.querySelector(".drawer-add-btn");
-      if (btn) {
-        btn.disabled = true;
-        setTimeout(() => (btn.disabled = false), 500);
+      if (window.__gestureLock === "contacts") {
+        window.__gestureLock = null;
+        document.body.classList.remove("gesture-contacts");
       }
-    }
+    }, 0);
   }
 
-  // === Contacts select =======================================================
-  function handleSelectContact(uid) {
-    closeDrawer();
-    renderChatUI(uid);
-  }
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
 
-  // === Close interactions ====================================================
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && isOpen) closeDrawer();
-  });
-  backdrop.addEventListener("click", closeDrawer);
-
-  // === Touch: swipe from left to open =======================================
-  let touchStartX = 0;
-  let touchCurrentX = 0;
-  const SWIPE_THRESHOLD = 60; // px
-  const SWIPE_ZONE = 24;      // px от левого края
-
-  function handleTouchStart(e) {
-    if (isOpen) return;
-    const x = e.touches[0].clientX;
-    if (x > SWIPE_ZONE) return;
-    touchStartX = x;
-    touchCurrentX = x;
-  }
-  function handleTouchMove(e) {
-    touchCurrentX = e.touches[0].clientX;
-  }
-  function handleTouchEnd() {
-    if (touchCurrentX - touchStartX > SWIPE_THRESHOLD) {
-      openDrawer();
-    }
-  }
-
-  main.addEventListener("touchstart", handleTouchStart, { passive: true });
-  main.addEventListener("touchmove", handleTouchMove, { passive: true });
-  main.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-  // === Touch: swipe left inside drawer to close =============================
-  let drawerStartX = 0;
-  let drawerCurrentX = 0;
-
-  drawer.addEventListener("touchstart", (e) => {
-    drawerStartX = e.touches[0].clientX;
-    drawerCurrentX = drawerStartX;
-  });
-  drawer.addEventListener("touchmove", (e) => {
-    drawerCurrentX = e.touches[0].clientX;
-  });
-  drawer.addEventListener("touchend", () => {
-    if (drawerStartX - drawerCurrentX > SWIPE_THRESHOLD) {
-      closeDrawer();
-    }
-  });
-
-  // === Desktop trigger (center-left) ========================================
-  if (window.innerWidth >= 768) {
-    const trigger = document.createElement("div");
-    trigger.id = "drawer-trigger";
-    trigger.className = "drawer-trigger";
-    trigger.title = "Contacts";
-    trigger.innerHTML = "&#x25B6;"; // ►
-    trigger.addEventListener("click", () => {
-      if (!isOpen) openDrawer();
-    });
-    document.body.appendChild(trigger);
-  }
+  // Экспорт для отладки
+  window.__contactsDrawer = { open, close, isOpen };
 }
-
