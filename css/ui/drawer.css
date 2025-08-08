@@ -155,3 +155,40 @@
 /* css/ui/drawer.css – внизу файла */
 .contacts-drawer-backdrop { pointer-events: none; }
 .contacts-drawer-backdrop.open { pointer-events: auto; }
+/* Backdrop: кликабелен только когда открыт, поверх контента, но под панелью */
+.contacts-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .2s ease, visibility .2s step-end;
+  z-index: 9998; /* ниже самой панели */
+}
+.contacts-drawer-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Панель поверх бэкдропа */
+.contacts-drawer { z-index: 9999; }
+
+/* Logout — тёмная, аккуратная, прибита к низу */
+.contacts-drawer .logout-btn {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #3a3a3a;
+  font: inherit;
+  text-align: center;
+  position: sticky;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  box-shadow: 0 6px 16px rgba(0,0,0,.15);
+}
+.contacts-drawer .logout-btn:active { transform: translateY(1px); }
