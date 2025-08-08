@@ -70,4 +70,52 @@
   cursor: pointer;
   filter: hue-rotate(45deg); /* пример изменения цвета */
   /* можно поменять размер, цвет, иконку */
+}/* === Logout button inside Drawer (ненавязчиво, внизу слева) === */
+.contacts-drawer {
+  position: relative; /* чтобы absolute-позиционирование работало внутри */
+}
+
+.logout-btn {
+  position: absolute;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.logout-btn:hover,
+.logout-btn:focus-visible {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
+  outline: none;
+}
+
+.logout-btn:active {
+  transform: translateY(1px);
+}
+
+/* Светлая тема — остаётся ненавязчивой */
+body.theme-light .logout-btn {
+  border-color: rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  color: rgba(0,0,0,0.85);
+}
+
+body.theme-light .logout-btn:hover,
+body.theme-light .logout-btn:focus-visible {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.16);
+}
+
+/* Если Drawer скроллится — держим отступы, чтобы кнопка не прилипала к краю */
+.contacts-drawer {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
