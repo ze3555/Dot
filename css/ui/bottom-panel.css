@@ -21,16 +21,15 @@
   transition: transform 0.25s cubic-bezier(.5,.12,.34,1.23), box-shadow 0.18s;
 }
 .chat-input {
-    border: 1px solid var(--border-color, #444);
+  display: block;
+  width: calc(85% - 32px);
+  margin: 16px auto 12px 20px ;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #444);
   background-color: var(--input-bg, #222);
   color: var(--text-color, #fff);
-  height: 44px;
-  font-size: 16px;
-  padding-left: 30px;
-  margin-left: 40px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  width: 70%;
+  font-size: 14px;
   box-sizing: border-box;
+  transition: padding-right 0.25s ease;
 }
