@@ -9,8 +9,13 @@
   color: var(--text-color, #fff);
   font-size: 14px;
   box-sizing: border-box;
+  transition: padding-right 0.25s ease;
 }
 
+/* При фокусе — оставляем место под DOT */
+.contacts-input.dot-active {
+  padding-right: 48px; /* место под DOT */
+}
 
 .contacts-wrapper {
   padding: 0 8px; /* чтобы контент внутри не прилипал к краям */
