@@ -35,16 +35,17 @@
 }
 .contacts-drawer-backdrop.active { opacity: 1; visibility: visible; }
 
-/* Desktop trigger (left arrow) — ВАЖНО: полноценно стилизован */
+/* Desktop trigger (left edge, vertically centered) */
 .drawer-trigger {
   position: fixed;
   left: 8px;
-  top: calc(var(--topbar-h) + 8px);
-  width: 28px;
-  height: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 10px;
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
@@ -56,9 +57,10 @@
   transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
 .drawer-trigger:hover { opacity: 1; }
-.drawer-trigger:active { transform: scale(.96); }
+.drawer-trigger:active { transform: translateY(-50%) scale(.96); }
 
-/* Header: Add contact button — sticky, full-width */
+/* Header: Add Contact — sticky, full-width, точечный селектор под реальную разметку */
+#contacts-drawer > .drawer-add-btn,
 .drawer-add-btn {
   position: sticky;
   top: 0;
@@ -81,7 +83,9 @@
   transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
   opacity: .98;
 }
+#contacts-drawer > .drawer-add-btn:hover,
 .drawer-add-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); opacity: 1; }
+#contacts-drawer > .drawer-add-btn:active,
 .drawer-add-btn:active { transform: scale(.985); }
 
 /* Content area */
