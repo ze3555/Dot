@@ -29,6 +29,12 @@ export function setupSwipeDrawer() {
     });
 
     moveDotToDrawer();
+
+    // Сразу попросим контакты‑UI прижать DOT к инпуту
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent("contacts:ensureDotAtInput"));
+    });
+
     isOpen = true;
   }
 
@@ -73,13 +79,13 @@ export function setupSwipeDrawer() {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    window.dispatchEvent(new CustomEvent('dot:sendMessage', { detail: { text } }));
+    window.dispatchEvent(new CustomEvent("dot:sendMessage", { detail: { text } }));
     input.value = "";
   }
 
   function openAddContactModal() {
     console.log("Открытие модалки добавления контакта");
-    // TODO: Здесь может быть реальная логика
+    // TODO: Реальная логика добавления контакта
   }
 
   function handleSelectContact(uid) {
@@ -87,32 +93,32 @@ export function setupSwipeDrawer() {
     renderChatUI(uid);
   }
 
+  // Закрытия
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen) closeDrawer();
   });
-
   backdrop.addEventListener("click", closeDrawer);
 
+  // Touch: открыть слева
   main.addEventListener("touchstart", handleTouchStart, { passive: true });
   main.addEventListener("touchmove", handleTouchMove, { passive: true });
   main.addEventListener("touchend", handleTouchEnd, { passive: true });
 
+  // Touch: закрыть свайпом влево внутри дровера
   drawer.addEventListener("touchstart", (e) => {
     touchStartX = e.touches[0].clientX;
     touchCurrentX = touchStartX;
   });
-
   drawer.addEventListener("touchmove", (e) => {
     touchCurrentX = e.touches[0].clientX;
   });
-
   drawer.addEventListener("touchend", () => {
     if (touchStartX - touchCurrentX > SWIPE_THRESHOLD) {
       closeDrawer();
     }
   });
 
-  // === ПК: прозрачная стрелка-триггер слева ===
+  // Десктоп: прозрачная стрелка-триггер слева
   if (window.innerWidth >= 768) {
     const trigger = document.createElement("div");
     trigger.id = "drawer-trigger";
@@ -127,7 +133,7 @@ export function setupSwipeDrawer() {
     document.body.appendChild(trigger);
   }
 
-  // === Swipe logic ===
+  // === Swipe logic (общий)
   let touchStartX = 0;
   let touchCurrentX = 0;
   const SWIPE_THRESHOLD = 60;
@@ -140,11 +146,9 @@ export function setupSwipeDrawer() {
     touchStartX = x;
     touchCurrentX = x;
   }
-
   function handleTouchMove(e) {
     touchCurrentX = e.touches[0].clientX;
   }
-
   function handleTouchEnd() {
     if (touchCurrentX - touchStartX > SWIPE_THRESHOLD) {
       openDrawer();
