@@ -60,3 +60,65 @@
 }
 .chat-send-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
 .chat-send-btn:active { transform: scale(.985); }
+/* === Chat input: mobile-friendly + space for docked Dot === */
+:root {
+  --chat-form-max-w: 720px;    /* синхронизировано с фактической шириной формы */
+  --chat-input-h: 46px;        /* 44–48px комфортный tap-target */
+}
+
+/* Подстрахуем max-width формы, если задан иначе выше */
+#chat-form {
+  max-width: var(--chat-form-max-w);
+}
+
+/* Резиновый инпут, без iOS-зума, аккуратные отступы */
+#chat-input,
+.chat-input {
+  width: 100%;
+  min-height: var(--chat-input-h);
+  font-size: 16px;                 /* предотвращает авто-zoom на iOS */
+  line-height: 1.25;
+  padding: 12px 14px;
+  border-radius: 16px;
+
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: var(--input-border);
+}
+
+/* Placeholder цвет из темы */
+#chat-input::placeholder,
+.chat-input::placeholder {
+  color: var(--input-ph);
+}
+
+/* Фокус-стейт */
+#chat-input:focus,
+.chat-input:focus {
+  outline: none;
+  box-shadow: var(--input-focus-ring);
+}
+
+/* Когда Дот «докнут» как send — даём место справа под него */
+body.dot-dock #chat-input,
+body.dot-dock .chat-input {
+  padding-right: 56px; /* ≈ ширина Дота (40) + зазор */
+}
+
+/* При доке прячем старую кнопку отправки, если она есть */
+body.dot-dock .chat-send-btn {
+  display: none !important;
+}
+
+/* Узкие экраны — чуть выше инпут и больше отступ справа */
+@media (max-width: 480px) {
+  :root { --chat-input-h: 48px; }
+  body.dot-dock #chat-input,
+  body.dot-dock .chat-input { padding-right: 60px; }
+}
+
+/* Уважение reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+  #chat-input, .chat-input { transition: none; }
+}
+
