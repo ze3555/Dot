@@ -10,8 +10,7 @@
 }
 
 /* Плавные переходы */
-body, .top-bar, .contacts-drawer, .contacts-drawer-backdrop,
-.bottom-panel, .drawer-trigger, #chat-input,
+body, .top-bar, .bottom-panel, .drawer-trigger, #chat-input,
 .drawer-add-btn, .logout-btn, .chat-send-btn {
   transition: background-color .18s cubic-bezier(.2,.8,.2,1),
               color .18s cubic-bezier(.2,.8,.2,1),
