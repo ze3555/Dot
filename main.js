@@ -9,21 +9,16 @@ import { setupSwipeDrawer } from "./js/handlers/swipeHandlers.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeThemeOnStart();       // 1. Apply saved theme
-  renderDotCore();                // 2. Ensure Dot exists/mounted (no-op if already)
+  renderDotCore();                // 2. Ensure Dot exists (no-op if already in DOM)
   setupDotCoreMenu();             // 3. Dot expansion with Function/Theme
-  // setupThemeSwitcher();         // ← removed: old topbar toggle is deprecated
   enableDotCoreDrag();            // 4. Drag
   setupSwipeDrawer();             // 5. Contacts drawer
-  setupDotCoreFeatures();         // 6. Dot core extras (legacy)
-  
-  // Logout button in drawer
+  setupDotCoreFeatures();         // 6. Legacy extras
+
   const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => logout());
-  }
+  if (logoutBtn) logoutBtn.addEventListener("click", () => logout());
 });
 
-// Auth state
 onAuthStateChanged((user) => {
   const main = document.getElementById("main-content");
   const logoutBtn = document.getElementById("logout-btn");
