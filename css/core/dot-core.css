@@ -1,65 +1,53 @@
-/* DOT Core — минимальные и безопасные стили.
-   Ничего не знает о размерах и позиционировании — только поведение/визуальные токены. */
+/* DOT Core — базовые стили, ничего лишнего.
+   Сохраняем размер/форму и якорь для меню. Цвет = currentColor (ставит JS). */
 
 .dot-core {
-  /* Базовая интерактивность */
+  position: relative;                 /* якорь для меню */
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: none;            /* жесты без лагов; JS тоже дублирует */
+  touch-action: none;
 
-  /* Цвета — строго через currentColor (JS ставит ч/б).
-     Можно переопределить через CSS-переменные при желании. */
+  /* ч/б диск — цвет приходит из JS автоконтраста */
+  background: currentColor;
   color: var(--dot-core-fg, currentColor);
-  background: var(--dot-core-bg, transparent);
-  border: 1px solid var(--dot-core-border, currentColor);
+  border: 3px solid var(--dot-core-border, currentColor);
 
-  /* Форма: уважает внешний radius (капсула/круг приходит от контейнера/темы) */
-  border-radius: inherit;
-
-  /* Мягкие переходы, отключаемые на драге */
+  box-shadow: 0 0 18px rgba(0,0,0,0.16);
   transition:
-    box-shadow .15s ease,
-    border-color .15s ease,
-    transform .15s ease,
-    opacity .15s ease,
-    background-color .15s ease,
-    color .1s linear;
+    box-shadow .2s ease,
+    transform .15s ease;
+  z-index: 10; /* на драге JS поднимает выше */
 }
 
-/* Во время перетаскивания – никаких анимаций */
 .dot-core.is-dragging {
   transition: none !important;
   cursor: grabbing;
 }
 
-/* Ховер/активация — очень деликатно, чтобы не мешать автоконтрасту */
-.dot-core:hover { opacity: 0.95; }
+.dot-core:hover { box-shadow: 0 0 22px rgba(0,0,0,0.18); }
 .dot-core:active { transform: translateY(1px); }
 
-/* Доступность: фокус-обводка на currentColor (ч/б из JS) */
 .dot-core:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
 
-/* Встроенные SVG и иконки используют currentColor,
-   чтобы автоконтраст работал без спец-стилей внутри. */
+/* Внутренние иконки/текст наследуют цвет диска */
 .dot-core svg {
   fill: currentColor;
   stroke: currentColor;
 }
 
-/* Если внутри есть текстовые/иконные элементы, не ломаем клики по ним */
-.dot-core > * {
-  pointer-events: auto;
-}
-
-/* Опционально: если DOT внизу докуется и нужно его выровнять без лишних костылей */
-.bottom-panel > .dot-core {
-  justify-self: end;   /* DOT справа в верхнем ярусе — см. bottom-panel.css */
-  align-self: center;
+/* Во время драга запрещаем скролл страницы (ставится JS-класс) */
+body.dragging-dotcore {
+  overflow: hidden !important;
+  touch-action: none !important;
 }
