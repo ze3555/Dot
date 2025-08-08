@@ -1,9 +1,11 @@
 // js/handlers/dotCoreDrag.js
 //
-// High-perf drag + автоконтраст по фону под центром DOT.
-// Теперь выставляем И цвет, И заливку (background-color) под фон.
-//
-// Публичная функция: enableDotCoreDrag()
+// High-perf drag + авто-контраст по фону под центром DOT.
+// Оптимизации:
+//  – без getBoundingClientRect() на каждом кадре;
+//  – центр считаем из commitLeft/Top + dx/dy;
+//  – пересчёт контраста не каждый кадр (каждые 2 кадра + только при изменении положения);
+//  – не пишем стили, если цвет не менялся.
 
 export function enableDotCoreDrag() {
   const dot = document.querySelector('.dot-core');
@@ -14,8 +16,8 @@ export function enableDotCoreDrag() {
   let dragging = false;
   let pointerId = null;
 
-  let commitLeft = null;
-  let commitTop  = null;
+  let commitLeft = 0;
+  let commitTop  = 0;
 
   let latestClientX = 0;
   let latestClientY = 0;
@@ -31,19 +33,19 @@ export function enableDotCoreDrag() {
   const Z_DRAG = 2147483647;
   let prevZ = '';
 
-  // запомним последнее решение, чтобы не дергать стили зря
+  // кэш последнего решения
   let lastIsDarkBg = null;
+  let lastHex = '';
+  let lastDx = 0, lastDy = 0;
+  let frameCounter = 0;
 
   function ensureFixedPosition() {
     const rect = dot.getBoundingClientRect();
-    const computed = getComputedStyle(dot);
-    const wasFixed = computed.position === 'fixed';
+    // фиксируем стартовую геометрию один раз
+    dotW = rect.width;
+    dotH = rect.height;
 
-    if (!wasFixed) {
-      dot.style.width = rect.width + 'px';
-      dot.style.height = rect.height + 'px';
-    }
-
+    // не вызываем layout снова: копируем текущее положение
     dot.style.position = 'fixed';
     dot.style.left = rect.left + 'px';
     dot.style.top  = rect.top  + 'px';
@@ -57,10 +59,8 @@ export function enableDotCoreDrag() {
     const pad = 6;
     const maxX = window.innerWidth  - dotW - pad;
     const maxY = window.innerHeight - dotH - pad;
-    if (x < pad) x = pad;
-    else if (x > maxX) x = maxX;
-    if (y < pad) y = pad;
-    else if (y > maxY) y = maxY;
+    if (x < pad) x = pad; else if (x > maxX) x = maxX;
+    if (y < pad) y = pad; else if (y > maxY) y = maxY;
     return [x, y];
   }
 
@@ -71,12 +71,11 @@ export function enableDotCoreDrag() {
     dot.setPointerCapture?.(pointerId);
 
     ensureFixedPosition();
-    const rect = dot.getBoundingClientRect();
-    dotW = rect.width;
-    dotH = rect.height;
 
     latestClientX = e.clientX;
     latestClientY = e.clientY;
+
+    const rect = { left: commitLeft, top: commitTop }; // уже знаем
     offsetX = latestClientX - rect.left;
     offsetY = latestClientY - rect.top;
 
@@ -88,11 +87,12 @@ export function enableDotCoreDrag() {
     dragging = true;
     rafPending = false;
 
-    // сразу проверить контраст в текущей точке
-    updateDotContrast(dot);
+    // стартовый апдейт контраста
+    updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
 
     tick();
 
+    // отключим выделение текста
     document.body.style.userSelect = 'none';
     e.preventDefault();
   }
@@ -106,6 +106,7 @@ export function enableDotCoreDrag() {
       rafPending = true;
       rafId = requestAnimationFrame(tick);
     }
+    // не блокируем скролл глобально, но preventDefault оставляем для перетаскивания
     e.preventDefault();
   }
 
@@ -116,7 +117,7 @@ export function enableDotCoreDrag() {
     pointerId = null;
     dragging = false;
 
-    // Закоммитить позицию
+    // Закоммитить позицию из transform (dx,dy)
     const transform = getComputedStyle(dot).transform;
     let tx = 0, ty = 0;
     if (transform && transform !== 'none') {
@@ -142,7 +143,7 @@ export function enableDotCoreDrag() {
     document.body.style.userSelect = '';
 
     // финальный апдейт контраста
-    updateDotContrast(dot);
+    updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
   }
 
   function tick() {
@@ -154,81 +155,73 @@ export function enableDotCoreDrag() {
 
     const dx = x - commitLeft;
     const dy = y - commitTop;
-    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
 
-    // обновляем контраст во время перетаскивания
-    updateDotContrast(dot);
+    // если движение микроскопическое — не дёргаем стили
+    if (dx !== lastDx || dy !== lastDy) {
+      lastDx = dx; lastDy = dy;
+      dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    }
+
+    // контраст не на каждом кадре
+    if ((frameCounter++ & 1) === 0) {
+      updateDotContrast(commitLeft, commitTop, dx, dy, /*force*/false);
+    }
 
     if (dragging) {
       rafId = requestAnimationFrame(tick);
     }
   }
 
-  // ===== Автоконтраст (фон и цвет Дота) =====
-  function updateDotContrast(dotEl) {
-    const rect = dotEl.getBoundingClientRect();
-    const cx = Math.round(rect.left + rect.width / 2);
-    const cy = Math.round(rect.top + rect.height / 2);
+  // ===== Автоконтраст (без layout-удара) =====
+  function updateDotContrast(left, top, dx, dy, force) {
+    // Центр круга в экранных координатах
+    const cx = Math.round(left + dx + dotW / 2);
+    const cy = Math.round(top  + dy + dotH / 2);
 
-    // временно отключим хит-тест, чтобы увидеть, что под DOT
-    const prevPE = dotEl.style.pointerEvents;
-    dotEl.style.pointerEvents = 'none';
+    // Временно выключим хит-тест, чтобы увидеть, что под DOT
+    const prevPE = dot.style.pointerEvents;
+    dot.style.pointerEvents = 'none';
     let behind = document.elementFromPoint(cx, cy);
-    dotEl.style.pointerEvents = prevPE;
+    dot.style.pointerEvents = prevPE;
 
-    // ищем ближайший непрозрачный фон вверх по дереву
+    // подбираем непрозрачный фон вверх по дереву (макс 10 шагов)
     let rgba = null;
-    let guard = 0;
-    while (behind && guard++ < 20) {
+    for (let i = 0; i < 10 && behind; i++) {
       const bg = getComputedStyle(behind).backgroundColor;
       const parsed = parseCssColor(bg);
-      if (parsed && parsed[3] > 0) { // alpha > 0
-        rgba = parsed;
-        break;
-      }
+      if (parsed && parsed[3] > 0) { rgba = parsed; break; }
       behind = behind.parentElement;
     }
-
-    // дефолт — белый фон
     if (!rgba) rgba = [255,255,255,1];
 
     const [r,g,b,a] = rgba;
     const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
-    const isDarkBg = lum < 0.5; // тёмным считаем ниже 0.5
+    const isDarkBg = lum < 0.5;
 
-    if (isDarkBg !== lastIsDarkBg) {
-      lastIsDarkBg = isDarkBg;
-      if (isDarkBg) {
-        setDotColorAndFill(dotEl, '#fff'); // на тёмном фоне — белый
-      } else {
-        setDotColorAndFill(dotEl, '#000'); // на светлом — чёрный
-      }
+    if (!force && isDarkBg === lastIsDarkBg) return; // ничего не меняем
+
+    lastIsDarkBg = isDarkBg;
+    const hex = isDarkBg ? '#fff' : '#000';
+    if (hex !== lastHex) {
+      lastHex = hex;
+      // Ставим И цвет, И фон — визуально цельный "шар"
+      dot.style.color = hex;
+      dot.style.backgroundColor = hex;
+      dot.style.setProperty('--dot-core-fg', hex);
+      dot.style.setProperty('--dot-core-border', hex);
+
+      try {
+        dot.querySelectorAll('svg').forEach(svg => {
+          svg.style.stroke = 'currentColor';
+          svg.style.fill = 'currentColor';
+        });
+      } catch(_) {}
     }
   }
 
-  function setDotColorAndFill(el, hex) {
-    // Текст/иконки, бордер-переменные и ЗАЛИВКА
-    el.style.color = hex;
-    el.style.backgroundColor = hex;
-    el.style.setProperty('--dot-core-fg', hex);
-    el.style.setProperty('--dot-core-border', hex);
-
-    // Если внутри есть SVG без currentColor — подсветим stroke/fill
-    try {
-      el.querySelectorAll('svg').forEach(svg => {
-        svg.style.stroke = 'currentColor';
-        svg.style.fill = 'currentColor';
-      });
-    } catch(_) {}
-  }
-
-  // helpers цветов
-  function srgb(v) {
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  }
-
-  function parseCssColor(color) {
+  // helpers
+  function srgb(v){ v/=255; return v<=0.03928? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }
+  function parseCssColor(color){
     if (!color) return null;
     if (color === 'transparent') return [0,0,0,0];
     if (color.startsWith('rgb')) {
@@ -254,11 +247,14 @@ export function enableDotCoreDrag() {
   window.addEventListener('pointerup', onPointerUpOrCancel, { passive: true });
   window.addEventListener('pointercancel', onPointerUpOrCancel, { passive: true });
 
-  // Поддержка актуальности без драга
-  const refresh = () => updateDotContrast(dot);
+  // актуальность без драга (resize/scroll)
+  const refresh = () => updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
   window.addEventListener('resize', refresh);
   window.addEventListener('scroll',  refresh, { passive: true });
 
   // стартовый апдейт
-  updateDotContrast(dot);
+  // commitLeft/Top установятся после первого pointerdown; до этого берём текущий rect
+  const rect0 = dot.getBoundingClientRect();
+  commitLeft = rect0.left; commitTop = rect0.top; dotW = rect0.width; dotH = rect0.height;
+  refresh();
 }
