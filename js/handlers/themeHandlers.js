@@ -6,6 +6,6 @@ export function initializeThemeOnStart() {
   initTheme();
 }
 
-/* NOTE:
+/* Note:
    Legacy topbar theme toggle is removed by design.
-   Theme is toggled ONLY from the Dot expansion panel. */
+   Theme is toggled ONLY from the Dot expansion panel now. */
