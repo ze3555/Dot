@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DOT</title>
+
   <link rel="stylesheet" href="./css/index.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffd400" />
@@ -12,23 +13,15 @@
   <link rel="apple-touch-icon" sizes="192x192" href="/img/dot192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="/img/dot512.png">
 
-  <!-- ✅ Firebase CDN (UMD compat-версии) -->
+  <!-- Firebase compat CDN (нужны app+auth+firestore до main.js) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ Инициализация Firebase -->
-  <script type="module" src="./js/firebase/config.js"></script>
+  <!-- Инициализация Firebase (глобально) -->
+  <script src="./js/firebase/config.js"></script>
 </head>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
-</script>
 <body class="theme-dark">
-
   <!-- TopBar -->
   <div class="top-bar">
     <div class="dot-core"></div>
@@ -39,9 +32,7 @@
 
   <!-- Contacts Drawer -->
   <div id="contacts-drawer" class="contacts-drawer">
-    <!-- ...твой контент контактов... -->
-
-    <!-- Logout внизу слева Drawer-а -->
+    <!-- ваш контент контактов -->
     <button id="logout-btn" class="logout-btn">Logout</button>
   </div>
   <div id="contacts-backdrop" class="contacts-drawer-backdrop"></div>
@@ -53,7 +44,7 @@
         <div class="avatar" aria-hidden="true">P</div>
         <div class="user-meta">
           <div class="username-row">
-            <span id="profile-username" class="username-chip">username</span>
+            <span id="profile-username" class="username-chip">—</span>
             <button id="edit-username-btn" class="profile-action">Edit</button>
           </div>
           <button id="copy-id-btn" class="profile-action subtle">Copy ID</button>
@@ -64,13 +55,8 @@
       <section class="profile-section">
         <label class="section-title">Contacts</label>
         <div class="add-username-row">
-          <input
-            id="add-username-input"
-            class="profile-input"
-            type="text"
-            placeholder="Add by username"
-            autocomplete="off"
-          />
+          <input id="add-username-input" class="profile-input" type="text"
+                 placeholder="Add by username" autocomplete="off" />
           <button id="add-username-btn" class="profile-action">Add</button>
         </div>
       </section>
@@ -80,13 +66,10 @@
 
   <!-- Bottom Panel -->
   <div class="bottom-panel">
-    <form id="chat-form">
-      <input
-        type="text"
-        id="chat-input"
-        class="chat-input"
-        placeholder="Type a message..."
-      />
+    <form id="chat-form" autocomplete="off">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." />
+      <!-- Кнопку отправки скрываем при dock Дота через CSS -->
+      <button type="submit" class="chat-send-btn" aria-label="Send"></button>
     </form>
   </div>
 
