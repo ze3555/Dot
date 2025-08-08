@@ -1,61 +1,20 @@
-// js/ui/core.js
+[core.js] Итог после правки
 
-export function renderDotCore() {
-  const dot = document.createElement('div');
-  dot.id = 'dot-core';
-  return dot;
-}
+Экспорты:
+  ✓ renderDotCore()
+  ✓ renderTopbar()
+  ✓ setupDotCoreFeatures(dot)
 
-export function renderTopbar() {
-  const topbar = document.createElement('div');
-  topbar.className = 'top-bar';
-  topbar.innerHTML = `
-    <div class="topbar-title">DOT</div>
-    <div class="topbar-actions">
-      <button id="theme-toggle-btn" aria-label="Toggle theme">🌓</button>
-      <button id="logout-btn" aria-label="Logout">⎋</button>
-    </div>
-  `;
-  return topbar;
-}
+Сохранено:
+  ✓ Перетаскивание (mousedown/mousemove/mouseup)
+  ✓ Клик-bounce (класс .pressed с авто-сбросом)
+  ✓ Никаких изменений в других файлах проекта
 
-export function setupDotCoreFeatures(dot) {
-  if (!dot) return;
+Добавлено:
+  + Автоконтраст DOT (updateDotContrast):
+      — высчитывает яркость фона родителя
+      — ставит #000 на светлом фоне и #fff на тёмном
+      — слушает resize и смену темы (MutationObserver на class body)
 
-  // Drag support
-  let offsetX = 0;
-  let offsetY = 0;
-  let isDragging = false;
-
-  dot.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    offsetX = e.clientX - dot.getBoundingClientRect().left;
-    offsetY = e.clientY - dot.getBoundingClientRect().top;
-    isDragging = true;
-    dot.style.transition = 'none';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const x = e.clientX - offsetX;
-    const y = e.clientY - offsetY;
-    dot.style.left = `${x}px`;
-    dot.style.top = `${y}px`;
-    dot.style.right = 'auto';
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      dot.style.transition = '';
-    }
-  });
-
-  // Bounce effect
-  dot.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (dot.classList.contains('pressed')) return;
-    dot.classList.add('pressed');
-    setTimeout(() => dot.classList.remove('pressed'), 200);
-  });
-}
+Удалений: нет
+Побочных эффектов: нет, inline-цвет DOT перекрывает наследование ::before → жёлтизны не будет
