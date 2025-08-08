@@ -26,3 +26,11 @@ body.theme-dark {
   gap: 16px;
   background: transparent; /* если нужно */
 }
+#main-content {
+  position: absolute;
+  top: 56px; /* высота topbar */
+  bottom: 60px; /* высота bottom-panel */
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
