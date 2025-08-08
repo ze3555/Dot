@@ -121,4 +121,62 @@ body.dot-dock .chat-send-btn {
 @media (prefers-reduced-motion: reduce) {
   #chat-input, .chat-input { transition: none; }
 }
+/* === Chat composer polish === */
+:root{
+  --composer-max-w: 740px;
+  --composer-h: 52px;
+  --composer-radius: 18px;
+}
 
+/* Контейнер снизу с safe-area */
+.bottom-panel{
+  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  background: linear-gradient(to top, rgba(0,0,0,.06), transparent);
+  z-index: 10010;
+}
+
+/* Форма по центру */
+#chat-form{
+  max-width: var(--composer-max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Само поле — крупный тап-таргет, без iOS-зума */
+#chat-input, .chat-input{
+  flex: 1 1 auto;
+  min-height: var(--composer-h);
+  font-size: 16px; /* iOS no-zoom */
+  line-height: 1.25;
+  border-radius: var(--composer-radius);
+  padding: 12px 14px;
+  background: var(--input-bg, #f0f2f4);
+  color: var(--input-fg, #101114);
+  border: 1px solid var(--input-border-color, rgba(0,0,0,.08));
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) inset;
+}
+
+#chat-input::placeholder, .chat-input::placeholder{
+  color: var(--input-ph, rgba(0,0,0,.45));
+}
+
+/* Красивый фокус без дерганий */
+#chat-input:focus, .chat-input:focus{
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, currentColor 18%, transparent),
+    0 1px 0 rgba(0,0,0,.04) inset;
+}
+
+/* Когда Дот докнут — даём место справа */
+body.dot-dock #chat-input, body.dot-dock .chat-input{ padding-right: 62px; }
+
+/* Прячем старую кнопку отправки */
+body.dot-dock .chat-send-btn{ display: none !important; }
+
+/* Узкие экраны — чуть выше поле */
+@media (max-width: 480px){
+  :root{ --composer-h: 54px; }
+}
