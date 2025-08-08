@@ -152,3 +152,6 @@
 }
 .logout-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
 .logout-btn:active { transform: scale(.985); }
+/* css/ui/drawer.css – внизу файла */
+.contacts-drawer-backdrop { pointer-events: none; }
+.contacts-drawer-backdrop.open { pointer-events: auto; }
