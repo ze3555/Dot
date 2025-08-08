@@ -26,3 +26,8 @@ body.theme-dark {
   gap: 16px;
   background: transparent; /* если нужно */
 }
+body.dragging-dotcore {
+  overflow-x: hidden !important;
+  overflow-y: auto !important; /* чтобы скролл не блокировался */
+  touch-action: none !important;
+}
