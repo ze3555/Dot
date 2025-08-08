@@ -1,6 +1,6 @@
 // js/handlers/dotMoveHandler.js
-// Перемещение .dot-core в нижнюю панель при фокусе на инпуте
-// + узкая строка действий с плюсом под инпутом (без изменения остальной логики)
+// Перемещение .dot-core в нижнюю панель при фокусе на инпуте.
+// DOT располагается справа (управляется через CSS-сетку bottom-panel).
 
 export function setupDotMoveOnInput() {
   const dot = document.querySelector('.dot-core');
@@ -8,19 +8,18 @@ export function setupDotMoveOnInput() {
   const topbar = document.querySelector('.topbar');
   if (!dot || !bottomPanel || !topbar) return;
 
-  // Гарантируем, что в нижней панели есть слой действий с плюсом
   ensureBottomActions(bottomPanel);
 
   let lastDotParent = null;
 
-  // При фокусе на поле ввода — переносим dot вниз
+  // При фокусе на поле ввода — переносим DOT в панель
   bottomPanel.addEventListener('focusin', (e) => {
     if (e.target.classList.contains('chat-input')) {
       if (!bottomPanel.contains(dot)) {
         lastDotParent = dot.parentElement;
         bottomPanel.appendChild(dot);
 
-        // Сбрасываем возможные фикс-позиции после драга
+        // Сброс координат после драга, чтобы корректно встать в грид
         dot.style.position = '';
         dot.style.left = '';
         dot.style.top = '';
@@ -29,7 +28,7 @@ export function setupDotMoveOnInput() {
     }
   });
 
-  // Возврат dot на место, когда фокус уходит из панели полностью
+  // Возврат DOT, когда фокус уходит из панели полностью
   bottomPanel.addEventListener('focusout', () => {
     setTimeout(() => {
       const active = document.activeElement;
@@ -39,7 +38,7 @@ export function setupDotMoveOnInput() {
     }, 0);
   });
 
-  // Клик по dot как "отправка" (поведение как было)
+  // Клик по DOT = отправка (как было)
   dot.addEventListener('click', () => {
     if (!bottomPanel.contains(dot)) return;
     const input = bottomPanel.querySelector('.chat-input');
@@ -48,13 +47,12 @@ export function setupDotMoveOnInput() {
     const text = input.value.trim();
     if (!text) return;
 
-    // Ничего в бэкенде не меняем — выбрасываем событие наружу
     window.dispatchEvent(new CustomEvent('dot:sendMessage', { detail: { text } }));
     input.value = '';
     input.focus();
   });
 
-  // Кнопка "папка" (плюс) — событие наружу, без привязки к реализации
+  // Плюс — триггер события наружу
   bottomPanel.addEventListener('click', (e) => {
     const btn = e.target.closest('#add-folder-btn');
     if (!btn) return;
