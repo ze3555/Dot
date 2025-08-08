@@ -2,14 +2,10 @@
 import { setTheme } from "../theme/index.js";
 
 /**
- * Dot expands into a tiny square with two buttons: "Function" and "Theme".
- * - Smooth animated expand/collapse straight from the Dot
- * - Disables drag while open
- * - Outside click / ESC to close
- * - "Function" emits window event 'dot:function'
- * - "Theme" toggles light/dark
- *
- * Keep the export name to match main.js: setupDotCoreMenu()
+ * Dot expands into a smaller square with two vertical buttons:
+ *  - "Function": emits 'dot:function'
+ *  - "Theme": toggles dark/light
+ * Smooth animation; drag-safe (post-drag clicks are suppressed).
  */
 export function setupDotCoreMenu() {
   const dot = document.querySelector(".dot-core");
@@ -23,57 +19,76 @@ export function setupDotCoreMenu() {
 
   // Save/restore inline styles to avoid layout shifts
   const saved = {
-    position: "",
-    left: "",
-    top: "",
-    width: "",
-    height: "",
-    zIndex: "",
-    borderRadius: "",
-    transition: "",
-    transform: "",
+    position: "", left: "", top: "", width: "", height: "",
+    zIndex: "", borderRadius: "", transition: "", transform: ""
   };
 
-  // Prevent drag when expanded (capture before dotCoreDrag handlers)
-  dot.addEventListener(
-    "pointerdown",
-    (e) => {
-      if (isOpen) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    },
-    true
-  );
+  // ----- Drag-safe click suppression -----
+  const DRAG_SLOP = 4;        // px — считем как "двигал"
+  const SUPPRESS_MS = 180;    // подавлять клик после драга
+  let suppressUntil = 0;
+  const pointer = { active:false, startX:0, startY:0, moved:false };
 
-  // Toggle on click (capture to suppress other dot click effects)
-  dot.addEventListener(
-    "click",
-    (e) => {
+  dot.addEventListener("pointerdown", (e) => {
+    pointer.active = true;
+    pointer.moved = false;
+    pointer.startX = e.clientX;
+    pointer.startY = e.clientY;
+  }, true);
+
+  window.addEventListener("pointermove", (e) => {
+    if (!pointer.active) return;
+    if (pointer.moved) return;
+    const dx = Math.abs(e.clientX - pointer.startX);
+    const dy = Math.abs(e.clientY - pointer.startY);
+    if (dx > DRAG_SLOP || dy > DRAG_SLOP) {
+      pointer.moved = true;
+    }
+  }, true);
+
+  window.addEventListener("pointerup", () => {
+    if (pointer.moved) {
+      suppressUntil = Date.now() + SUPPRESS_MS;
+    }
+    pointer.active = false;
+  }, true);
+
+  // Prevent drag interaction while expanded
+  dot.addEventListener("pointerdown", (e) => {
+    if (isOpen) {
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (dot.classList.contains("is-dragging")) return; // ignore if currently dragging
-      isOpen ? collapse() : expand();
-    },
-    true
-  );
+    }
+  }, true);
+
+  // Toggle on click (capture) with drag suppression
+  dot.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    // If just dragged, do not open
+    if (Date.now() < suppressUntil) return;
+    // Extra guard in case other code toggles class late
+    if (dot.classList.contains("is-dragging")) return;
+
+    isOpen ? collapse() : expand();
+  }, true);
 
   function expand() {
     if (isOpen) return;
     isOpen = true;
 
-    // Snapshot current rect and inline styles
     const rect = dot.getBoundingClientRect();
     for (const k in saved) saved[k] = dot.style[k] || "";
 
-    // Pin the Dot in place (fixed) at the exact on-screen coordinates
+    // Fix Dot at screen position
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
     dot.style.width = rect.width + "px";
     dot.style.height = rect.height + "px";
     dot.style.transform = "translate3d(0,0,0)";
-    dot.style.zIndex = "2147483647"; // above everything
+    dot.style.zIndex = "2147483647";
     dot.style.transition =
       "left 180ms cubic-bezier(.2,.8,.2,1), " +
       "top 180ms cubic-bezier(.2,.8,.2,1), " +
@@ -82,10 +97,9 @@ export function setupDotCoreMenu() {
       "border-radius 180ms cubic-bezier(.2,.8,.2,1), " +
       "box-shadow 180ms cubic-bezier(.2,.8,.2,1)";
 
-    // Visual state
     dot.classList.add("dot-expanded");
 
-    // Create panel with buttons
+    // Panel (vertical buttons)
     panel = document.createElement("div");
     panel.className = "dot-panel";
     panel.innerHTML = `
@@ -94,7 +108,7 @@ export function setupDotCoreMenu() {
     `;
     dot.appendChild(panel);
 
-    // Wire actions
+    // Actions
     panel.querySelector("#dot-fn")?.addEventListener("click", () => {
       window.dispatchEvent(new CustomEvent("dot:function"));
       collapse();
@@ -108,12 +122,16 @@ export function setupDotCoreMenu() {
     document.addEventListener("keydown", onEsc, true);
     document.addEventListener("click", onOutsideClick, true);
 
-    // Compute target square and animate from the center
-    const TARGET = Math.max(148, Math.min(196, Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.28)));
+    // Smaller square target (slightly reduced vs. previous):
+    //  - responsive: ~24% of min viewport side
+    //  - clamped: 128..160 px
+    const TARGET = Math.max(128, Math.min(160,
+      Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
+    ));
     const dx = (TARGET - rect.width) / 2;
     const dy = (TARGET - rect.height) / 2;
 
-    // Ensure color background matches theme
+    // Theme-aware contrast
     if (document.body.classList.contains("theme-dark")) {
       dot.style.background = "#111";
       dot.style.color = "#fff";
@@ -121,20 +139,17 @@ export function setupDotCoreMenu() {
       dot.style.background = "#fff";
       dot.style.color = "#111";
     }
-    dot.style.boxShadow = "0 16px 40px rgba(0,0,0,0.35)";
+    dot.style.boxShadow = "0 14px 32px rgba(0,0,0,0.32)";
 
-    // Next frame → animate
+    // Animate to target square
     requestAnimationFrame(() => {
       dot.style.left = rect.left - dx + "px";
       dot.style.top = rect.top - dy + "px";
       dot.style.width = TARGET + "px";
       dot.style.height = TARGET + "px";
-      dot.style.borderRadius = "16px";
-
-      // Stagger: reveal content slightly after growth starts
-      setTimeout(() => {
-        panel.classList.add("visible");
-      }, 60);
+      dot.style.borderRadius = "12px"; // a bit tighter
+      // Reveal content slightly after growth starts
+      setTimeout(() => panel.classList.add("visible"), 60);
     });
   }
 
@@ -143,7 +158,7 @@ export function setupDotCoreMenu() {
     restoring = true;
     panel?.classList.remove("visible");
 
-    // Animate back to original size/position
+    // Animate back
     const back = () => {
       dot.style.left = saved.left;
       dot.style.top = saved.top;
@@ -152,10 +167,8 @@ export function setupDotCoreMenu() {
       dot.style.borderRadius = saved.borderRadius || "";
       dot.style.boxShadow = "0 0 0 rgba(0,0,0,0)";
     };
-
     back();
 
-    // After transition ends, clean up
     const onDone = () => {
       dot.removeEventListener("transitionend", onDone);
       panel?.remove();
@@ -185,12 +198,8 @@ export function setupDotCoreMenu() {
     dot.addEventListener("transitionend", onDone);
   }
 
-  function onEsc(e) {
-    if (e.key === "Escape") collapse();
-  }
-  function onOutsideClick(e) {
-    if (!dot.contains(e.target)) collapse();
-  }
+  function onEsc(e) { if (e.key === "Escape") collapse(); }
+  function onOutsideClick(e) { if (!dot.contains(e.target)) collapse(); }
 }
 
 function injectStylesOnce() {
@@ -199,44 +208,48 @@ function injectStylesOnce() {
   style.id = "dot-expander-styles";
   style.textContent = `
     .dot-core.dot-expanded {
-      /* ensure content layout while expanded */
       display: grid;
       place-items: center;
       overflow: hidden;
     }
+    /* Panel — vertical stack */
     .dot-core .dot-panel {
       position: absolute;
-      inset: 8px;
+      inset: 10px;
       display: flex;
+      flex-direction: column;    /* vertical buttons */
       gap: 10px;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       opacity: 0;
-      transform: scale(.98);
+      transform: scale(.985);
       transition: opacity 150ms cubic-bezier(.2,.8,.2,1), transform 150ms cubic-bezier(.2,.8,.2,1);
-      pointer-events: none; /* enabled when visible */
+      pointer-events: none;
     }
     .dot-core .dot-panel.visible {
       opacity: 1;
       transform: scale(1);
       pointer-events: auto;
     }
+    /* Buttons — full width, compact height */
     .dot-core .dot-btn {
       -webkit-tap-highlight-color: transparent;
       appearance: none;
       border: 1px solid currentColor;
       background: transparent;
       color: currentColor;
-      padding: 8px 14px;
-      border-radius: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
       font: inherit;
       line-height: 1;
       cursor: pointer;
       opacity: 0.95;
       transition: transform 120ms cubic-bezier(.2,.8,.2,1), opacity 120ms cubic-bezier(.2,.8,.2,1);
+      width: 100%;
+      text-align: center;
     }
     .dot-core .dot-btn:hover { opacity: 1; }
-    .dot-core .dot-btn:active { transform: scale(0.98); }
+    .dot-core .dot-btn:active { transform: scale(0.985); }
   `;
   document.head.appendChild(style);
 }
