@@ -1,37 +1,44 @@
-/* DOT Core — базовые стили, ничего лишнего.
-   Сохраняем размер/форму и якорь для меню. Цвет = currentColor (ставит JS). */
+/* =========================
+   DOT core + DOT menu (one file)
+   ========================= */
 
+/* Универсальная утилита скрытия (меню по умолчанию скрыто) */
+.ClassHidden { display: none !important; }
+
+/* --- DOT Core --- */
 .dot-core {
-  position: relative;                 /* якорь для меню */
+  /* якорь для меню */
+  position: relative;
+
+  /* форма/размер */
   width: 35px;
   height: 35px;
   border-radius: 50%;
+
+  /* layout */
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
+  /* интерактивность */
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
 
-  /* ч/б диск — цвет приходит из JS автоконтраста */
-  background: currentColor;
+  /* внешний вид: цвет диска // ч/б выставляется JS автоконтраста через currentColor */
   color: var(--dot-core-fg, currentColor);
+  background: currentColor;
   border: 3px solid var(--dot-core-border, currentColor);
 
   box-shadow: 0 0 18px rgba(0,0,0,0.16);
   transition:
     box-shadow .2s ease,
     transform .15s ease;
-  z-index: 10; /* на драге JS поднимает выше */
+  z-index: 10; /* на драге поднимается JS */
 }
 
-.dot-core.is-dragging {
-  transition: none !important;
-  cursor: grabbing;
-}
-
+.dot-core.is-dragging { transition: none !important; cursor: grabbing; }
 .dot-core:hover { box-shadow: 0 0 22px rgba(0,0,0,0.18); }
 .dot-core:active { transform: translateY(1px); }
 
@@ -40,14 +47,74 @@
   outline-offset: 2px;
 }
 
-/* Внутренние иконки/текст наследуют цвет диска */
-.dot-core svg {
-  fill: currentColor;
-  stroke: currentColor;
+/* Иконки/текст внутри точки наследуют currentColor */
+.dot-core svg { fill: currentColor; stroke: currentColor; }
+
+/* Если DOT докуется в нижнюю панель — держим его справа, по центру строки */
+.bottom-panel > .dot-core { justify-self: end; align-self: center; }
+
+/* --- DOT Menu --- */
+.dot-menu {
+  position: absolute;
+  z-index: 1000;
+
+  min-width: 180px;
+  max-width: 260px;
+
+  padding: 10px;
+  border-radius: 12px;
+
+  background: rgba(28, 28, 30, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.35),
+    0 2px 6px rgba(0,0,0,0.2);
+
+  /* дефолтное положение: ниже и вправо от точки */
+  top: calc(100% + 8px);
+  right: 0;
 }
 
-/* Во время драга запрещаем скролл страницы (ставится JS-класс) */
-body.dragging-dotcore {
-  overflow: hidden !important;
-  touch-action: none !important;
+/* Флип-положения — ставит JS через data-pos */
+.dot-menu[data-pos="down-left"]  { left: 0; right: auto; }
+.dot-menu[data-pos="up-right"]   { bottom: calc(100% + 8px); top: auto; right: 0; }
+.dot-menu[data-pos="up-left"]    { bottom: calc(100% + 8px); top: auto; left: 0; right: auto; }
+
+/* Контент меню: пилюли как на скрине */
+.dot-menu .menu-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dot-menu .menu-pill,
+.dot-menu [role="menuitem"],
+.dot-menu button,
+.dot-menu a[data-action] {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dot-menu button:active,
+.dot-menu a:active { transform: translateY(1px); }
+
+.dot-menu .menu-title {
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  margin: 0 0 8px 2px;
+}
+
+/* iOS safe area снизу */
+@supports (padding: max(0px)) {
+  .dot-menu { margin-bottom: max(0px, env(safe-area-inset-bottom)); }
 }
