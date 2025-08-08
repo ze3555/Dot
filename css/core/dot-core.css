@@ -189,4 +189,43 @@ body.dot-dock .dot-core {
 body.dragging-dotcore .dot-core {
   transition: none;
 }
+/* === Дот как кнопка Send при фокусе === */
+body.dot-dock .dot-core{
+  position: fixed;
+  z-index: 11020;
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  right: calc(max(14px, (100vw - var(--composer-max-w, 740px)) / 2));
+  bottom: calc(env(safe-area-inset-bottom) + 12px + ((var(--composer-h) - 42px)/2));
+  display: grid; place-items: center;
+
+  /* кнопочный вид + glow (из прошлой правки) */
+  background: var(--btn-bg, #111);
+  color: var(--btn-fg, #fff);
+  border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
+}
+
+/* Иконка «paper plane» */
+body.dot-dock .dot-core > *{ display:none; }
+body.dot-dock .dot-core::after{
+  content:"";
+  width: 18px; height: 18px; display:block; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
+          mask: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
+}
+
+/* Состояние: нет текста → «неактивна» (приглушаем) */
+body.dot-dock:not(.dot-send-ready) .dot-core{
+  opacity: .4;
+  pointer-events: auto; /* тап делает focus на поле */
+}
+
+/* Док на узких экранах: прижимаем к правому краю */
+@media (max-width: 860px){
+  body.dot-dock .dot-core{ right: 14px; }
+}
 
