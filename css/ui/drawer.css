@@ -119,3 +119,11 @@ body.theme-light .logout-btn:focus-visible {
 .contacts-drawer {
   padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
+/* Усиление видимости logout-кнопки внутри Drawer */
+#contacts-drawer #logout-btn.logout-btn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+}
