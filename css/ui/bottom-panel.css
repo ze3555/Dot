@@ -1,64 +1,74 @@
+/* css/ui/bottom-panel.css */
+/* Composer bar at the bottom. Colors from theme tokens. */
+
 .bottom-panel {
-  position: fixed;
+  position: sticky;
   bottom: 0;
-  left: 0;
-  right: 0;
-  background: #0b0b0c;
-  border-top: 1px solid #1e1f20;
-  padding: 12px 16px calc(35px + env(safe-area-inset-bottom)) 16px;
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
+  z-index: 999;
+  display: block;
+  padding: 8px 10px;
+  background: var(--panel-bg);
+  color: var(--panel-fg);
+  box-shadow: 0 -1px 8px rgba(0,0,0,0.12);
+  border-top: var(--panel-border);
 }
 
-body.light-theme .bottom-panel {
-  background: #0b0b0c;
-  border-top-color: #1e1f20;
-}
-
-/* Вложенная форма */
-#chat-form {
-  width: 100%;
-  max-width: 740px;
-  display: flex;
-  align-items: center;
+.bottom-panel form {
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 8px;
 }
 
-/* Поле ввода */
-.chat-input {
-  flex: 1 1 auto;
-  font-size: 16px;
-  border: none;
+/* Input */
+#chat-input, .chat-input {
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: var(--input-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 36px;
+}
+#chat-input::placeholder, .chat-input::placeholder {
+  color: var(--input-ph);
+}
+#chat-input:focus, .chat-input:focus {
   outline: none;
-  background: #111111;
-  color: #ffffff;
-  padding: 12px 14px;
-  border-radius: 20px;
-  border: 1px solid #2a2a2b;
+  border-color: currentColor;
+  box-shadow: var(--input-focus-ring);
 }
 
-.chat-input::placeholder {
-  color: #999999;
-  opacity: 0.9;
-}
-
-/* Кнопка DOT */
+/* Send button (you keep it hidden via style inline — here is the theme-ready look) */
 .chat-send-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #111111;
-  color: #ffffff;
-  border: 1px solid #2a2a2b;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  appearance: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-bg);
   cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease, transform .12s ease, opacity .12s ease;
 }
+.chat-send-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
+.chat-send-btn:active { transform: scale(.985); }
 
-.chat-send-btn .dot-svg-wrap svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
+/* Bottom actions area (if created by dotMoveHandler) */
+.bottom-actions {
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+.add-folder-btn {
+  appearance: none;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: currentColor;
+  border-radius: 10px;
+  padding: 6px 10px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity .12s ease, transform .12s ease, border-color .12s ease;
+  opacity: .95;
+}
+.add-folder-btn:hover { opacity: 1; }
+.add-folder-btn:active { transform: scale(.985); }
