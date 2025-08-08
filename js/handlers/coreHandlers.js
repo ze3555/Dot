@@ -1,10 +1,10 @@
 // js/handlers/coreHandlers.js
-import { setTheme } from "../theme/index.js";
+import { toggleTheme } from "./themeHandlers.js";
 
 /**
  * Dot expands into a smaller square with two vertical buttons:
  *  - "Function": emits 'dot:function'
- *  - "Theme": toggles dark/light via setTheme(next)
+ *  - "Theme": calls toggleTheme()
  * Smooth animation; drag-safe (post-drag clicks are suppressed).
  */
 export function setupDotCoreMenu() {
@@ -24,8 +24,8 @@ export function setupDotCoreMenu() {
   };
 
   // ----- Drag-safe click suppression -----
-  const DRAG_SLOP = 4;        // px
-  const SUPPRESS_MS = 180;    // ms
+  const DRAG_SLOP = 4;      // px: consider as "dragged"
+  const SUPPRESS_MS = 180;  // ms: suppress click after drag
   let suppressUntil = 0;
   const pointer = { active:false, startX:0, startY:0, moved:false };
 
@@ -48,20 +48,17 @@ export function setupDotCoreMenu() {
     pointer.active = false;
   }, true);
 
-  // Prevent drag interaction while expanded
+  // Prevent drag while expanded
   dot.addEventListener("pointerdown", (e) => {
     if (isOpen) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
-  // Toggle on click (capture) with drag suppression
+  // Toggle expand/collapse on click (with drag suppression)
   dot.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-
-    // If just dragged, do not open
-    if (Date.now() < suppressUntil) return;
+    if (Date.now() < suppressUntil) return;           // just dragged
     if (dot.classList.contains("is-dragging")) return;
-
     isOpen ? collapse() : expand();
   }, true);
 
@@ -105,15 +102,15 @@ export function setupDotCoreMenu() {
       collapse();
     });
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
-      const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
-      setTheme(next); // ← тот же механизм, что и глобальный переключатель
+      toggleTheme();
+      // оставляем панель открытой, чтобы можно было сразу вернуть тему, если нужно
     });
 
     // Close interactions
     document.addEventListener("keydown", onEsc, true);
     document.addEventListener("click", onOutsideClick, true);
 
-    // Smaller square target (responsive)
+    // Target square (compact)
     const TARGET = Math.max(128, Math.min(160,
       Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
     ));
