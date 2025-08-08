@@ -1,9 +1,10 @@
 .topbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   height: 56px; /* или нужная высота */
+  display: flex;
   background-color: var(--bg-primary, #121212);
   z-index: 2000;
   align-items: center;
