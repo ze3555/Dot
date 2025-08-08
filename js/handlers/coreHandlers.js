@@ -1,10 +1,10 @@
 // js/handlers/coreHandlers.js
-import { toggleTheme } from "./themeHandlers.js";
+import { setTheme } from "../theme/index.js";
 
 /**
  * Dot expands into a smaller square with two vertical buttons:
  *  - "Function": emits 'dot:function'
- *  - "Theme": calls toggleTheme()
+ *  - "Theme": toggles dark/light via setTheme(next)
  * Smooth animation; drag-safe (post-drag clicks are suppressed).
  */
 export function setupDotCoreMenu() {
@@ -24,8 +24,8 @@ export function setupDotCoreMenu() {
   };
 
   // ----- Drag-safe click suppression -----
-  const DRAG_SLOP = 4;      // px: consider as "dragged"
-  const SUPPRESS_MS = 180;  // ms: suppress click after drag
+  const DRAG_SLOP = 4;      // px: считаем как "таскали"
+  const SUPPRESS_MS = 180;  // мс: подавляем клик после драга
   let suppressUntil = 0;
   const pointer = { active:false, startX:0, startY:0, moved:false };
 
@@ -48,16 +48,16 @@ export function setupDotCoreMenu() {
     pointer.active = false;
   }, true);
 
-  // Prevent drag while expanded
+  // Блокируем драг, когда раскрыт
   dot.addEventListener("pointerdown", (e) => {
     if (isOpen) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
-  // Toggle expand/collapse on click (with drag suppression)
+  // Клик по Dot (с учётом подавления после драга)
   dot.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (Date.now() < suppressUntil) return;           // just dragged
+    if (Date.now() < suppressUntil) return;           // только что таскали — не открываем
     if (dot.classList.contains("is-dragging")) return;
     isOpen ? collapse() : expand();
   }, true);
@@ -69,7 +69,7 @@ export function setupDotCoreMenu() {
     const rect = dot.getBoundingClientRect();
     for (const k in saved) saved[k] = dot.style[k] || "";
 
-    // Fix Dot at screen position
+    // Зафиксировать Dot в экранных координатах
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
@@ -87,7 +87,7 @@ export function setupDotCoreMenu() {
 
     dot.classList.add("dot-expanded");
 
-    // Panel (vertical buttons)
+    // Панель с кнопками (вертикально)
     panel = document.createElement("div");
     panel.className = "dot-panel";
     panel.innerHTML = `
@@ -96,28 +96,29 @@ export function setupDotCoreMenu() {
     `;
     dot.appendChild(panel);
 
-    // Actions
+    // Действия
     panel.querySelector("#dot-fn")?.addEventListener("click", () => {
       window.dispatchEvent(new CustomEvent("dot:function"));
       collapse();
     });
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
-      toggleTheme();
-      // оставляем панель открытой, чтобы можно было сразу вернуть тему, если нужно
+      const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
+      setTheme(next); // ← единый механизм темы
+      // панель не закрываем — можно сразу вернуть обратно при желании
     });
 
-    // Close interactions
+    // Закрытие
     document.addEventListener("keydown", onEsc, true);
     document.addEventListener("click", onOutsideClick, true);
 
-    // Target square (compact)
+    // Компактный квадрат, адаптивный
     const TARGET = Math.max(128, Math.min(160,
       Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
     ));
     const dx = (TARGET - rect.width) / 2;
     const dy = (TARGET - rect.height) / 2;
 
-    // Theme-aware contrast
+    // Контраст от темы
     if (document.body.classList.contains("theme-dark")) {
       dot.style.background = "#111"; dot.style.color = "#fff";
     } else {
@@ -125,7 +126,7 @@ export function setupDotCoreMenu() {
     }
     dot.style.boxShadow = "0 14px 32px rgba(0,0,0,0.32)";
 
-    // Animate to target square
+    // Анимация
     requestAnimationFrame(() => {
       dot.style.left = rect.left - dx + "px";
       dot.style.top = rect.top - dy + "px";
@@ -141,22 +142,19 @@ export function setupDotCoreMenu() {
     restoring = true;
     panel?.classList.remove("visible");
 
-    // Animate back
-    const back = () => {
-      dot.style.left = saved.left;
-      dot.style.top = saved.top;
-      dot.style.width = saved.width;
-      dot.style.height = saved.height;
-      dot.style.borderRadius = saved.borderRadius || "";
-      dot.style.boxShadow = "0 0 0 rgba(0,0,0,0)";
-    };
-    back();
+    // Возврат в исходные размеры/позицию
+    dot.style.left = saved.left;
+    dot.style.top = saved.top;
+    dot.style.width = saved.width;
+    dot.style.height = saved.height;
+    dot.style.borderRadius = saved.borderRadius || "";
+    dot.style.boxShadow = "0 0 0 rgba(0,0,0,0)";
 
     const onDone = () => {
       dot.removeEventListener("transitionend", onDone);
       panel?.remove(); panel = null;
 
-      // Restore inline styles
+      // Восстановить стили
       dot.style.position = saved.position;
       dot.style.left = saved.left;
       dot.style.top = saved.top;
