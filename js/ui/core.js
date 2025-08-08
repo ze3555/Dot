@@ -1,22 +1,20 @@
 // js/ui/core.js
-import { setupDotMoveOnInput } from "../handlers/dotMoveHandler.js";
 
-export function renderTopbar(user) {
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) {
-    logoutBtn.style.display = user ? "block" : "none";
-  }
-  // Кнопка контактов и её обработчик полностью убраны
-}
+export function renderDotButton() {
+  const dot = document.createElement('div');
+  dot.id = 'dot-core';
 
-export function renderDotCore() {
-  const dot = document.querySelector(".dot-core");
-  if (!dot) return;
+  dot.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (dot.classList.contains('pressed')) return;
 
-  dot.id = "dot-core";
-}
+    dot.classList.add('pressed');
 
-// === Инициализация dot-core "магнитика" ===
-export function setupDotCoreFeatures() {
-  setupDotMoveOnInput();
+    // Удаляем класс после завершения анимации
+    setTimeout(() => {
+      dot.classList.remove('pressed');
+    }, 200);
+  });
+
+  return dot;
 }
