@@ -173,3 +173,21 @@ body.dragging-dotcore {
 .dot-core {
   z-index: 2147483647 !important;
 }
+/* Состояние DOT при добавлении контакта */
+.dot-core.dot-add-mode {
+  transform: translateX(10px) scale(1.05);
+  background-color: var(--accent-color, #4cafef);
+  border-radius: 50px;
+  transition: all 0.25s ease;
+}
+
+.dot-core.dot-add-mode::after {
+  content: "+";
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
