@@ -28,3 +28,64 @@
 .dot-core.is-dragging { cursor: grabbing; box-shadow: 0 8px 20px rgba(0,0,0,.20); }
 
 .top-bar .dot-core { margin-left: 8px; }
+/* === Docked Dot near chat input (Send mode) ===
+   Включается при наличии класса body.dot-dock (добавит JS на focus/blur) */
+body.dot-dock .dot-core {
+  position: fixed;                /* отрываем от топ-бара */
+  z-index: 1101;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;            /* кнопка-капсула */
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+
+  /* Визуально как кнопка отправки из темы */
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-bg);
+
+  /* Позиционирование: у правого края формы.
+     На десктопе — выравниваемся по max-width формы,
+     на мобиле — переопределим ниже на фиксированный отступ. */
+  right: calc(max(10px, (100vw - var(--chat-form-max-w)) / 2) + 12px);
+  bottom: calc(env(safe-area-inset-bottom) + var(--composer-pad-y, 8px) + (var(--chat-input-h) / 2) - 20px);
+
+  display: grid;
+  place-items: center;
+
+  transition:
+    right .20s cubic-bezier(.2,.8,.2,1),
+    bottom .20s cubic-bezier(.2,.8,.2,1),
+    transform .20s cubic-bezier(.2,.8,.2,1),
+    background-color .12s ease,
+    color .12s ease,
+    box-shadow .12s ease;
+}
+
+/* На узких экранах привязываемся к краю вьюпорта */
+@media (max-width: 860px) {
+  body.dot-dock .dot-core { right: 14px; }
+}
+
+/* Скрываем внутренности Дота и рисуем paper-plane иконку из currentColor */
+body.dot-dock .dot-core > * { display: none; }
+body.dot-dock .dot-core::after {
+  content: "";
+  width: 18px; height: 18px;
+  display: block;
+  background: var(--btn-fg);
+  -webkit-mask: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
+          mask: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
+}
+
+/* Тач-фидбек */
+body.dot-dock .dot-core:active { transform: scale(.98); }
+
+/* Reduce motion уважение */
+@media (prefers-reduced-motion: reduce) {
+  body.dot-dock .dot-core { transition: none; }
+}
+
