@@ -1,6 +1,6 @@
 // js/handlers/swipeHandlers.js
-// Contacts drawer: edge-swipe only (from left edge), horizontal, below top-bar.
-// Gesture-lock чтобы не конфликтовать с профилем.
+// Contacts drawer: открытие — edge-swipe с левого края; закрытие — тап по бэкдропу ИЛИ свайп влево внутри панели.
+// Gesture-lock, чтобы не конфликтовать с профилем.
 
 let WIRED = false;
 
@@ -37,30 +37,41 @@ export function setupSwipeHandlers() {
   backdrop.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
-  // Gesture config
+  // ---- Gesture config
   const topBar = document.querySelector(".top-bar");
   const TOP_Y = Math.max(48, (topBar?.offsetHeight || 64));
-  const EDGE_X = 20;   // старт только из левой кромки
-  const MIN_X  = 60;   // порог открытия
-  const ANGLE  = 1.4;  // |dx| > 1.4 * |dy|
+  const EDGE_X = 20;   // старт открытия только из левого края
+  const MIN_X  = 60;   // порог по горизонтали
+  const ANGLE  = 1.4;  // |dx| > 1.4*|dy|
   const MAX_DT = 800;  // мс
 
+  let mode = "closed"; // "opening" | "closing" | "closed"
   let track = false, claim = false, x0 = 0, y0 = 0, x = 0, y = 0, t0 = 0;
 
-  function reset() { track = false; claim = false; }
+  function reset() { track = false; claim = false; mode = "closed"; }
 
   function onStart(e) {
-    if (isOpen()) return;
     const t = e.touches?.[0]; if (!t) return;
 
+    if (isOpen()) {
+      // закрытие — свайп влево, начинаем ТОЛЬКО внутри самой панели
+      const rect = drawer.getBoundingClientRect();
+      const inDrawer = t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom;
+      if (!inDrawer) { reset(); return; }
+      track = true; claim = false; mode = "closing";
+      x0 = x = t.clientX; y0 = y = t.clientY; t0 = Date.now();
+      return;
+    }
+
+    // открытие — только из левого края и ниже топ-бара
     const fromEdge = t.clientX <= EDGE_X;
     const belowTop = t.clientY > TOP_Y + 4;
     if (!fromEdge || !belowTop) { reset(); return; }
 
-    // Игнорируем тач на элементах, где не хотим жестов
+    // избегаем конфликтов (дот/профиль)
     if (e.target?.closest(".dot-core, .profile-top-drawer, .profile-top-backdrop")) { reset(); return; }
 
-    track = true; claim = false;
+    track = true; claim = false; mode = "opening";
     x0 = x = t.clientX; y0 = y = t.clientY; t0 = Date.now();
   }
 
@@ -73,21 +84,33 @@ export function setupSwipeHandlers() {
 
     if (!claim && Math.abs(dy) > Math.abs(dx) * ANGLE) { reset(); return; }
 
-    if (!claim && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
-      claim = true;
-      e.preventDefault(); // блокируем скролл
-      window.__gestureLock = "contacts";
-      document.body.classList.add("gesture-contacts");
+    if (!claim) {
+      if (mode === "opening" && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
+        claim = true;
+        e.preventDefault();
+        window.__gestureLock = "contacts";
+        document.body.classList.add("gesture-contacts");
+      }
+      if (mode === "closing" && dx < -10 && Math.abs(dx) > Math.abs(dy)) {
+        claim = true;
+        e.preventDefault();
+        window.__gestureLock = "contacts";
+        document.body.classList.add("gesture-contacts");
+      }
+    } else {
+      e.preventDefault();
     }
-
-    if (claim) e.preventDefault();
   }
 
   function onEnd() {
     if (!track) return;
     const dt = Date.now() - t0, dx = x - x0, dy = y - y0;
 
-    if (claim && dx >= MIN_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DT) open();
+    if (mode === "opening" && claim && dx >= MIN_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DT) {
+      open();
+    } else if (mode === "closing" && claim && -dx >= MIN_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DT) {
+      close();
+    }
 
     reset();
     setTimeout(() => {
@@ -106,5 +129,5 @@ export function setupSwipeHandlers() {
   window.__contactsDrawer = { open, close, isOpen };
 }
 
-// Алиас под импорт из main.js
+// Алиас под возможный старый импорт
 export function setupSwipeDrawer() { return setupSwipeHandlers(); }
