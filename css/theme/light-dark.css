@@ -1,70 +1,193 @@
-/* СВЕТЛАЯ ТЕМА */
-.theme-light {
-  background: #f0f0f0;
+/* css/theme/light-dark.css
+   Theme toggling via body classes: .theme-light / .theme-dark
+   Никакой жёсткой перезаписи компонентной верстки. Только цвета/тени/тонкие эффекты.
+*/
+
+/* ---------- BASE TRANSITIONS (для приятного переключения) ---------- */
+body, .top-bar, .dot-core,
+.contacts-drawer, .bottom-panel, .drawer-trigger,
+#chat-input, .drawer-add-btn, .logout-btn, .add-folder-btn {
+  transition: background-color .18s cubic-bezier(.2,.8,.2,1),
+              color .18s cubic-bezier(.2,.8,.2,1),
+              box-shadow .18s cubic-bezier(.2,.8,.2,1),
+              border-color .18s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ---------- LIGHT THEME ---------- */
+body.theme-light {
+  background: #f5f5f7;
   color: #111;
 }
 
-.theme-light .topbar {
-  background: #000;
+/* Top bar */
+body.theme-light .top-bar {
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Dot — даём только цвет; фон/контраст регулирует JS */
+body.theme-light .dot-core {
+  color: #111;
+}
+
+/* Contacts drawer */
+body.theme-light .contacts-drawer {
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.10);
+  border-right: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Drawer backdrop */
+body.theme-light .contacts-drawer-backdrop {
+  background: rgba(0,0,0,0.15);
+}
+
+/* Drawer trigger (desktop arrow) */
+body.theme-light .drawer-trigger {
+  background: rgba(255,255,255,0.9);
+  color: #111;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Drawer buttons */
+body.theme-light .drawer-add-btn,
+body.theme-light .logout-btn {
+  background: #111;
   color: #fff;
-  box-shadow: 0 2px 6px #ccc;
+  border: 1px solid #111;
 }
-
-.theme-light .dot-core {
-  background: #fff;
-  color: #000;
-}
-
-.theme-light .login-modal {
-  background: #fff;
-  color: #000;
-}
-
-.theme-light .login-modal input {
-  background: #eee;
-  color: #000;
-}
-
-.theme-light .login-modal button {
-  background: #000;
-  color: #fff;
-}
-
-.theme-light .login-modal button:hover {
+body.theme-light .drawer-add-btn:hover,
+body.theme-light .logout-btn:hover {
   background: #333;
+  border-color: #333;
 }
 
-/* ТЁМНАЯ ТЕМА */
-.theme-dark {
-  background: #1a1a1a;
+/* Bottom panel (composer) */
+body.theme-light .bottom-panel {
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Chat input */
+body.theme-light #chat-input,
+body.theme-light .chat-input {
+  background: #f1f1f3;
+  color: #111;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+body.theme-light #chat-input::placeholder,
+body.theme-light .chat-input::placeholder {
+  color: rgba(0,0,0,0.45);
+}
+body.theme-light #chat-input:focus,
+body.theme-light .chat-input:focus {
+  outline: none;
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(17,17,17,0.12);
+}
+
+/* Optional: chat send button, if используется где-то */
+body.theme-light .chat-send-btn {
+  background: #111;
+  color: #fff;
+  border: 1px solid #111;
+}
+body.theme-light .chat-send-btn:hover {
+  background: #333;
+  border-color: #333;
+}
+
+/* ---------- DARK THEME ---------- */
+body.theme-dark {
+  background: #121212;
   color: #fff;
 }
 
-.theme-dark .topbar {
-  background-color: #fff;
+/* Top bar */
+body.theme-dark .top-bar {
+  background: #161616;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+/* Dot — только цвет; фон/контраст управляет JS */
+body.theme-dark .dot-core {
+  color: #fff;
+}
+
+/* Contacts drawer */
+body.theme-dark .contacts-drawer {
+  background: #161616;
+  color: #fff;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.45);
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Drawer backdrop */
+body.theme-dark .contacts-drawer-backdrop {
+  background: rgba(0,0,0,0.45);
+}
+
+/* Drawer trigger */
+body.theme-dark .drawer-trigger {
+  background: rgba(22,22,22,0.95);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Drawer buttons */
+body.theme-dark .drawer-add-btn,
+body.theme-dark .logout-btn {
+  background: #ffffff;
   color: #000;
+  border: 1px solid #ffffff;
+}
+body.theme-dark .drawer-add-btn:hover,
+body.theme-dark .logout-btn:hover {
+  background: #e9e9e9;
+  border-color: #e9e9e9;
 }
 
-.theme-dark .dot-core {
-  background-color: #000;
+/* Bottom panel (composer) */
+body.theme-dark .bottom-panel {
+  background: #161616;
   color: #fff;
+  box-shadow: 0 -1px 8px rgba(0,0,0,0.45);
+  border-top: 1px solid rgba(255,255,255,0.06);
 }
 
-.theme-dark .login-modal {
-  background: #1a1a1a;
+/* Chat input */
+body.theme-dark #chat-input,
+body.theme-dark .chat-input {
+  background: #1e1e1e;
   color: #fff;
+  border: 1px solid rgba(255,255,255,0.16);
+}
+body.theme-dark #chat-input::placeholder,
+body.theme-dark .chat-input::placeholder {
+  color: rgba(255,255,255,0.55);
+}
+body.theme-dark #chat-input:focus,
+body.theme-dark .chat-input:focus {
+  outline: none;
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.14);
 }
 
-.theme-dark .login-modal input {
-  background: #2a2a2a;
-  color: #fff;
+/* Optional: chat send button */
+body.theme-dark .chat-send-btn {
+  background: #ffffff;
+  color: #000;
+  border: 1px solid #ffffff;
+}
+body.theme-dark .chat-send-btn:hover {
+  background: #e9e9e9;
+  border-color: #e9e9e9;
 }
 
-.theme-dark .login-modal button {
-  background: #000;
-  color: #fff;
-}
-
-.theme-dark .login-modal button:hover {
-  background: #222;
-}
