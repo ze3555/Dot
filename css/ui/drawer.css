@@ -75,7 +75,7 @@
 /* Поле ввода — строго ВНУТРИ + запас под .dot-core */
 .contacts-drawer .contacts-input {
   display: block;
-  width: 100%;
+  width: 70%;
   box-sizing: border-box;
   margin: 0 0 10px 0;   /* только нижний отступ */
   padding: 10px 14px;
@@ -117,8 +117,8 @@
 }
 
 /* Мобильная ширина */
-@media (max-width: 440px) {
-  .contacts-drawer { width: 90vw; }
+@media (max-width: 300px) {
+  .contacts-drawer { width: 70vw; }
 }
 
 /* dot в drawer (если используешь как кнопку добавления) */
