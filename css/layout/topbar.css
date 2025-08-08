@@ -1,10 +1,9 @@
 /* css/layout/topbar.css */
-/* Inverted top-bar colors come from theme variables. */
 .top-bar {
   position: sticky;
   top: 0;
   z-index: 1000;
-  height: 48px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -14,13 +13,8 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.10);
 }
 
-/* Title placeholder if you ever render it */
-.topbar-title {
-  font-weight: 600;
-  letter-spacing: .02em;
-}
+.topbar-title { font-weight: 600; letter-spacing: .02em; }
 
-/* Topbar actions if present (kept minimal) */
 .topbar-actions {
   margin-left: auto;
   display: flex;
