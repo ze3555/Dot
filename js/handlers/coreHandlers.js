@@ -1,4 +1,3 @@
-
 // js/handlers/coreHandlers.js
 import { setTheme } from "../theme/index.js";
 
@@ -65,6 +64,18 @@ export function setupDotCoreMenu() {
     isOpen ? collapse() : expand();
   });
 
+  // === Закрытие по клику вне и по ESC ===
+  const onOutsidePointerDown = (e) => {
+    if (!isOpen) return;
+    // если клик не по доту и не внутри панели — закрываем
+    if (!dot.contains(e.target)) {
+      collapse();
+    }
+  };
+  const onEscape = (e) => {
+    if (isOpen && e.key === "Escape") collapse();
+  };
+
   function expand() {
     if (isOpen) return;
     isOpen = true;
@@ -88,7 +99,7 @@ export function setupDotCoreMenu() {
       "border-radius 180ms cubic-bezier(.2,.8,.2,1), " +
       "box-shadow 180ms cubic-bezier(.2,.8,.2,1)";
 
-    // ВАЖНО: помечаем состояние «раскрыт», чтобы dotCoreDrag не трогал цвет/фон
+    // Флаг раскрытия — замораживает автоконтраст в dotCoreDrag.js
     dot.classList.add("dot-expanded");
 
     // Панель
@@ -108,8 +119,13 @@ export function setupDotCoreMenu() {
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
       const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
       setTheme(next);
-      // Никаких inline-цветов — фон/текст берутся из темы автоматически.
+      // цвета/фон панели задаёт тема через .dot-expanded
     });
+
+    // Подписки на время открытия: клики вне и ESC
+    // pointerdown с capture — закрываем до чужих обработчиков
+    document.addEventListener("pointerdown", onOutsidePointerDown, true);
+    document.addEventListener("keydown", onEscape);
 
     // Визуал
     const TARGET = Math.max(128, Math.min(160,
@@ -135,6 +151,10 @@ export function setupDotCoreMenu() {
     restoring = true;
     panel?.classList.remove("visible");
 
+    // Снятие подписок
+    document.removeEventListener("pointerdown", onOutsidePointerDown, true);
+    document.removeEventListener("keydown", onEscape);
+
     // Возврат геометрии
     dot.style.left = saved.left;
     dot.style.top = saved.top;
@@ -147,10 +167,10 @@ export function setupDotCoreMenu() {
       dot.removeEventListener("transitionend", onDone);
       panel?.remove(); panel = null;
 
-      // Снимаем флаг раскрытия — автоконтраст снова может управлять цветом/фоном
+      // Снимаем флаг раскрытия — автоконтраст снова активен
       dot.classList.remove("dot-expanded");
 
-      // Восстановить стилевые свойства (кроме цвета/фона — пусть автоконтраст выставит сам)
+      // Восстанавливаем inline-стили (цвет/фон дальше выставит автоконтраст)
       dot.style.position = saved.position;
       dot.style.left = saved.left;
       dot.style.top = saved.top;
@@ -160,8 +180,6 @@ export function setupDotCoreMenu() {
       dot.style.borderRadius = saved.borderRadius;
       dot.style.transition = saved.transition;
       dot.style.transform = saved.transform;
-
-      // Чистим любые наши inline-цвета, чтобы автоконтраст обновил кружок
       dot.style.backgroundColor = saved.backgroundColor;
       dot.style.color = saved.color;
 
@@ -177,7 +195,7 @@ function injectStylesOnce() {
   const style = document.createElement("style");
   style.id = "dot-expander-styles";
   style.textContent = `
-    /* Когда DOT раскрыт, фон/текст берем из темы (видим кнопки!) */
+    /* Когда DOT раскрыт, фон/текст берем из темы (кнопки видны) */
     .dot-core.dot-expanded {
       display: grid;
       place-items: center;
@@ -204,7 +222,7 @@ function injectStylesOnce() {
       transform: scale(1);
       pointer-events: auto;
     }
-    /* Кнопки — используют currentColor, который задан темой у .dot-expanded */
+    /* Кнопки — currentColor */
     .dot-core .dot-btn {
       -webkit-tap-highlight-color: transparent;
       appearance: none;
