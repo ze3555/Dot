@@ -1,0 +1,142 @@
+/* ==== Profile Top Drawer (верхняя шторка профиля) ==== */
+.profile-top-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  /* высота шторки: регулируется переменной */
+  height: var(--profile-sheet-height, 62vh);
+  max-height: calc(100vh - env(safe-area-inset-top));
+
+  background: #181818;
+  color: #fff;
+  border-bottom: 1px solid #1e1f20;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.32);
+  z-index: 100000; /* выше левого дроуэра и его backdrop'а */
+
+  display: flex;
+  flex-direction: column;
+
+  /* скрыта по умолчанию — уезжает вверх */
+  transform: translateY(-100%);
+  transition: transform 0.34s cubic-bezier(.5,.12,.34,1.23);
+  will-change: transform;
+
+  /* безопасные отступы для iOS/андроид статус-бара */
+  padding-top: calc(env(safe-area-inset-top) + 8px);
+  padding-bottom: 12px;
+  overflow: hidden;
+}
+
+.profile-top-drawer.open { transform: translateY(0); }
+
+/* Прокручиваемая зона внутри шторки */
+.profile-top-drawer .profile-sheet-scroll {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px;
+  box-sizing: border-box;
+}
+
+/* Бекдроп для верхней шторки */
+.profile-top-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.22);
+  z-index: 99999;
+  display: none;
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+/* соседнее состояние: шторка + backdrop */
+.profile-top-drawer.open + .profile-top-backdrop { display: block; opacity: 1; }
+/* альтернативно — ручное управление классом */
+#profile-top-backdrop.active { display: block; opacity: 1; }
+
+/* Внутренности (минимум) */
+.profile-top-drawer .profile-header {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.profile-top-drawer .avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #111; border: 1px solid #2a2a2b;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.profile-top-drawer .user-meta { display: flex; flex-direction: column; gap: 6px; }
+.profile-top-drawer .username-row { display: flex; align-items: center; gap: 8px; }
+.profile-top-drawer .username-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #111; border: 1px solid #2a2a2b;
+  font-size: 13px; color: #fff;
+}
+
+.profile-top-drawer .profile-action {
+  padding: 6px 10px;
+  font-size: 13px;
+  background: #000; color: #fff;
+  border: 1px solid #2a2a2b;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.profile-top-drawer .profile-action:hover { background: #222; }
+.profile-top-drawer .profile-action.subtle {
+  background: transparent;
+  border-color: #2a2a2b;
+}
+
+.profile-top-drawer .section-title {
+  display: block;
+  font-size: 12px;
+  opacity: .8;
+  margin: 10px 0 8px;
+}
+.profile-top-drawer .add-username-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.profile-top-drawer .profile-input {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2b;
+  background: #111; color: #fff; font-size: 14px;
+}
+
+/* Светлая тема */
+body.theme-light .profile-top-drawer {
+  background: #fff;
+  color: #000;
+  border-bottom-color: #ddd;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+}
+body.theme-light .profile-top-drawer .username-chip {
+  background: #eee; border-color: #d0d0d0; color: #000;
+}
+body.theme-light .profile-top-drawer .profile-input {
+  background: #eee; color: #000; border-color: #d0d0d0;
+}
+body.theme-light .profile-top-drawer .profile-action {
+  background: #000; color: #fff; border-color: #1e1f20;
+}
+body.theme-light .profile-top-drawer .profile-action.subtle {
+  background: transparent; color: inherit; border-color: #d0d0d0;
+}
+
+/* Блокировка скролла страницы при открытой шторке (по желанию через JS) */
+body.no-scroll { overflow: hidden; }
+
+/* Мобильные ширины — ничего спец не нужно, но на очень узких сужаем отступы */
+@media (max-width: 440px) {
+  .profile-top-drawer .profile-sheet-scroll { padding: 10px 12px; }
+}
