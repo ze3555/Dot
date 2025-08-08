@@ -1,10 +1,9 @@
+
 // js/handlers/dotCoreDrag.js
 //
-// High-perf drag + автоконтраст (фон+цвет) без дёрганий на отпускании.
-// Ключевые фиксы:
-//  • Во время драга отключаем transition (transition: none), на отпускании возвращаем.
-//  • Не читаем computed transform — используем lastDx/lastDy (без reflow).
-//  • Коммитим left/top до сброса transform (FLIP без анимации на релизе).
+// High-perf drag + авто-контраст (фон+цвет).
+// ВАЖНО: когда DOT раскрыт (.dot-expanded), мы не трогаем цвет/фон,
+// чтобы панель оставалась читабельной (фон/цвет приходят из темы).
 
 export function enableDotCoreDrag() {
   const dot = document.querySelector('.dot-core');
@@ -32,14 +31,13 @@ export function enableDotCoreDrag() {
   const Z_DRAG = 2147483647;
   let prevZ = '';
 
-  // кэш состояния
   let lastIsDarkBg = null;
   let lastHex = '';
   let lastDx = 0, lastDy = 0;
   let frameCounter = 0;
-
-  // отключаем/возвращаем transition
   let savedTransition = '';
+
+  const isFrozen = () => dot.classList.contains('dot-expanded');
 
   function ensureFixedPosition() {
     const rect = dot.getBoundingClientRect();
@@ -77,7 +75,6 @@ export function enableDotCoreDrag() {
     offsetX = latestClientX - commitLeft;
     offsetY = latestClientY - commitTop;
 
-    // временно отключаем любые переходы — двигаем «сырым» transform’ом
     savedTransition = dot.style.transition || '';
     dot.style.transition = 'none';
 
@@ -89,8 +86,8 @@ export function enableDotCoreDrag() {
     dragging = true;
     rafPending = false;
 
-    // стартовый апдейт контраста
-    updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
+    // стартовый апдейт (если не заморожен)
+    if (!isFrozen()) updateDotContrast(commitLeft, commitTop, 0, 0, true);
 
     tick();
 
@@ -117,28 +114,24 @@ export function enableDotCoreDrag() {
     pointerId = null;
     dragging = false;
 
-    // 1) Коммитим абсолютную позицию (без чтения computed transform)
+    // Коммит абсолютной позиции
     commitLeft += lastDx;
     commitTop  += lastDy;
     dot.style.left = commitLeft + 'px';
     dot.style.top  = commitTop  + 'px';
 
-    // 2) Сбрасываем transform в 0 — переходы выключены, рывка нет
     dot.style.transform = 'translate3d(0,0,0)';
-
-    // 3) Убираем «режим драга»
     dot.style.willChange = '';
     dot.classList.remove('is-dragging');
     dot.style.zIndex = prevZ || '';
     document.body.style.userSelect = '';
 
-    // 4) Возвращаем transition в следующий кадр (чтобы не поймать промежуточный стейт)
     requestAnimationFrame(() => {
       dot.style.transition = savedTransition;
     });
 
-    // финальный апдейт контраста
-    updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
+    // финальный апдейт (если не заморожен)
+    if (!isFrozen()) updateDotContrast(commitLeft, commitTop, 0, 0, true);
   }
 
   function tick() {
@@ -156,8 +149,8 @@ export function enableDotCoreDrag() {
       dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
     }
 
-    if ((frameCounter++ & 1) === 0) {
-      updateDotContrast(commitLeft, commitTop, dx, dy, /*force*/false);
+    if (!isFrozen() && (frameCounter++ & 1) === 0) {
+      updateDotContrast(commitLeft, commitTop, dx, dy, false);
     }
 
     if (dragging) {
@@ -165,8 +158,10 @@ export function enableDotCoreDrag() {
     }
   }
 
-  // ===== Автоконтраст (фон+цвет, лёгкий) =====
+  // ===== Автоконтраст (фон+цвет), пропускаем если .dot-expanded =====
   function updateDotContrast(left, top, dx, dy, force) {
+    if (isFrozen()) return;
+
     const cx = Math.round(left + dx + dotW / 2);
     const cy = Math.round(top  + dy + dotH / 2);
 
@@ -235,7 +230,7 @@ export function enableDotCoreDrag() {
   window.addEventListener('pointercancel', onPointerUpOrCancel, { passive: true });
 
   // актуальность без драга
-  const refresh = () => updateDotContrast(commitLeft, commitTop, 0, 0, /*force*/true);
+  const refresh = () => { if (!isFrozen()) updateDotContrast(commitLeft, commitTop, 0, 0, true); };
   window.addEventListener('resize', refresh);
   window.addEventListener('scroll',  refresh, { passive: true });
 
