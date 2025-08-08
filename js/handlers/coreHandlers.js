@@ -1,3 +1,4 @@
+
 // js/handlers/coreHandlers.js
 import { setTheme } from "../theme/index.js";
 
@@ -5,8 +6,8 @@ import { setTheme } from "../theme/index.js";
  * DOT expands into a compact square with two vertical buttons:
  *  - "Function": emits 'dot:function'
  *  - "Theme": toggles light/dark via setTheme(next)
- * Smooth animation; drag-safe (post-drag clicks are suppressed).
- * Now: no hard theme colors on expand; contrast auto-recomputed.
+ * Smooth animation; drag-safe; when expanded we freeze auto-contrast
+ * and style via theme vars (no inline colors).
  */
 export function setupDotCoreMenu() {
   const dot = document.querySelector(".dot-core");
@@ -21,12 +22,13 @@ export function setupDotCoreMenu() {
   // Save/restore inline styles to avoid layout shifts
   const saved = {
     position: "", left: "", top: "", width: "", height: "",
-    zIndex: "", borderRadius: "", transition: "", transform: "", boxShadow: "", background: "", color: ""
+    zIndex: "", borderRadius: "", transition: "", transform: "",
+    boxShadow: "", color: "", backgroundColor: ""
   };
 
   // ----- Drag-safe click suppression -----
-  const DRAG_SLOP = 4;      // px
-  const SUPPRESS_MS = 180;  // ms
+  const DRAG_SLOP = 4;
+  const SUPPRESS_MS = 180;
   let suppressUntil = 0;
   const pointer = { active:false, startX:0, startY:0, moved:false };
 
@@ -54,7 +56,7 @@ export function setupDotCoreMenu() {
     if (isOpen) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
-  // Toggle on click (BUBBLE). Не мешаем кнопкам внутри панели.
+  // Toggle on click (bubble). Кнопки внутри панели не трогаем.
   dot.addEventListener("click", (e) => {
     if (Date.now() < suppressUntil) return;
     if (dot.classList.contains("is-dragging")) return;
@@ -63,70 +65,6 @@ export function setupDotCoreMenu() {
     isOpen ? collapse() : expand();
   });
 
-  // ===== Контраст под Дотом (фон+цвет) — локальная утилита =====
-  function recomputeDotContrast() {
-    // центр текущего дота в viewport
-    const rect = dot.getBoundingClientRect();
-    const cx = Math.round(rect.left + rect.width / 2);
-    const cy = Math.round(rect.top + rect.height / 2);
-
-    // заглянуть «под дот»
-    const prevPE = dot.style.pointerEvents;
-    dot.style.pointerEvents = "none";
-    let behind = document.elementFromPoint(cx, cy);
-    dot.style.pointerEvents = prevPE;
-
-    // ищем непрозрачный фон вверх
-    let rgba = null;
-    for (let i = 0; i < 12 && behind; i++) {
-      const bg = getComputedStyle(behind).backgroundColor;
-      const parsed = parseCssColor(bg);
-      if (parsed && parsed[3] > 0) { rgba = parsed; break; }
-      behind = behind.parentElement;
-    }
-    if (!rgba) rgba = [255,255,255,1];
-
-    const [r,g,b] = rgba;
-    const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
-    const hex = lum < 0.5 ? "#fff" : "#000";
-
-    // ставим и fill, и fg
-    if (dot.style.backgroundColor !== hex) dot.style.backgroundColor = hex;
-    if (dot.style.color !== hex) dot.style.color = hex;
-
-    // страхуем вложенные svg
-    try {
-      dot.querySelectorAll("svg").forEach(svg => {
-        svg.style.stroke = "currentColor";
-        svg.style.fill = "currentColor";
-      });
-    } catch(_) {}
-  }
-  function srgb(v){ v/=255; return v<=0.03928? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }
-  function parseCssColor(color){
-    if (!color) return null;
-    if (color === "transparent") return [0,0,0,0];
-    if (color.startsWith("rgb")) {
-      const m = color.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+(?:\.\d+)?))?\)/i);
-      if (!m) return null;
-      return [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10), m[4] ? parseFloat(m[4]) : 1];
-    }
-    if (color.startsWith("#")) {
-      let hex = color.slice(1);
-      if (hex.length === 3) hex = hex.split("").map(c=>c+c).join("");
-      if (hex.length !== 6) return null;
-      const r = parseInt(hex.slice(0,2),16);
-      const g = parseInt(hex.slice(2,4),16);
-      const b = parseInt(hex.slice(4,6),16);
-      return [r,g,b,1];
-    }
-    return null;
-  }
-
-  // Временные подписки на время раскрытия
-  let mo = null;
-  const onWinChange = () => recomputeDotContrast();
-
   function expand() {
     if (isOpen) return;
     isOpen = true;
@@ -134,7 +72,7 @@ export function setupDotCoreMenu() {
     const rect = dot.getBoundingClientRect();
     for (const k in saved) saved[k] = dot.style[k] || "";
 
-    // Зафиксировать Dot в экранных координатах
+    // Зафиксировать в viewport и анимировать в квадрат
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
@@ -150,9 +88,10 @@ export function setupDotCoreMenu() {
       "border-radius 180ms cubic-bezier(.2,.8,.2,1), " +
       "box-shadow 180ms cubic-bezier(.2,.8,.2,1)";
 
+    // ВАЖНО: помечаем состояние «раскрыт», чтобы dotCoreDrag не трогал цвет/фон
     dot.classList.add("dot-expanded");
 
-    // Панель с кнопками (вертикально)
+    // Панель
     panel = document.createElement("div");
     panel.className = "dot-panel";
     panel.innerHTML = `
@@ -161,50 +100,33 @@ export function setupDotCoreMenu() {
     `;
     dot.appendChild(panel);
 
-    // Действия
     panel.querySelector("#dot-fn")?.addEventListener("click", () => {
       window.dispatchEvent(new CustomEvent("dot:function"));
-      // контраст мог измениться из-за overlay — обновим перед закрытием
-      recomputeDotContrast();
       collapse();
     });
 
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
       const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
       setTheme(next);
-      // сразу пересчитать контраст, т.к. фон за дотом поменялся
-      // маленькая задержка, чтобы body успел переключить класс и перекрасить фон
-      requestAnimationFrame(recomputeDotContrast);
+      // Никаких inline-цветов — фон/текст берутся из темы автоматически.
     });
 
-    // Подписки на время открытия: изменения окна и темы
-    window.addEventListener("resize", onWinChange, { passive: true });
-    window.addEventListener("scroll", onWinChange, { passive: true });
-    mo = new MutationObserver(recomputeDotContrast);
-    mo.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-
-    // Компактный квадрат
+    // Визуал
     const TARGET = Math.max(128, Math.min(160,
       Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
     ));
     const dx = (TARGET - rect.width) / 2;
     const dy = (TARGET - rect.height) / 2;
 
-    // Тени без вмешательства в цвет — цвет задаёт auto-contrast
     dot.style.boxShadow = "0 14px 32px rgba(0,0,0,0.32)";
 
-    // Анимация и первичный пересчёт контраста
     requestAnimationFrame(() => {
       dot.style.left = rect.left - dx + "px";
       dot.style.top = rect.top - dy + "px";
       dot.style.width = TARGET + "px";
       dot.style.height = TARGET + "px";
       dot.style.borderRadius = "12px";
-      // панель появляется, и затем пересчитываем контраст ещё раз
-      setTimeout(() => {
-        panel.classList.add("visible");
-        recomputeDotContrast();
-      }, 60);
+      setTimeout(() => panel.classList.add("visible"), 60);
     });
   }
 
@@ -213,12 +135,7 @@ export function setupDotCoreMenu() {
     restoring = true;
     panel?.classList.remove("visible");
 
-    // Отписки
-    window.removeEventListener("resize", onWinChange);
-    window.removeEventListener("scroll", onWinChange);
-    mo?.disconnect(); mo = null;
-
-    // Возврат в исходные размеры/позицию
+    // Возврат геометрии
     dot.style.left = saved.left;
     dot.style.top = saved.top;
     dot.style.width = saved.width;
@@ -230,7 +147,10 @@ export function setupDotCoreMenu() {
       dot.removeEventListener("transitionend", onDone);
       panel?.remove(); panel = null;
 
-      // Восстановить стили, КРОМЕ цвета/фона — их оставляем авто-контрастными
+      // Снимаем флаг раскрытия — автоконтраст снова может управлять цветом/фоном
+      dot.classList.remove("dot-expanded");
+
+      // Восстановить стилевые свойства (кроме цвета/фона — пусть автоконтраст выставит сам)
       dot.style.position = saved.position;
       dot.style.left = saved.left;
       dot.style.top = saved.top;
@@ -240,10 +160,10 @@ export function setupDotCoreMenu() {
       dot.style.borderRadius = saved.borderRadius;
       dot.style.transition = saved.transition;
       dot.style.transform = saved.transform;
-      dot.classList.remove("dot-expanded");
 
-      // На всякий — пересчёт после закрытия
-      recomputeDotContrast();
+      // Чистим любые наши inline-цвета, чтобы автоконтраст обновил кружок
+      dot.style.backgroundColor = saved.backgroundColor;
+      dot.style.color = saved.color;
 
       isOpen = false;
       restoring = false;
@@ -257,12 +177,15 @@ function injectStylesOnce() {
   const style = document.createElement("style");
   style.id = "dot-expander-styles";
   style.textContent = `
+    /* Когда DOT раскрыт, фон/текст берем из темы (видим кнопки!) */
     .dot-core.dot-expanded {
       display: grid;
       place-items: center;
       overflow: hidden;
+      background: var(--panel-bg) !important;
+      color: var(--panel-fg) !important;
     }
-    /* Panel — vertical stack */
+    /* Панель с кнопками */
     .dot-core .dot-panel {
       position: absolute;
       inset: 10px;
@@ -281,7 +204,7 @@ function injectStylesOnce() {
       transform: scale(1);
       pointer-events: auto;
     }
-    /* Buttons — full width, compact height */
+    /* Кнопки — используют currentColor, который задан темой у .dot-expanded */
     .dot-core .dot-btn {
       -webkit-tap-highlight-color: transparent;
       appearance: none;
