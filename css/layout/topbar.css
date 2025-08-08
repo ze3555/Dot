@@ -5,7 +5,7 @@
   right: 0;
   height: 56px; /* или нужная высота */
   background-color: var(--bg-primary, #121212);
-  z-index: 1000;
+  z-index: 2000;
   display: flex;
   align-items: center;
   padding: 0 16px;
