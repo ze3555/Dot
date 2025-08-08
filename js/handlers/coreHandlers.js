@@ -2,9 +2,9 @@
 import { setTheme } from "../theme/index.js";
 
 /**
- * Dot expands into a smaller square with two vertical buttons:
+ * DOT expands into a compact square with two vertical buttons:
  *  - "Function": emits 'dot:function'
- *  - "Theme": toggles dark/light via setTheme(next)
+ *  - "Theme": toggles light/dark via setTheme(next)
  * Smooth animation; drag-safe (post-drag clicks are suppressed).
  */
 export function setupDotCoreMenu() {
@@ -17,15 +17,15 @@ export function setupDotCoreMenu() {
   let restoring = false;
   let panel = null;
 
-  // Save/restore inline styles to avoid layout shifts
+  // Save/restore inline styles
   const saved = {
     position: "", left: "", top: "", width: "", height: "",
     zIndex: "", borderRadius: "", transition: "", transform: ""
   };
 
-  // ----- Drag-safe click suppression -----
-  const DRAG_SLOP = 4;      // px: считаем как "таскали"
-  const SUPPRESS_MS = 180;  // мс: подавляем клик после драга
+  // Drag-safe click suppression
+  const DRAG_SLOP = 4;
+  const SUPPRESS_MS = 180;
   let suppressUntil = 0;
   const pointer = { active:false, startX:0, startY:0, moved:false };
 
@@ -48,16 +48,16 @@ export function setupDotCoreMenu() {
     pointer.active = false;
   }, true);
 
-  // Блокируем драг, когда раскрыт
+  // Block drag when expanded
   dot.addEventListener("pointerdown", (e) => {
     if (isOpen) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
-  // Клик по Dot (с учётом подавления после драга)
+  // Toggle with drag suppression
   dot.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (Date.now() < suppressUntil) return;           // только что таскали — не открываем
+    if (Date.now() < suppressUntil) return;
     if (dot.classList.contains("is-dragging")) return;
     isOpen ? collapse() : expand();
   }, true);
@@ -69,7 +69,6 @@ export function setupDotCoreMenu() {
     const rect = dot.getBoundingClientRect();
     for (const k in saved) saved[k] = dot.style[k] || "";
 
-    // Зафиксировать Dot в экранных координатах
     dot.style.position = "fixed";
     dot.style.left = rect.left + "px";
     dot.style.top = rect.top + "px";
@@ -87,7 +86,6 @@ export function setupDotCoreMenu() {
 
     dot.classList.add("dot-expanded");
 
-    // Панель с кнопками (вертикально)
     panel = document.createElement("div");
     panel.className = "dot-panel";
     panel.innerHTML = `
@@ -96,29 +94,28 @@ export function setupDotCoreMenu() {
     `;
     dot.appendChild(panel);
 
-    // Действия
+    // Actions
     panel.querySelector("#dot-fn")?.addEventListener("click", () => {
       window.dispatchEvent(new CustomEvent("dot:function"));
       collapse();
     });
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
       const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
-      setTheme(next); // ← единый механизм темы
-      // панель не закрываем — можно сразу вернуть обратно при желании
+      setTheme(next); // single, canonical toggle
+      // keep panel open so user can toggle back if wanted
     });
 
-    // Закрытие
     document.addEventListener("keydown", onEsc, true);
     document.addEventListener("click", onOutsideClick, true);
 
-    // Компактный квадрат, адаптивный
+    // Compact target square
     const TARGET = Math.max(128, Math.min(160,
       Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
     ));
     const dx = (TARGET - rect.width) / 2;
     const dy = (TARGET - rect.height) / 2;
 
-    // Контраст от темы
+    // Theme-aware contrast
     if (document.body.classList.contains("theme-dark")) {
       dot.style.background = "#111"; dot.style.color = "#fff";
     } else {
@@ -126,7 +123,6 @@ export function setupDotCoreMenu() {
     }
     dot.style.boxShadow = "0 14px 32px rgba(0,0,0,0.32)";
 
-    // Анимация
     requestAnimationFrame(() => {
       dot.style.left = rect.left - dx + "px";
       dot.style.top = rect.top - dy + "px";
@@ -142,7 +138,6 @@ export function setupDotCoreMenu() {
     restoring = true;
     panel?.classList.remove("visible");
 
-    // Возврат в исходные размеры/позицию
     dot.style.left = saved.left;
     dot.style.top = saved.top;
     dot.style.width = saved.width;
@@ -154,7 +149,6 @@ export function setupDotCoreMenu() {
       dot.removeEventListener("transitionend", onDone);
       panel?.remove(); panel = null;
 
-      // Восстановить стили
       dot.style.position = saved.position;
       dot.style.left = saved.left;
       dot.style.top = saved.top;
@@ -191,7 +185,6 @@ function injectStylesOnce() {
       place-items: center;
       overflow: hidden;
     }
-    /* Panel — vertical stack */
     .dot-core .dot-panel {
       position: absolute;
       inset: 10px;
@@ -210,7 +203,6 @@ function injectStylesOnce() {
       transform: scale(1);
       pointer-events: auto;
     }
-    /* Buttons — full width, compact height */
     .dot-core .dot-btn {
       -webkit-tap-highlight-color: transparent;
       appearance: none;
