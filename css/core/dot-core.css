@@ -1,28 +1,30 @@
 /* css/core/dot-core.css */
-/* The floating Dot: size/shape/motion only — no hard colors here. */
+/* DOT — круг, цвет и фон синхронно = currentColor.
+   JS выставляет currentColor (и background) в зависимости от фона под Дотом. */
+
 .dot-core {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   display: inline-grid;
   place-items: center;
-  position: relative; /* converted to fixed during drag/expand in JS */
+  position: relative; /* в drag/expand переводим во fixed */
   user-select: none;
   cursor: pointer;
-  border: 1px solid currentColor;
-  background: transparent;             /* color comes from theme/JS */
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+
+  /* ВАЖНО: по умолчанию фон = currentColor, чтобы без JS не был «дыркой» */
+  background: currentColor;
+  border: none;
+
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease,
+    background-color .12s ease,
+    color .12s ease,
+    border-color .12s ease;
 }
 
-.dot-core.pressed {
-  transform: scale(0.98);
-}
+.dot-core.pressed { transform: scale(0.98); }
+.dot-core.is-dragging { cursor: grabbing; box-shadow: 0 8px 20px rgba(0,0,0,.20); }
 
-.dot-core.is-dragging {
-  cursor: grabbing;
-  box-shadow: 0 8px 20px rgba(0,0,0,.20);
-}
-
-.top-bar .dot-core {
-  margin-left: 8px;
-}
+.top-bar .dot-core { margin-left: 8px; }
