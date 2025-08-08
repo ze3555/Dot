@@ -1,11 +1,15 @@
 /* css/theme/light-dark.css
-   Theme toggling via body classes: .theme-light / .theme-dark
-   — Переменные темы
-   — Инвертированные топ-бары (dark topbar в светлой теме, milky topbar в тёмной)
-   — DOT не красим из темы (фон убираем), дальше им рулит JS
+   Тематические переменные + инвертированный топ-бар.
+   DOT не красим (фон прозрачный) — им рулит JS.
 */
 
-/* ---------- Плавные переходы ---------- */
+/* Глобальные размеры */
+:root {
+  --topbar-h: 48px;
+  --composer-h: 56px;
+}
+
+/* Плавные переходы */
 body, .top-bar, .contacts-drawer, .contacts-drawer-backdrop,
 .bottom-panel, .drawer-trigger, #chat-input,
 .drawer-add-btn, .logout-btn, .chat-send-btn {
@@ -15,17 +19,15 @@ body, .top-bar, .contacts-drawer, .contacts-drawer-backdrop,
               border-color .18s cubic-bezier(.2,.8,.2,1);
 }
 
-/* ---------- LIGHT THEME ---------- */
+/* LIGHT */
 body.theme-light {
-  /* Базовые токены */
   --bg: #f6f7f9;
   --fg: #111;
 
-  /* Инвертированный топ-бар: тёмный */
-  --topbar-bg: #171717;  /* не абсолютный чёрный */
+  /* инвертированный топ-бар: тёмный */
+  --topbar-bg: #171717;
   --topbar-fg: #fff;
 
-  /* Панели/инпуты */
   --panel-bg: #ffffff;
   --panel-fg: #111;
   --panel-shadow: 0 6px 28px rgba(0,0,0,0.10);
@@ -46,17 +48,15 @@ body.theme-light {
   color: var(--fg);
 }
 
-/* ---------- DARK THEME ---------- */
+/* DARK */
 body.theme-dark {
-  /* Базовые токены */
-  --bg: #121315; /* чуть «теплее» темный фон */
+  --bg: #121315;
   --fg: #fff;
 
-  /* Инвертированный топ-бар: «молочный» */
-  --topbar-bg: #f2f2f3;  /* off-white */
+  /* топ-бар «молочный» */
+  --topbar-bg: #f2f2f3;
   --topbar-fg: #111;
 
-  /* Панели/инпуты */
   --panel-bg: #161616;
   --panel-fg: #fff;
   --panel-shadow: 0 6px 28px rgba(0,0,0,0.45);
@@ -77,33 +77,29 @@ body.theme-dark {
   color: var(--fg);
 }
 
-/* ---------- Топ-бар (инверсия по темам) ---------- */
+/* Топ-бар */
 .top-bar {
   background: var(--topbar-bg);
   color: var(--topbar-fg);
   box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+  height: var(--topbar-h);
 }
 
-/* ---------- DOT: не красим, убираем фон, чтобы JS управлял динамикой ---------- */
-.top-bar .dot-core,
-.dot-core {
-  background: transparent; /* перекрывает жёлтый дефолт, если где-то был */
-  /* color не задаём — автоконтраст/JS решат */
+/* DOT — фон прозрачный, цвет отдаём JS */
+.top-bar .dot-core, .dot-core {
+  background: transparent;
 }
 
-/* ---------- Drawer ---------- */
+/* Drawer */
 .contacts-drawer {
   background: var(--panel-bg);
   color: var(--panel-fg);
   box-shadow: var(--panel-shadow);
   border-right: var(--panel-border);
 }
+.contacts-drawer-backdrop { background: var(--backdrop); }
 
-.contacts-drawer-backdrop {
-  background: var(--backdrop);
-}
-
-/* Desktop trigger-стрелка слева */
+/* Триггер (desktop) */
 .drawer-trigger {
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
@@ -111,52 +107,34 @@ body.theme-dark {
   border: 1px solid color-mix(in oklab, var(--panel-fg), transparent 92%);
 }
 
-/* Кнопки в дровере */
-.drawer-add-btn,
-.logout-btn {
+/* Кнопки */
+.drawer-add-btn, .logout-btn, .chat-send-btn {
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-bg);
 }
-.drawer-add-btn:hover,
-.logout-btn:hover {
+.drawer-add-btn:hover, .logout-btn:hover, .chat-send-btn:hover {
   background: var(--btn-bg-hover);
   border-color: var(--btn-bg-hover);
 }
 
-/* ---------- Bottom panel / Composer ---------- */
+/* Bottom panel */
 .bottom-panel {
   background: var(--panel-bg);
   color: var(--panel-fg);
   box-shadow: 0 -1px 8px rgba(0,0,0,0.12);
   border-top: var(--panel-border);
+  min-height: var(--composer-h);
 }
 
-/* Инпут сообщений */
-#chat-input,
-.chat-input {
+/* Инпуты */
+#chat-input, .chat-input, .contacts-input {
   background: var(--input-bg);
   color: var(--input-fg);
   border: var(--input-border);
 }
-#chat-input::placeholder,
-.chat-input::placeholder {
-  color: var(--input-ph);
-}
-#chat-input:focus,
-.chat-input:focus {
-  outline: none;
-  border-color: currentColor;
-  box-shadow: var(--input-focus-ring);
-}
-
-/* Кнопка отправки (если видима) */
-.chat-send-btn {
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
-}
-.chat-send-btn:hover {
-  background: var(--btn-bg-hover);
-  border-color: var(--btn-bg-hover);
+#chat-input::placeholder, .chat-input::placeholder,
+.contacts-input::placeholder { color: var(--input-ph); }
+#chat-input:focus, .chat-input:focus, .contacts-input:focus {
+  outline: none; border-color: currentColor; box-shadow: var(--input-focus-ring);
 }
