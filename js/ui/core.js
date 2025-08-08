@@ -29,7 +29,7 @@ export function renderDotCore() {
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
-      dot.style.transition = ''; // вернуть плавность
+      dot.style.transition = '';
     }
   });
 
@@ -37,10 +37,22 @@ export function renderDotCore() {
   dot.addEventListener('click', (e) => {
     e.stopPropagation();
     if (dot.classList.contains('pressed')) return;
-
     dot.classList.add('pressed');
     setTimeout(() => dot.classList.remove('pressed'), 200);
   });
 
   return dot;
+}
+
+export function renderTopbar() {
+  const topbar = document.createElement('div');
+  topbar.className = 'top-bar';
+  topbar.innerHTML = `
+    <div class="topbar-title">DOT</div>
+    <div class="topbar-actions">
+      <button id="theme-toggle-btn" aria-label="Toggle theme">🌓</button>
+      <button id="logout-btn" aria-label="Logout">⎋</button>
+    </div>
+  `;
+  return topbar;
 }
