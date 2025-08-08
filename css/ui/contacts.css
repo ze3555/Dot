@@ -1,6 +1,6 @@
 .contacts-input {
   display: block;
-  width: calc(100% - 32px);
+  width: calc(85% - 32px);
   margin: 16px auto 12px auto;
   padding: 10px 14px;
   border-radius: 6px;
