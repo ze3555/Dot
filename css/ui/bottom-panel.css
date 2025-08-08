@@ -1,53 +1,63 @@
-/* Нижняя панель чатов: компактная высота + место под строку действий */
+/* Нижняя панель: компактная, DOT справа, под инпутом — линия действий с плюсом */
 .bottom-panel {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
 
-  /* компактная высота под два яруса */
-  height: 100px;
-
+  height: 100px; /* компактно под два яруса */
   background: var(--bg-secondary, #232324);
   z-index: 1000;
   box-shadow: 0 -1px 4px rgba(0,0,0,0.3);
   box-sizing: border-box;
 
-  /* двухъярусная сетка */
+  /* двухъярусная сетка: 1) инпут + DOT, 2) строка действий */
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: 52px 28px; /* 1) инпут+dot, 2) строка действий */
+  grid-template-columns: 1fr auto; /* инпут слева, DOT справа */
+  grid-template-rows: 52px 28px;
   gap: 8px 12px;
 
   padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px;
 }
 
-/* DOT, который переезжает в панель при фокусе */
+/* DOT переезжает в панель — фиксируем справа в верхнем ярусе */
 .bottom-panel > .dot-core {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 1;
   align-self: center;
+  justify-self: end;
 }
 
-/* Инпут чата в верхнем ярусе */
+/* Инпут слева, тёмная тема по умолчанию */
 .bottom-panel .chat-input {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
 
   height: 44px;
   font-size: 16px;
   padding: 0 12px;
   border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.08);
   outline: none;
   width: 100%;
   box-sizing: border-box;
 
-  background: var(--input-bg, #fff);
-  color: var(--input-fg, #111);
+  background: var(--input-bg, #1c1e22); /* тёмный */
+  color: var(--input-fg, #e9e9e9);
 }
 
-/* Нижняя тонкая строка действий (под инпутом) */
+/* placeholder для тёмного поля */
+.bottom-panel .chat-input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+/* фокус — аккуратная подсветка */
+.bottom-panel .chat-input:focus {
+  border-color: rgba(122, 146, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(122, 146, 255, 0.15);
+}
+
+/* Нижняя строка действий */
 .bottom-panel .bottom-actions {
   grid-column: 1 / -1;
   grid-row: 2;
