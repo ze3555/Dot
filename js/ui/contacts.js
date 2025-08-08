@@ -19,18 +19,12 @@ export async function renderContactsUI(container, onSelectContact) {
   // Логика перемещения DOT при фокусе
   input.addEventListener("focus", () => {
     const dot = document.querySelector(".dot-core");
-    if (dot) {
-      dot.classList.add("dot-add-mode"); // класс для анимации смещения
-      wrapper.classList.add("dot-active");
-    }
+    if (dot) dot.classList.add("dot-add-mode");
   });
 
   input.addEventListener("blur", () => {
     const dot = document.querySelector(".dot-core");
-    if (dot) {
-      dot.classList.remove("dot-add-mode");
-      wrapper.classList.remove("dot-active");
-    }
+    if (dot) dot.classList.remove("dot-add-mode");
   });
 
   // Список контактов
