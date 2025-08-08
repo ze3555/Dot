@@ -1,18 +1,18 @@
 .topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 56px; /* или нужная высота */
-  display: flex;
+  height: 56px;
+  z-index: 2147483646; /* чуть ниже чем у dot-core */
   background-color: var(--bg-primary, #121212);
-  z-index: 2000;
+  display: flex;
   align-items: center;
   padding: 0 16px;
   box-sizing: border-box;
-  user-select: none;
-  /* Добавь если нужно тень */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .logout-btn {
