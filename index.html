@@ -10,7 +10,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" sizes="192x192" href="/img/dot192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="/img/dot512.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/img/dot512.png">
+
   <!-- ✅ Firebase CDN (UMD compat-версии) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -29,9 +30,8 @@
 <body class="theme-dark">
 
   <!-- TopBar -->
- <div class="topbar">
+  <div class="top-bar">
     <div class="dot-core"></div>
-    
 
     <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
 
@@ -40,17 +40,26 @@
       <button id="btn-theme">Theme</button>
     </div>
   </div>
-  
 
   <!-- Основная зона -->
   <main id="main-content"></main>
-  
-   <div id="contacts-drawer" class="contacts-drawer"></div>
-<div id="contacts-backdrop" class="contacts-drawer-backdrop"></div>
-<div class="bottom-panel">
-  <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." />
-  <!-- dot-core будет сюда перемещаться через JS -->
-</div>
+
+  <div id="contacts-drawer" class="contacts-drawer"></div>
+  <div id="contacts-backdrop" class="contacts-drawer-backdrop"></div>
+
+  <!-- Bottom Panel -->
+  <div class="bottom-panel">
+    <form id="chat-form">
+      <input
+        type="text"
+        id="chat-input"
+        class="chat-input"
+        placeholder="Type a message..."
+      />
+      <!-- dot-core будет сюда перемещаться через JS -->
+    </form>
+  </div>
+
   <!-- Основной JS -->
   <script type="module" src="./main.js"></script>
 </body>
