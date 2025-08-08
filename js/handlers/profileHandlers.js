@@ -1,10 +1,8 @@
 // js/handlers/profileHandlers.js
-// Profile Top Drawer: open/close + profile actions (edit username, copy UID, add contact).
-// Triggers: swipe-down from top zone (mobile), "P" hotkey (desktop)
+// (версия с авто-монтажом и свайпом сверху; добавлен жестовый lock)
 
 import { normalizeUsername, setMyUsername, addContactByUsername } from "../firebase/usernames.js";
 
-// Lazy getters — чтобы не падать, если firebase ещё не готов
 function $auth() { return window.firebase?.auth(); }
 function $db()   { return window.firebase?.firestore(); }
 
@@ -14,10 +12,9 @@ export function setupProfileDrawer() {
   if (wired) return;
   wired = true;
 
-  // === Ensure DOM (auto-mount) ==============================================
+  // === Ensure DOM ===
   let drawer = document.getElementById("profile-top");
   let backdrop = document.getElementById("profile-top-backdrop");
-
   if (!drawer) {
     drawer = document.createElement("aside");
     drawer.id = "profile-top";
@@ -37,36 +34,29 @@ export function setupProfileDrawer() {
           </div>
           <button id="close-profile-top" class="profile-action subtle" aria-label="Close">Close</button>
         </header>
-
         <section class="profile-section">
           <label class="section-title">Contacts</label>
           <div class="add-username-row">
-            <input id="add-username-input" class="profile-input" type="text"
-                   placeholder="Add by username" autocomplete="off" />
+            <input id="add-username-input" class="profile-input" type="text" placeholder="Add by username" autocomplete="off" />
             <button id="add-username-btn" class="profile-action">Add</button>
           </div>
         </section>
-      </div>
-    `;
+      </div>`;
     document.body.appendChild(drawer);
-  } else {
-    // Вёрстка есть — добавим кромку, если её нет
-    if (!drawer.querySelector(".profile-grabber")) {
-      const grabber = document.createElement("div");
-      grabber.className = "profile-grabber";
-      grabber.setAttribute("aria-hidden", "true");
-      drawer.prepend(grabber);
-    }
   }
-
   if (!backdrop) {
     backdrop = document.createElement("div");
     backdrop.id = "profile-top-backdrop";
     backdrop.className = "profile-top-backdrop";
     document.body.appendChild(backdrop);
   }
+  if (!drawer.querySelector(".profile-grabber")) {
+    const g = document.createElement("div");
+    g.className = "profile-grabber";
+    g.setAttribute("aria-hidden", "true");
+    drawer.prepend(g);
+  }
 
-  // === Elements & helpers ====================================================
   const closeBtn = drawer.querySelector("#close-profile-top");
   const copyIdBtn = drawer.querySelector("#copy-id-btn");
   const editUsernameBtn = drawer.querySelector("#edit-username-btn");
@@ -93,8 +83,7 @@ export function setupProfileDrawer() {
   }
 
   async function populate() {
-    const auth = $auth();
-    const db = $db();
+    const auth = $auth(), db = $db();
     const user = auth?.currentUser;
     if (!user || !db) return;
     try {
@@ -110,7 +99,7 @@ export function setupProfileDrawer() {
     } catch (e) { console.error("populate profile error:", e); }
   }
 
-  // === Controls ==============================================================
+  // Controls
   closeBtn?.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
@@ -134,7 +123,7 @@ export function setupProfileDrawer() {
   });
 
   addUsernameBtn?.addEventListener("click", async () => {
-    const val = normalizeUsername(addUsernameInput?.value || "");
+    const val = (addUsernameInput?.value || "").trim().toLowerCase();
     if (!val) return;
     addUsernameBtn.disabled = true;
     try {
@@ -146,42 +135,53 @@ export function setupProfileDrawer() {
     finally { addUsernameBtn.disabled = false; }
   });
 
-  // === Triggers: swipe-down (mobile) + "P" (desktop) =========================
+  // ---- Triggers: swipe-down from top zone (mobile) + "P" (desktop)
   const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64));
-  const SWIPE_MIN_Y = 50;  // мягче
-  const SWIPE_MAX_X = 60;  // допускаем диагональ
+  const EDGE_ZONE_PX = 20; // чтобы не конкурировать с левым краем
+  const SWIPE_MIN_Y  = 50;
+  const SWIPE_MAX_X  = 60;
   const MAX_DURATION = 800;
 
-  let tStartX = 0, tStartY = 0, tLastX = 0, tLastY = 0, t0 = 0, tracking = false;
+  let tracking = false, x0 = 0, y0 = 0, x = 0, y = 0, t0 = 0;
 
   function onTouchStart(e) {
     if (isOpen()) return;
-    const t = e.touches?.[0]; if (!t) return;
+    // не стартуем, если лочен другой жест (например, контакты)
+    if (window.__gestureLock === "contacts") return;
 
+    const t = e.touches?.[0]; if (!t) return;
     const fromTopZone = t.clientY <= TOP_ZONE_PX || (e.target && e.target.closest(".top-bar"));
+    const fromLeftEdge = t.clientX <= EDGE_ZONE_PX; // профилю запрещаем старт с левого края
     const onDot = e.target && e.target.closest(".dot-core");
-    if (!fromTopZone || onDot) return;
+    if (!fromTopZone || fromLeftEdge || onDot) return;
 
     tracking = true;
-    tStartX = tLastX = t.clientX;
-    tStartY = tLastY = t.clientY;
+    x0 = x = t.clientX;
+    y0 = y = t.clientY;
     t0 = Date.now();
   }
+
   function onTouchMove(e) {
     if (!tracking) return;
     const t = e.touches?.[0]; if (!t) return;
-    tLastX = t.clientX; tLastY = t.clientY;
+    x = t.clientX; y = t.clientY;
 
-    const dx = tLastX - tStartX;
-    const dy = tLastY - tStartY;
-    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) && dy > 0) e.preventDefault();
+    const dx = x - x0;
+    const dy = y - y0;
+    if (Math.abs(dy) > 8 && dy > 0 && Math.abs(dy) > Math.abs(dx)) {
+      e.preventDefault(); // делаем жест «ощутимым»
+    }
   }
+
   function onTouchEnd() {
     if (!tracking) return;
     const dt = Date.now() - t0;
-    const dx = tLastX - tStartX;
-    const dy = tLastY - tStartY;
-    if (dy >= SWIPE_MIN_Y && Math.abs(dx) <= SWIPE_MAX_X && dt <= MAX_DURATION) open();
+    const dx = x - x0;
+    const dy = y - y0;
+
+    if (dy >= SWIPE_MIN_Y && Math.abs(dx) <= SWIPE_MAX_X && dt <= MAX_DURATION) {
+      open();
+    }
     tracking = false;
   }
 
@@ -189,6 +189,7 @@ export function setupProfileDrawer() {
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
 
+  // Desktop hotkey
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = (e.target && e.target.tagName) || "";
@@ -198,7 +199,7 @@ export function setupProfileDrawer() {
   });
 
   // Debug
-  window.__profileDrawer = { open, close, populate };
+  window.__profileDrawer = { open, close };
 }
 
 function toast(msg) {
