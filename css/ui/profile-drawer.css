@@ -161,3 +161,26 @@
 @media (prefers-reduced-motion: reduce) {
   .profile-top-drawer, .profile-top-backdrop { transition: none; }
 }
+/* Чипы/кнопки – единый стиль */
+.username-chip, .profile-action:not(.subtle) {
+  background: #262626;
+  border: 1px solid #313131;
+}
+.profile-action.subtle { background: transparent; border: 0; color: rgba(255,255,255,.9); }
+
+/* Поле добавления контакта – цельный блок */
+.add-username-row {
+  background: #1f1f1f;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 6px;
+}
+.profile-input {
+  background: transparent;
+  border: 0;
+  padding: 10px 12px;
+}
+#add-username-btn.profile-action {
+  border-radius: 12px;
+  padding: 10px 12px;
+}
