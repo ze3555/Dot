@@ -3,8 +3,26 @@
 export function renderDotCore() {
   const dot = document.createElement('div');
   dot.id = 'dot-core';
+  return dot;
+}
 
-  // ===== Drag =====
+export function renderTopbar() {
+  const topbar = document.createElement('div');
+  topbar.className = 'top-bar';
+  topbar.innerHTML = `
+    <div class="topbar-title">DOT</div>
+    <div class="topbar-actions">
+      <button id="theme-toggle-btn" aria-label="Toggle theme">🌓</button>
+      <button id="logout-btn" aria-label="Logout">⎋</button>
+    </div>
+  `;
+  return topbar;
+}
+
+export function setupDotCoreFeatures(dot) {
+  if (!dot) return;
+
+  // Drag support
   let offsetX = 0;
   let offsetY = 0;
   let isDragging = false;
@@ -33,26 +51,11 @@ export function renderDotCore() {
     }
   });
 
-  // ===== Click Bounce Effect =====
+  // Bounce effect
   dot.addEventListener('click', (e) => {
     e.stopPropagation();
     if (dot.classList.contains('pressed')) return;
     dot.classList.add('pressed');
     setTimeout(() => dot.classList.remove('pressed'), 200);
   });
-
-  return dot;
-}
-
-export function renderTopbar() {
-  const topbar = document.createElement('div');
-  topbar.className = 'top-bar';
-  topbar.innerHTML = `
-    <div class="topbar-title">DOT</div>
-    <div class="topbar-actions">
-      <button id="theme-toggle-btn" aria-label="Toggle theme">🌓</button>
-      <button id="logout-btn" aria-label="Logout">⎋</button>
-    </div>
-  `;
-  return topbar;
 }
