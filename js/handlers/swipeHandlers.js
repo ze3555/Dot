@@ -1,6 +1,6 @@
 // js/handlers/swipeHandlers.js
-// Contacts drawer: открытие — edge-swipe с левого края; закрытие — тап по бэкдропу ИЛИ свайп влево внутри панели.
-// Gesture-lock, чтобы не конфликтовать с профилем.
+// Contacts drawer: открытие — edge-swipe с левого края; закрытие — тап по бэкдропу
+// или свайп влево внутри открытой панели. Gesture-lock, чтобы не конфликтовать с профилем.
 
 let WIRED = false;
 
@@ -23,24 +23,28 @@ export function setupSwipeHandlers() {
   function open() {
     if (isOpen()) return;
     drawer.classList.add("open");
-    backdrop.classList.add("open");
+    // Совместимость: включаем обе схемы (.open и .active)
+    backdrop.classList.add("open", "active");
     document.body.classList.add("no-scroll");
   }
   function close() {
     if (!isOpen()) return;
     drawer.classList.remove("open");
-    backdrop.classList.remove("open");
+    // Совместимость: снимаем обе
+    backdrop.classList.remove("open", "active");
     document.body.classList.remove("no-scroll");
   }
 
-  // Close UX
+  // Закрытие по клику вне панели и по ESC
   backdrop.addEventListener("click", close);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
-  // ---- Gesture config
+  // ---- Жесты
   const topBar = document.querySelector(".top-bar");
   const TOP_Y = Math.max(48, (topBar?.offsetHeight || 64));
-  const EDGE_X = 20;   // старт открытия только из левого края
+
+  // Пороговые значения
+  const EDGE_X = 20;   // старт открытия только с левого края
   const MIN_X  = 60;   // порог по горизонтали
   const ANGLE  = 1.4;  // |dx| > 1.4*|dy|
   const MAX_DT = 800;  // мс
@@ -54,21 +58,21 @@ export function setupSwipeHandlers() {
     const t = e.touches?.[0]; if (!t) return;
 
     if (isOpen()) {
-      // закрытие — свайп влево, начинаем ТОЛЬКО внутри самой панели
-      const rect = drawer.getBoundingClientRect();
-      const inDrawer = t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom;
+      // Закрываем свайпом влево — старт только внутри самой панели
+      const r = drawer.getBoundingClientRect();
+      const inDrawer = t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
       if (!inDrawer) { reset(); return; }
       track = true; claim = false; mode = "closing";
       x0 = x = t.clientX; y0 = y = t.clientY; t0 = Date.now();
       return;
     }
 
-    // открытие — только из левого края и ниже топ-бара
+    // Открытие — только из левой кромки и ниже топ-бара
     const fromEdge = t.clientX <= EDGE_X;
     const belowTop = t.clientY > TOP_Y + 4;
     if (!fromEdge || !belowTop) { reset(); return; }
 
-    // избегаем конфликтов (дот/профиль)
+    // Избегаем конфликтов (дот/профиль)
     if (e.target?.closest(".dot-core, .profile-top-drawer, .profile-top-backdrop")) { reset(); return; }
 
     track = true; claim = false; mode = "opening";
@@ -86,14 +90,12 @@ export function setupSwipeHandlers() {
 
     if (!claim) {
       if (mode === "opening" && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
-        claim = true;
-        e.preventDefault();
+        claim = true; e.preventDefault();
         window.__gestureLock = "contacts";
         document.body.classList.add("gesture-contacts");
       }
       if (mode === "closing" && dx < -10 && Math.abs(dx) > Math.abs(dy)) {
-        claim = true;
-        e.preventDefault();
+        claim = true; e.preventDefault();
         window.__gestureLock = "contacts";
         document.body.classList.add("gesture-contacts");
       }
@@ -125,9 +127,9 @@ export function setupSwipeHandlers() {
   window.addEventListener("touchmove",  onMove,  { passive: false });
   window.addEventListener("touchend",   onEnd,   { passive: true });
 
-  // Debug
+  // Debug API
   window.__contactsDrawer = { open, close, isOpen };
 }
 
-// Алиас под возможный старый импорт
+// Алиас под старое имя (если где-то остался импорт setupSwipeDrawer)
 export function setupSwipeDrawer() { return setupSwipeHandlers(); }
