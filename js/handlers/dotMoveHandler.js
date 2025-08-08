@@ -1,8 +1,8 @@
 // js/handlers/dotMoveHandler.js
-// DOT докуется в нижнюю панель при фокусе на инпуте и возвращается:
-//  – при расфокусе — в сохранённую плавающую позицию,
-//  – при двойном клике — на топбар.
-// Плюс: мгновенный апдейт автоконтраста при каждом перемещении между зонами.
+// Перемещение .dot-core в нижнюю панель при фокусе на инпуте,
+// возврат в сохранённую плавающую позицию при расфокусе,
+// одинарный клик в доке — отправка сообщения,
+// ДВОЙНОЙ клик НЕ возвращает в топбар (этим теперь занимается coreHandlers: мини-окно).
 
 export function setupDotMoveOnInput() {
   const dot = document.querySelector('.dot-core');
@@ -12,8 +12,8 @@ export function setupDotMoveOnInput() {
 
   ensureBottomActions(bottomPanel);
 
+  // Сохраняем "плавающую" позицию, чтобы вернуть после дока
   let floatState = { parent: null, left: 0, top: 0, has: false };
-  let homeMode = false;
 
   function captureFloatState() {
     const rect = dot.getBoundingClientRect();
@@ -34,52 +34,47 @@ export function setupDotMoveOnInput() {
       dot.style.left = floatState.left + 'px';
       dot.style.top = floatState.top + 'px';
       dot.style.transform = 'translate3d(0,0,0)';
-      updateDotContrast(dot);
     } else {
-      undockToTopbar();
+      // если нет сохранённой позиции, вернём в топбар
+      if (!topbar.contains(dot)) topbar.appendChild(dot);
+      dot.style.position = '';
+      dot.style.left = '';
+      dot.style.top = '';
+      dot.style.transform = 'translate3d(0,0,0)';
     }
   }
 
-  function undockToTopbar() {
-    if (!topbar.contains(dot)) topbar.appendChild(dot);
-    dot.style.position = '';
-    dot.style.left = '';
-    dot.style.top = '';
-    dot.style.transform = 'translate3d(0,0,0)';
-    updateDotContrast(dot);
-  }
-
-  // Док при фокусе
+  // Док при фокусе на инпуте
   bottomPanel.addEventListener('focusin', (e) => {
     if (!e.target.classList.contains('chat-input')) return;
 
     captureFloatState();
+
     if (!bottomPanel.contains(dot)) {
       bottomPanel.appendChild(dot);
     }
+
+    // Сбросим фикс-позиции для корректного грид-расклада
     dot.style.position = '';
     dot.style.left = '';
     dot.style.top = '';
     dot.style.transform = 'translate3d(0,0,0)';
-    updateDotContrast(dot);
   });
 
-  // Возврат при расфокусе всей панели
+  // Возврат из дока при потере фокуса всей панели
   bottomPanel.addEventListener('focusout', () => {
     setTimeout(() => {
       const active = document.activeElement;
-      if (bottomPanel.contains(active)) return;
-      if (homeMode) {
-        undockToTopbar();
-      } else {
-        undockToFloat();
-      }
+      if (bottomPanel.contains(active)) return; // фокус всё ещё внутри
+      undockToFloat();
     }, 0);
   });
 
-  // Клик по DOT в доке — отправка
-  dot.addEventListener('click', () => {
-    if (!bottomPanel.contains(dot)) return;
+  // Клик по DOT в доке = отправка; игнорируем двойные клики (чтобы не конфликтовать с мини-окном)
+  dot.addEventListener('click', (e) => {
+    if (e.detail > 1) return;                 // часть двойного клика — пропускаем
+    if (!bottomPanel.contains(dot)) return;    // только в доке
+
     const input = bottomPanel.querySelector('.chat-input');
     if (!input) return;
 
@@ -91,81 +86,12 @@ export function setupDotMoveOnInput() {
     input.focus();
   });
 
-  // Плюс — наружу событие
+  // Плюс под инпутом — наружу событие
   bottomPanel.addEventListener('click', (e) => {
     const btn = e.target.closest('#add-folder-btn');
     if (!btn) return;
     window.dispatchEvent(new CustomEvent('dot:addFolder'));
   });
-
-  // Управление режимами
-  dot.addEventListener('pointerdown', () => { homeMode = false; }, { passive: true });
-
-  dot.addEventListener('dblclick', () => {
-    homeMode = true;
-    undockToTopbar();
-  });
-
-  // ===== Мини-копия автоконтраста для событий док/ан-док (то же правило ч/б) =====
-  function updateDotContrast(dotEl) {
-    const rect = dotEl.getBoundingClientRect();
-    const cx = Math.round(rect.left + rect.width / 2);
-    const cy = Math.round(rect.top + rect.height / 2);
-
-    const prevPE = dotEl.style.pointerEvents;
-    dotEl.style.pointerEvents = 'none';
-    let behind = document.elementFromPoint(cx, cy);
-    dotEl.style.pointerEvents = prevPE;
-
-    let rgba = null;
-    let guard = 0;
-    while (behind && guard++ < 20) {
-      const bg = getComputedStyle(behind).backgroundColor;
-      const parsed = parseCssColor(bg);
-      if (parsed && parsed[3] > 0) { rgba = parsed; break; }
-      behind = behind.parentElement;
-    }
-    if (!rgba) rgba = [255,255,255,1];
-
-    const [r,g,b,a] = rgba;
-    const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
-    const hex = lum < 0.5 ? '#fff' : '#000';
-
-    dotEl.style.color = hex;
-    dotEl.style.setProperty('--dot-core-fg', hex);
-    dotEl.style.setProperty('--dot-core-border', hex);
-
-    try {
-      dotEl.querySelectorAll('svg').forEach(svg => {
-        svg.style.stroke = 'currentColor';
-        svg.style.fill = 'currentColor';
-      });
-    } catch(_) {}
-  }
-
-  function srgb(v) {
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  }
-  function parseCssColor(color) {
-    if (!color) return null;
-    if (color === 'transparent') return [0,0,0,0];
-    if (color.startsWith('rgb')) {
-      const m = color.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+(?:\.\d+)?))?\)/i);
-      if (!m) return null;
-      return [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10), m[4] ? parseFloat(m[4]) : 1];
-    }
-    if (color.startsWith('#')) {
-      let hex = color.slice(1);
-      if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
-      if (hex.length !== 6) return null;
-      const r = parseInt(hex.slice(0,2),16);
-      const g = parseInt(hex.slice(2,4),16);
-      const b = parseInt(hex.slice(4,6),16);
-      return [r,g,b,1];
-    }
-    return null;
-  }
 
   // Инфраструктура панели
   function ensureBottomActions(panel) {
