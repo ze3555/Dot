@@ -117,8 +117,8 @@
 }
 
 /* Мобильная ширина */
-@media (max-width: 300px) {
-  .contacts-drawer { width: 80vw; }
+@media (max-width: 370px) {
+  .contacts-drawer { width: 70vw; }
 }
 
 /* dot в drawer (если используешь как кнопку добавления) */
