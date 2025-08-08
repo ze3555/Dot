@@ -4,7 +4,7 @@ import { setTheme } from "../theme/index.js";
 /**
  * Dot expands into a smaller square with two vertical buttons:
  *  - "Function": emits 'dot:function'
- *  - "Theme": toggles dark/light
+ *  - "Theme": toggles dark/light via setTheme(next)
  * Smooth animation; drag-safe (post-drag clicks are suppressed).
  */
 export function setupDotCoreMenu() {
@@ -24,8 +24,8 @@ export function setupDotCoreMenu() {
   };
 
   // ----- Drag-safe click suppression -----
-  const DRAG_SLOP = 4;        // px — считем как "двигал"
-  const SUPPRESS_MS = 180;    // подавлять клик после драга
+  const DRAG_SLOP = 4;        // px
+  const SUPPRESS_MS = 180;    // ms
   let suppressUntil = 0;
   const pointer = { active:false, startX:0, startY:0, moved:false };
 
@@ -37,28 +37,20 @@ export function setupDotCoreMenu() {
   }, true);
 
   window.addEventListener("pointermove", (e) => {
-    if (!pointer.active) return;
-    if (pointer.moved) return;
+    if (!pointer.active || pointer.moved) return;
     const dx = Math.abs(e.clientX - pointer.startX);
     const dy = Math.abs(e.clientY - pointer.startY);
-    if (dx > DRAG_SLOP || dy > DRAG_SLOP) {
-      pointer.moved = true;
-    }
+    if (dx > DRAG_SLOP || dy > DRAG_SLOP) pointer.moved = true;
   }, true);
 
   window.addEventListener("pointerup", () => {
-    if (pointer.moved) {
-      suppressUntil = Date.now() + SUPPRESS_MS;
-    }
+    if (pointer.moved) suppressUntil = Date.now() + SUPPRESS_MS;
     pointer.active = false;
   }, true);
 
   // Prevent drag interaction while expanded
   dot.addEventListener("pointerdown", (e) => {
-    if (isOpen) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }
+    if (isOpen) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
   // Toggle on click (capture) with drag suppression
@@ -68,7 +60,6 @@ export function setupDotCoreMenu() {
 
     // If just dragged, do not open
     if (Date.now() < suppressUntil) return;
-    // Extra guard in case other code toggles class late
     if (dot.classList.contains("is-dragging")) return;
 
     isOpen ? collapse() : expand();
@@ -115,16 +106,14 @@ export function setupDotCoreMenu() {
     });
     panel.querySelector("#dot-theme")?.addEventListener("click", () => {
       const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
-      setTheme(next);
+      setTheme(next); // ← тот же механизм, что и глобальный переключатель
     });
 
     // Close interactions
     document.addEventListener("keydown", onEsc, true);
     document.addEventListener("click", onOutsideClick, true);
 
-    // Smaller square target (slightly reduced vs. previous):
-    //  - responsive: ~24% of min viewport side
-    //  - clamped: 128..160 px
+    // Smaller square target (responsive)
     const TARGET = Math.max(128, Math.min(160,
       Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.24)
     ));
@@ -133,11 +122,9 @@ export function setupDotCoreMenu() {
 
     // Theme-aware contrast
     if (document.body.classList.contains("theme-dark")) {
-      dot.style.background = "#111";
-      dot.style.color = "#fff";
+      dot.style.background = "#111"; dot.style.color = "#fff";
     } else {
-      dot.style.background = "#fff";
-      dot.style.color = "#111";
+      dot.style.background = "#fff"; dot.style.color = "#111";
     }
     dot.style.boxShadow = "0 14px 32px rgba(0,0,0,0.32)";
 
@@ -147,8 +134,7 @@ export function setupDotCoreMenu() {
       dot.style.top = rect.top - dy + "px";
       dot.style.width = TARGET + "px";
       dot.style.height = TARGET + "px";
-      dot.style.borderRadius = "12px"; // a bit tighter
-      // Reveal content slightly after growth starts
+      dot.style.borderRadius = "12px";
       setTimeout(() => panel.classList.add("visible"), 60);
     });
   }
@@ -171,8 +157,7 @@ export function setupDotCoreMenu() {
 
     const onDone = () => {
       dot.removeEventListener("transitionend", onDone);
-      panel?.remove();
-      panel = null;
+      panel?.remove(); panel = null;
 
       // Restore inline styles
       dot.style.position = saved.position;
@@ -186,7 +171,6 @@ export function setupDotCoreMenu() {
       dot.style.transform = saved.transform;
       dot.style.background = "";
       dot.style.boxShadow = "";
-
       dot.classList.remove("dot-expanded");
 
       document.removeEventListener("keydown", onEsc, true);
@@ -217,7 +201,7 @@ function injectStylesOnce() {
       position: absolute;
       inset: 10px;
       display: flex;
-      flex-direction: column;    /* vertical buttons */
+      flex-direction: column;
       gap: 10px;
       align-items: stretch;
       justify-content: center;
