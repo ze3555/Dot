@@ -18,19 +18,6 @@ export async function renderContactsUI(container, onSelectContact) {
   input.placeholder = "Enter user UID to add";
   input.className = "contacts-input";
 
-  // Кнопка добавления
-  const button = document.createElement("button");
-  button.textContent = "@";
-  button.className = "contacts-add-btn";
-
-  button.addEventListener("click", async () => {
-    const uid = input.value.trim();
-    if (!uid) return;
-    await addContact(uid);
-    input.value = "";
-    await renderContactsUI(container, onSelectContact);
-  });
-
   // Список контактов
   const list = document.createElement("ul");
   list.className = "contacts-list";
