@@ -161,3 +161,17 @@ body.theme-light .logout-btn:focus-visible {
   background: rgba(0,0,0,0.06);
   border-color: rgba(0,0,0,0.16);
 }
+.drawer-add-btn {
+  background-color: rgba(255, 255, 255, 0.6); /* молочный тусклый */
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+.drawer-add-btn:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
