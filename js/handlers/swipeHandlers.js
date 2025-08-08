@@ -2,6 +2,7 @@
 
 import { renderContactsUI } from "../ui/contacts.js";
 import { renderChatUI } from "../ui/chat.js";
+import { addContact } from "./contactHandlers.js";
 
 export function setupSwipeDrawer() {
   const drawer = document.getElementById("contacts-drawer");
@@ -19,7 +20,7 @@ export function setupSwipeDrawer() {
     drawer.innerHTML = "";
     renderContactsUI(drawer, handleSelectContact);
 
-    // Добавляем «молочную» кнопку Add Contact в шапку дровера
+    // Кнопка «молочного» цвета
     addDrawerAddBtn();
 
     // Плавное появление
@@ -39,7 +40,6 @@ export function setupSwipeDrawer() {
     drawer.classList.remove("open");
     backdrop.classList.remove("active");
 
-    // Дождаться конца анимации
     setTimeout(() => {
       drawer.style.display = "none";
       backdrop.style.display = "none";
@@ -52,19 +52,42 @@ export function setupSwipeDrawer() {
   // === Drawer header button ==================================================
   function addDrawerAddBtn() {
     const btn = document.createElement("button");
-    btn.className = "drawer-add-btn"; // стили задашь в CSS
+    btn.className = "drawer-add-btn"; // стилизуется в CSS
     btn.textContent = "Add Contact";
     btn.title = "Add new contact";
     btn.type = "button";
     btn.addEventListener("click", openAddContactModal);
-
-    // Вставляем кнопу в начало контента дровера
     drawer.prepend(btn);
   }
 
-  function openAddContactModal() {
-    // TODO: подключи свою реальную логику добавления контакта
-    console.log("Open Add Contact modal");
+  // Реальная логика добавления контакта
+  async function openAddContactModal() {
+    const input = drawer.querySelector(".contacts-input");
+    const uid = (input?.value || "").trim();
+    if (!uid) {
+      // Ненавязчиво подсветим инпут, без алертов
+      input?.focus();
+      input?.classList.add("dot-active");
+      setTimeout(() => input?.classList.remove("dot-active"), 600);
+      return;
+    }
+
+    try {
+      await addContact(uid);
+      // Очистим поле и перерисуем список контактов
+      if (input) input.value = "";
+      drawer.innerHTML = "";
+      renderContactsUI(drawer, handleSelectContact);
+      addDrawerAddBtn();
+    } catch (err) {
+      console.error("Add contact failed:", err);
+      // Мягкий фолбек: визуально пульсануть кнопку
+      const btn = drawer.querySelector(".drawer-add-btn");
+      if (btn) {
+        btn.disabled = true;
+        setTimeout(() => (btn.disabled = false), 500);
+      }
+    }
   }
 
   // === Contacts select =======================================================
@@ -92,11 +115,9 @@ export function setupSwipeDrawer() {
     touchStartX = x;
     touchCurrentX = x;
   }
-
   function handleTouchMove(e) {
     touchCurrentX = e.touches[0].clientX;
   }
-
   function handleTouchEnd() {
     if (touchCurrentX - touchStartX > SWIPE_THRESHOLD) {
       openDrawer();
@@ -131,11 +152,9 @@ export function setupSwipeDrawer() {
     trigger.className = "drawer-trigger"; // стилизуй в CSS
     trigger.title = "Contacts";
     trigger.innerHTML = "&#x25B6;"; // ►
-
     trigger.addEventListener("click", () => {
       if (!isOpen) openDrawer();
     });
-
     document.body.appendChild(trigger);
   }
 }
