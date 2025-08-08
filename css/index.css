@@ -2,6 +2,8 @@
 @import "./layout/topbar.css";
 @import "./layout/main.css";
 @import "./ui/login-modal.css";
-@import "./theme/light-dark.css";
 @import "./ui/drawer.css";
 @import "./ui/bottom-panel.css";
+
+/* ТЕПЕРЬ — ТЕМА, САМОЙ ПОСЛЕДНЕЙ */
+@import "./theme/light-dark.css";
