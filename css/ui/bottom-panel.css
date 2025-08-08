@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 200px; /* высота нижней панели */
+  height: 150px; /* высота нижней панели */
   background: var(--bg-secondary, #232324);
   display: flex;
   align-items: center;
@@ -22,7 +22,7 @@
 }
 .chat-input {
   display: block;
-  width: calc(85% - 32px);
+  width: calc(70% - 32px);
   padding: 10px 14px;
   border-radius: 6px;
   border: 1px solid var(--border-color, #444);
