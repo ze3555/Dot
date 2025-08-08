@@ -1,205 +1,65 @@
+/* DOT Core — минимальные и безопасные стили.
+   Ничего не знает о размерах и позиционировании — только поведение/визуальные токены. */
+
 .dot-core {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: var(--dot-core-bg, #ffd400);
-  box-shadow: 0 0 18px 0 rgba(0,0,0,0.16);
-  display: flex;
+  /* Базовая интерактивность */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: box-shadow 0.25s, background 0.2s;
-  position: relative;
-  border: 3px solid var(--dot-core-border, #fff);
-  z-index: 10;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;            /* жесты без лагов; JS тоже дублирует */
+
+  /* Цвета — строго через currentColor (JS ставит ч/б).
+     Можно переопределить через CSS-переменные при желании. */
+  color: var(--dot-core-fg, currentColor);
+  background: var(--dot-core-bg, transparent);
+  border: 1px solid var(--dot-core-border, currentColor);
+
+  /* Форма: уважает внешний radius (капсула/круг приходит от контейнера/темы) */
+  border-radius: inherit;
+
+  /* Мягкие переходы, отключаемые на драге */
+  transition:
+    box-shadow .15s ease,
+    border-color .15s ease,
+    transform .15s ease,
+    opacity .15s ease,
+    background-color .15s ease,
+    color .1s linear;
 }
 
-.dot-core:hover,
+/* Во время перетаскивания – никаких анимаций */
+.dot-core.is-dragging {
+  transition: none !important;
+  cursor: grabbing;
+}
+
+/* Ховер/активация — очень деликатно, чтобы не мешать автоконтрасту */
+.dot-core:hover { opacity: 0.95; }
+.dot-core:active { transform: translateY(1px); }
+
+/* Доступность: фокус-обводка на currentColor (ч/б из JS) */
 .dot-core:focus-visible {
-  box-shadow: 0 0 24px 0 rgba(0,0,0,0.28);
-  background: var(--dot-core-bg-hover, #ffe156);
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
-body.theme-dark .dot-core {
-  background: var(--dot-core-bg-dark, #232324);
-  border-color: #161617;
-  box-shadow: 0 0 20px 0 rgba(0,0,0,0.26);
-}
-body.theme-dark .dot-core:hover,
-body.theme-dark .dot-core:focus-visible {
-  background: var(--dot-core-bg-dark-hover, #353538);
+/* Встроенные SVG и иконки используют currentColor,
+   чтобы автоконтраст работал без спец-стилей внутри. */
+.dot-core svg {
+  fill: currentColor;
+  stroke: currentColor;
 }
 
-/* --- Адаптивное выпадающее меню: фиксированное положение --- */
-.dot-core-menu {
-  display: none;
-  position: fixed; /* теперь всегда fixed, координаты выставляет JS */
-  min-width: 220px;
-  max-width: 96vw;
-  padding: 16px 22px;
-  background: var(--dot-menu-bg, #fff);
-  border-radius: 22px;
-  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
-  border: 2px solid var(--dot-menu-border, #f2f2f2);
-  z-index: 99999;
-  flex-direction: row;
-  gap: 22px;
-  align-items: center;
-  transition: background 0.2s, color 0.2s;
+/* Если внутри есть текстовые/иконные элементы, не ломаем клики по ним */
+.dot-core > * {
+  pointer-events: auto;
 }
 
-.dot-core-menu.open {
-  display: flex;
+/* Опционально: если DOT внизу докуется и нужно его выровнять без лишних костылей */
+.bottom-panel > .dot-core {
+  justify-self: end;   /* DOT справа в верхнем ярусе — см. bottom-panel.css */
+  align-self: center;
 }
-
-body.theme-dark .dot-core-menu {
-  background: var(--dot-menu-bg-dark, #232324);
-  border-color: #232324;
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.24);
-  color: #ededed;
-}
-
-/* Кнопки меню */
-.dot-core-menu button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: 1.15rem;
-  color: var(--dot-menu-item-color, #323042);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 14px;
-  border-radius: 12px;
-  transition: background 0.16s, color 0.16s;
-}
-
-.dot-core-menu button:hover,
-.dot-core-menu button:focus-visible {
-  background: var(--dot-menu-item-hover-bg, #f7f7fd);
-  color: var(--dot-menu-item-hover-color, #34307a);
-}
-
-body.theme-dark .dot-core-menu button {
-  color: #ededed;
-}
-body.theme-dark .dot-core-menu button:hover,
-body.theme-dark .dot-core-menu button:focus-visible {
-  background: #2b2b2d;
-  color: #ffd400;
-}
-
-/* --- Мобильная адаптация меню --- */
-@media (max-width: 520px) {
-  .dot-core {
-    width: 40px;
-    height: 40px;
-  }
-  .dot-core-menu {
-    flex-direction: column;
-    align-items: stretch;
-    min-width: 90vw;
-    max-width: 98vw;
-    gap: 8px;
-    padding: 14px 4px;
-    border-radius: 16px;
-    font-size: 1.03rem;
-    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.20);
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-  .dot-core-menu button {
-    width: 100%;
-    font-size: 1.08rem;
-    padding: 14px 8px;
-    border-radius: 12px;
-    justify-content: flex-start;
-    text-align: left;
-    gap: 2px;
-    min-height: 44px;
-  }
-}
-
-@media (max-width: 370px) {
-  .dot-core {
-    width: 32px;
-    height: 32px;
-  }
-  .dot-core-menu {
-    min-width: 98vw;
-    font-size: 0.99rem;
-    padding: 8px 1px;
-    border-radius: 8px;
-  }
-  .dot-core-menu button {
-    padding: 10px 2px;
-    font-size: 0.97rem;
-    min-height: 36px;
-  }
-}
-
-/* --- Тёмная/светлая тема через переменные --- */
-:root {
-  --dot-core-bg: #ffd400;
-  --dot-core-bg-hover: #ffe156;
-  --dot-core-border: #fff;
-  --dot-menu-bg: #fff;
-  --dot-menu-border: #f2f2f2;
-  --dot-menu-item-color: #323042;
-  --dot-menu-item-hover-bg: #f7f7fd;
-  --dot-menu-item-hover-color: #34307a;
-}
-body.theme-dark {
-  --dot-core-bg: #232324;
-  --dot-core-bg-hover: #353538;
-  --dot-core-border: #161617;
-  --dot-menu-bg: #232324;
-  --dot-menu-border: #232324;
-  --dot-menu-item-color: #ededed;
-  --dot-menu-item-hover-bg: #2b2b2d;
-  --dot-menu-item-hover-color: #ffd400;
-}
-body.dragging-dotcore {
-  overflow: hidden !important;
-  touch-action: none !important;
-}
-.dot-core.dot-invert {
-  background: #fff !important;
-  border-color: #dedede !important;
-  box-shadow: 0 0 18px 0 rgba(0,0,0,0.15) !important;
-}
-.dot-core {
-  z-index: 2147483647 !important;
-}
-/* Состояние DOT при добавлении контакта */
-.dot-core.dot-add-mode {
-  transform: translateX(10px) scale(1.05);
-  background-color: var(--accent-color, #4cafef);
-  border-radius: 50px;
-  transition: all 0.25s ease;
-}
-
-.dot-core.dot-add-mode::after {
-  content: "+";
-  color: #fff;
-  font-size: 18px;
-  font-weight: bold;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* DOT при режиме добавления */
-.dot-core.dot-add-mode {
-  background-color: var(--accent-color, #4cafef);
-  border-radius: 50%;
-  transition: all 0.25s ease;
-  z-index: 9999;
-}
-/* css/core/dot-core.css — можно в конец файла */
-.dot-core { touch-action: none; will-change: auto; }
-.dot-core.is-dragging { transition: none !important; }
-
