@@ -1,4 +1,5 @@
 // js/ui/core.js
+// Лёгкая корректировка автоконтраста: тоже красим и фон, и цвет.
 
 export function renderDotCore() {
   const dot = document.createElement('div');
@@ -22,12 +23,22 @@ export function renderTopbar() {
 export function setupDotCoreFeatures(dot) {
   if (!dot) return;
 
-  // === Контраст фона ===
+  // === Контраст фона (момент старта/ресайз/смена класса body) ===
   function updateDotContrast() {
-    const bg = window.getComputedStyle(dot.parentElement).backgroundColor;
-    const [r, g, b] = bg.match(/\d+/g).map(Number);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    dot.style.backgroundColor = brightness > 128 ? '#000' : '#fff';
+    const parent = dot.parentElement || document.body;
+    const bg = window.getComputedStyle(parent).backgroundColor;
+    const nums = bg.match(/\d+/g);
+    if (!nums) return;
+    const [r, g, b] = nums.map(Number);
+    const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+    const hex = lum < 0.5 ? '#fff' : '#000';
+    dot.style.backgroundColor = hex;
+    dot.style.color = hex;
+  }
+
+  function srgb(v) {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   }
 
   updateDotContrast();
@@ -35,7 +46,7 @@ export function setupDotCoreFeatures(dot) {
   const observer = new MutationObserver(updateDotContrast);
   observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-  // === Drag ===
+  // === Простой drag из этого файла оставляем как было (если нужен) ===
   let offsetX = 0, offsetY = 0, isDragging = false;
 
   dot.addEventListener('mousedown', (e) => {
