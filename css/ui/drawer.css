@@ -24,7 +24,7 @@
   left: 0;
   top: 64px;            /* под топ-бар */
   bottom: 60px;         /* над нижней панелью (итого ~70–80% vh) */
-  width: 170px;
+  width: 300px;
 
   background: #181818;
   color: #fff;
