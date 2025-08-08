@@ -1,14 +1,16 @@
 .contacts-input {
+  display: block;
+  width: calc(100% - 32px); /* чтобы были отступы по бокам */
+  margin: 16px auto 12px auto; /* отступ сверху и снизу */
   padding: 10px 14px;
-  font-size: 14px;
-  border: 1px solid var(--border-color, #444);
   border-radius: 6px;
-  background: var(--input-bg, #2b2b2b);
+  border: 1px solid var(--border-color, #444);
+  background-color: var(--input-bg, #222);
   color: var(--text-color, #fff);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 14px;
+  box-sizing: border-box;
 }
-.contacts-input:focus {
-  border-color: #5e9cff;
-  box-shadow: 0 0 0 2px rgba(94, 156, 255, 0.3);
+
+.contacts-wrapper {
+  padding: 0 8px; /* чтобы контент внутри не прилипал к краям */
 }
