@@ -6,6 +6,7 @@ import { setupDotCoreMenu } from "./js/handlers/coreHandlers.js";
 import { initializeThemeOnStart } from "./js/handlers/themeHandlers.js";
 import { enableDotCoreDrag } from "./js/handlers/dotCoreDrag.js";
 import { setupSwipeDrawer } from "./js/handlers/swipeHandlers.js";
+import { setupProfileDrawer } from "./js/handlers/profileHandlers.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeThemeOnStart();       // 1. Apply saved theme
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   enableDotCoreDrag();            // 4. Drag
   setupSwipeDrawer();             // 5. Contacts drawer
   setupDotCoreFeatures();         // 6. Legacy extras
+  setupProfileDrawer();            // 6. Profile top drawer
 
   // Logout in drawer
   const logoutBtn = document.getElementById("logout-btn");
