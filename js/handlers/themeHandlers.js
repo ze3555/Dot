@@ -7,5 +7,5 @@ export function initializeThemeOnStart() {
 }
 
 /* NOTE:
-   Old topbar toggle is deprecated/removed by design.
-   Theme is toggled ONLY from the Dot expansion panel now. */
+   Legacy topbar theme toggle is removed by design.
+   Theme is toggled ONLY from the Dot expansion panel. */
