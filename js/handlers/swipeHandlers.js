@@ -1,125 +1,101 @@
-
 // js/handlers/swipeHandlers.js
-// Left contacts drawer: edge-swipe only (from left edge), horizontal, below top-bar.
-// Adds a simple gesture lock to avoid conflicts with profile drawer.
+// Contacts drawer: открывается ТОЛЬКО edge-swipe с левого края, горизонтально и ниже топ-бара.
+// Вводим gesture-lock, чтобы не конфликтовать с профилем.
 
-let wired = false;
+(function () {
+  'use strict';
 
-export function setupSwipeHandlers() {
-  if (wired) return;
-  wired = true;
+  let wired = false;
 
-  const drawer = document.getElementById("contacts-drawer");
-  const backdrop =
-    document.getElementById("contacts-backdrop") ||
-    document.getElementById("contacts-drawer-backdrop") ||
-    document.querySelector(".contacts-drawer-backdrop");
+  function setupSwipeHandlers() {
+    if (wired) return;
+    wired = true;
 
-  if (!drawer || !backdrop) return;
+    const drawer = document.getElementById('contacts-drawer');
+    const backdrop = document.querySelector('.contacts-drawer-backdrop');
+    if (!drawer || !backdrop) { console.warn('[ContactsSwipe] missing drawer/backdrop'); return; }
 
-  // ---- Open/Close helpers
-  function isOpen() { return drawer.classList.contains("open"); }
-  function open() {
-    if (isOpen()) return;
-    drawer.classList.add("open");
-    backdrop.classList.add("open");
-    document.body.classList.add("no-scroll");
-  }
-  function close() {
-    if (!isOpen()) return;
-    drawer.classList.remove("open");
-    backdrop.classList.remove("open");
-    document.body.classList.remove("no-scroll");
-  }
-
-  // Close interactions
-  backdrop.addEventListener("click", close);
-  window.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-
-  // ---- Gesture config
-  const topBar = document.querySelector(".top-bar");
-  const TOP_ZONE_PX = Math.max(48, (topBar?.offsetHeight || 64));
-  const EDGE_ZONE_PX = 20;   // старт только из узкой левой кромки
-  const MIN_SWIPE_X  = 60;   // порог открытия
-  const ANGLE_RATIO  = 1.4;  // |dx| должен быть в 1.4x больше |dy|
-  const MAX_DURATION = 800;  // мс
-
-  let tracking = false, claimed = false;
-  let x0 = 0, y0 = 0, x = 0, y = 0, t0 = 0;
-
-  function cancel() { tracking = claimed = false; }
-
-  function onTouchStart(e) {
-    if (isOpen()) return; // не стартуем, если уже открыто
-    const t = e.touches?.[0]; if (!t) return;
-
-    // Старт ТОЛЬКО из левой кромки и НИЖЕ топ-бара (чтобы не конфликтовать с профилем)
-    const fromLeftEdge = t.clientX <= EDGE_ZONE_PX;
-    const belowTopBar  = t.clientY > TOP_ZONE_PX + 4;
-    if (!fromLeftEdge || !belowTopBar) { cancel(); return; }
-
-    // Игнорируем тач на элементах, где не хотим жестов
-    if (e.target.closest(".dot-core, .profile-top-drawer, .profile-top-backdrop")) { cancel(); return; }
-
-    // Ставим «готовность»
-    tracking = true;
-    claimed = false;
-    x0 = x = t.clientX;
-    y0 = y = t.clientY;
-    t0 = Date.now();
-  }
-
-  function onTouchMove(e) {
-    if (!tracking) return;
-    const t = e.touches?.[0]; if (!t) return;
-    x = t.clientX; y = t.clientY;
-
-    const dx = x - x0;
-    const dy = y - y0;
-
-    // Если пошло явно по вертикали — отменяем распознавание
-    if (!claimed && Math.abs(dy) > Math.abs(dx) * ANGLE_RATIO) { cancel(); return; }
-
-    // Как только двинулись вправо достаточно ощутимо — «забираем» жест
-    if (!claimed && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
-      claimed = true;
-      // Блокируем страницы скролл только после признания жеста
-      e.preventDefault(); // (работает потому что move слушаем с passive:false)
-      // Лочим жест на время распознавания
-      window.__gestureLock = "contacts";
-      document.body.classList.add("gesture-contacts");
+    function isOpen() { return drawer.classList.contains('open'); }
+    function open() {
+      if (isOpen()) return;
+      drawer.classList.add('open');
+      backdrop.classList.add('open');
+      document.body.classList.add('no-scroll');
+    }
+    function close() {
+      if (!isOpen()) return;
+      drawer.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.classList.remove('no-scroll');
     }
 
-    if (claimed) {
-      // Можно добавить live-следование панели по dx (peek), но пока просто блокируем скролл
-      e.preventDefault();
-    }
-  }
+    // Close UX
+    backdrop.addEventListener('click', close);
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-  function onTouchEnd() {
-    if (!tracking) return;
-    const dt = Date.now() - t0;
-    const dx = x - x0;
-    const dy = y - y0;
+    // Gesture config
+    const topBar = document.querySelector('.top-bar');
+    const TOP_Y = Math.max(48, (topBar && topBar.offsetHeight) || 64);
+    const EDGE_X = 20;
+    const MIN_X  = 60;
+    const ANGLE  = 1.4;
+    const MAX_DT = 800;
 
-    if (claimed && dx >= MIN_SWIPE_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DURATION) {
-      open();
-    }
+    let track = false, claim = false, x0 = 0, y0 = 0, x = 0, y = 0, t0 = 0;
 
-    cancel();
-    // Сбрасываем lock немного позже (даём шанc обработать open/close)
-    setTimeout(() => {
-      if (window.__gestureLock === "contacts") {
-        window.__gestureLock = null;
-        document.body.classList.remove("gesture-contacts");
+    function reset() { track = false; claim = false; }
+
+    function onStart(e) {
+      if (isOpen()) return;
+      const t = e.touches && e.touches[0]; if (!t) return;
+      const fromEdge = t.clientX <= EDGE_X;
+      const belowTop = t.clientY > TOP_Y + 4;
+      if (!fromEdge || !belowTop) { reset(); return; }
+      if (e.target && (e.target.closest('.dot-core') || e.target.closest('.profile-top-drawer') || e.target.closest('.profile-top-backdrop'))) {
+        reset(); return;
       }
-    }, 0);
+      track = true; claim = false;
+      x0 = x = t.clientX; y0 = y = t.clientY; t0 = Date.now();
+    }
+
+    function onMove(e) {
+      if (!track) return;
+      const t = e.touches && e.touches[0]; if (!t) return;
+      x = t.clientX; y = t.clientY;
+      const dx = x - x0, dy = y - y0;
+
+      if (!claim && Math.abs(dy) > Math.abs(dx) * ANGLE) { reset(); return; }
+      if (!claim && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
+        claim = true;
+        e.preventDefault(); // блокируем скролл страницы
+        window.__gestureLock = 'contacts';
+        document.body.classList.add('gesture-contacts');
+      }
+      if (claim) e.preventDefault();
+    }
+
+    function onEnd() {
+      if (!track) return;
+      const dt = Date.now() - t0, dx = x - x0, dy = y - y0;
+      if (claim && dx >= MIN_X && Math.abs(dx) > Math.abs(dy) / 1.1 && dt <= MAX_DT) open();
+      reset();
+      setTimeout(() => {
+        if (window.__gestureLock === 'contacts') {
+          window.__gestureLock = null;
+          document.body.classList.remove('gesture-contacts');
+        }
+      }, 0);
+    }
+
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove',  onMove,  { passive: false });
+    window.addEventListener('touchend',   onEnd,   { passive: true });
+
+    // Debug
+    window.__contactsDrawer = { open, close, isOpen };
+    console.debug('[ContactsSwipe] wired');
   }
 
-  window.addEventListener("touchstart", onTouchStart, { passive: true });
-  window.addEventListener("touchmove", onTouchMove, { passive: false });
-  window.addEventListener("touchend", onTouchEnd, { passive: true });
-
-  // Экспорт для отладки
-  window.__contactsDrawer = { open, close, isOpen };
-}
+  window.setupSwipeHandlers = setupSwipeHandlers;
+  try { setupSwipeHandlers(); } catch (e) { console.error('[ContactsSwipe] setup error:', e); }
+})();
