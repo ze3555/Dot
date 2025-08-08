@@ -164,3 +164,7 @@ body.theme-light .chat-plus-btn:hover {
 .bottom-panel,
 #chat-form,
 #chat-input { box-sizing: border-box; }
+#chat-input {
+  font-size: 16px; /* убираем zoom на iOS при фокусе */
+  -webkit-text-size-adjust: 100%; /* фиксирует размер шрифта */
+}
