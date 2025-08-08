@@ -23,7 +23,7 @@
 .chat-input {
   display: block;
   width: calc(85% - 32px);
-  margin:  auto 12px 10px ;
+  margin:  0px auto 12px 10px ;
   padding: 10px 14px;
   border-radius: 6px;
   border: 1px solid var(--border-color, #444);
