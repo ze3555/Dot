@@ -121,3 +121,60 @@
 .contacts-list-item:hover {
   background: color-mix(in oklab, var(--panel-fg), transparent 93%);
 }
+/* ==== Desktop trigger arrow (LEFT drawer opener) ==== */
+.drawer-trigger {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translate(-4px, -50%);      /* чуть выступает за край экрана */
+  z-index: 1001;
+
+  width: 28px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 6px;
+
+  border-radius: 0 10px 10px 0;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+  border-right: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 4px 0 18px rgba(0,0,0,0.22);
+  backdrop-filter: saturate(140%) blur(6px);
+
+  font-size: 18px;              /* если используешь символ-стрелку ‹ */
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+
+  opacity: 0.28;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.drawer-trigger:hover {
+  opacity: 0.65;
+  transform: translate(0, -50%); /* на ховере прячем зазор слева */
+}
+
+.drawer-trigger:active {
+  transform: translate(0, -50%) scale(0.98);
+}
+
+.drawer-trigger:focus-visible {
+  outline: 2px solid #ffd400;
+  outline-offset: 2px;
+}
+
+/* Светлая тема */
+body.theme-light .drawer-trigger {
+  background: rgba(0,0,0,0.06);
+  color: rgba(0,0,0,0.9);
+  border-right-color: rgba(0,0,0,0.16);
+  box-shadow: 4px 0 18px rgba(0,0,0,0.08);
+}
+
+/* Прячем на мобиле — только десктопный контрол */
+@media (max-width: 767px) {
+  .drawer-trigger { display: none; }
+}
