@@ -1,98 +1,86 @@
 // js/handlers/coreHandlers.js
-// Центр управления dot-меню (классическая схема).
-// Меню: .dot-core-menu (fixed), скрыто без класса .open.
-// Клик по DOT (если не в доке) — toggle меню. Клик вне / Esc / скролл / ресайз — закрыть.
 
-export function initCoreHandlers() {
+export function setupDotCoreMenu() {
   const dot = document.querySelector('.dot-core');
-  const menu = document.querySelector('.dot-core-menu');
+  const menu = document.getElementById('dot-core-menu');
+
   if (!dot || !menu) return;
 
-  // Глушим все остаточные "мини-окна", если они где-то лежат
-  document.querySelectorAll('.dot-mini').forEach(el => el.remove());
+  let isOpen = false;
 
-  const bottomPanel = document.querySelector('.bottom-panel');
-  const isDockedInBottom = () => bottomPanel && bottomPanel.contains(dot);
-
-  // --- API ---
-  const openMenu = () => {
-    if (menu.classList.contains('open')) return;
-    menu.classList.add('open');
-    positionMenu();
-    // слушатели для автозакрытия/репозиционирования
-    window.addEventListener('pointerdown', onDocPointerDown, true);
-    window.addEventListener('keydown', onKeyDown, true);
-    window.addEventListener('scroll', onViewportChange, { passive: true });
-    window.addEventListener('resize', onViewportChange, { passive: true });
-  };
-
-  const closeMenu = () => {
-    if (!menu.classList.contains('open')) return;
-    menu.classList.remove('open');
-    window.removeEventListener('pointerdown', onDocPointerDown, true);
-    window.removeEventListener('keydown', onKeyDown, true);
-    window.removeEventListener('scroll', onViewportChange);
-    window.removeEventListener('resize', onViewportChange);
-  };
-
-  const toggleMenu = () => (menu.classList.contains('open') ? closeMenu() : openMenu());
-
-  function onDocPointerDown(e) {
-    if (!menu.classList.contains('open')) return;
-    if (menu.contains(e.target)) return;
-    if (dot.contains(e.target)) return;
-    closeMenu();
-  }
-  function onKeyDown(e) { if (e.key === 'Escape') closeMenu(); }
-  function onViewportChange() { if (menu.classList.contains('open')) positionMenu(); }
-
-  // Позиционирование фиксированного меню около точки
+  // === Позиционирование меню возле DotCore ===
   function positionMenu() {
-    const d = dot.getBoundingClientRect();
-    // временно делаем видимым для измерений
-    menu.style.visibility = 'hidden';
-    menu.style.left = '0px'; menu.style.top = '0px';
-    const m = menu.getBoundingClientRect();
+    menu.style.display = "flex";
+    menu.style.visibility = "hidden";
 
-    const GAP = 10;
-    let top = d.bottom + GAP;     // дефолт — под точкой
-    let left = d.right - m.width; // прижимаем правым краем к точке
+    const dotRect = dot.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
 
-    // флип вверх, если не влазит снизу
-    if (top + m.height > window.innerHeight - 8) top = d.top - m.height - GAP;
-    // корректируем влево/вправо по краям
-    if (left < 8) left = 8;
-    const maxLeft = window.innerWidth - m.width - 8;
-    if (left > maxLeft) left = maxLeft;
+    let left = dotRect.left + dotRect.width / 2 - menuRect.width / 2;
+    let top = dotRect.bottom + 8;
 
-    menu.style.left = Math.round(left) + 'px';
-    menu.style.top  = Math.round(top)  + 'px';
-    menu.style.visibility = '';
+    const padding = 8;
+    if (left < padding) left = padding;
+    if (left + menuRect.width > window.innerWidth - padding)
+      left = window.innerWidth - menuRect.width - padding;
+    if (top + menuRect.height > window.innerHeight - padding)
+      top = dotRect.top - menuRect.height - 8;
+
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+    menu.style.position = "fixed";
+    menu.style.visibility = "visible";
+    menu.style.zIndex = 99999;
   }
 
-  // === Обработчики ===
+  function closeMenu() {
+    isOpen = false;
+    menu.classList.remove('open');
+    menu.style.display = "";
+    menu.style.left = "";
+    menu.style.top = "";
+    menu.style.position = "";
+    menu.style.visibility = "";
+    menu.style.zIndex = "";
+  }
 
-  // Клик по DOT открывает/закрывает меню (кроме дока)
-  dot.addEventListener('click', () => {
-    if (isDockedInBottom()) return; // в доке — отправка, не трогаем
-    toggleMenu();
-  });
-
-  // Клик по пунктам меню — закрыть и отдать действие наружу
-  menu.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, [role="menuitem"], a, [data-action]');
-    if (!btn) return;
-    closeMenu();
-    const action = (btn.dataset.action || btn.textContent || '').trim().toLowerCase();
-
-    if (action === 'contacts') {
-      // Спец-кейс проекта: открыть режим контактов (обрабатывается снаружи)
-      window.dispatchEvent(new CustomEvent('dot:openContacts'));
-      return;
+  // Клик по точке DOT
+  dot.addEventListener('click', (e) => {
+    if (document.body.classList.contains('dragging-dotcore')) return;
+    e.stopPropagation();
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    if (isOpen) {
+      positionMenu();
+    } else {
+      closeMenu();
     }
-    window.dispatchEvent(new CustomEvent('dot:menuAction', { detail: { action } }));
   });
 
-  // На старте — меню закрыто
-  closeMenu();
+  // Закрытие меню по клику вне
+  document.addEventListener('click', (e) => {
+    if (
+      isOpen &&
+      !menu.contains(e.target) &&
+      !dot.contains(e.target)
+    ) {
+      closeMenu();
+    }
+  });
+
+  // ESC закрывает меню
+  document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape" && isOpen) {
+      closeMenu();
+    }
+  });
+
+  // Клик на любой пункт меню — закрыть меню
+  menu.addEventListener('click', (e) => {
+    if (e.target.closest('button')) closeMenu();
+  });
+
+  // Перепозиционировать при ресайзе/скролле
+  window.addEventListener('resize', () => { if (isOpen) positionMenu(); });
+  window.addEventListener('scroll', () => { if (isOpen) positionMenu(); });
 }
