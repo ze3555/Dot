@@ -14,6 +14,11 @@
   /* Добавь если нужно тень */
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
+.topbar {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
 .logout-btn {
   position: absolute;
