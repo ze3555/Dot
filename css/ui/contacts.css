@@ -1,7 +1,7 @@
 .contacts-input {
   display: block;
-  width: calc(100% - 32px); /* чтобы были отступы по бокам */
-  margin: 16px auto 12px auto; /* отступ сверху и снизу */
+  width: calc(100% - 32px);
+  margin: 16px auto 12px auto;
   padding: 10px 14px;
   border-radius: 6px;
   border: 1px solid var(--border-color, #444);
@@ -10,6 +10,7 @@
   font-size: 14px;
   box-sizing: border-box;
 }
+
 
 .contacts-wrapper {
   padding: 0 8px; /* чтобы контент внутри не прилипал к краям */
