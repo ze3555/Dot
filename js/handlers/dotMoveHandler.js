@@ -1,6 +1,8 @@
 // js/handlers/dotMoveHandler.js
-// DOT: док в нижнюю панель при фокусе, возврат в прежнюю плавающую позицию при расфокусе,
-// двойной клик — вернуть в топбар. Отправка сообщения по клику на DOT в доке — без изменений.
+// DOT докуется в нижнюю панель при фокусе на инпуте и возвращается:
+//  – при расфокусе — в сохранённую плавающую позицию,
+//  – при двойном клике — на топбар.
+// Плюс: мгновенный апдейт автоконтраста при каждом перемещении между зонами.
 
 export function setupDotMoveOnInput() {
   const dot = document.querySelector('.dot-core');
@@ -10,13 +12,9 @@ export function setupDotMoveOnInput() {
 
   ensureBottomActions(bottomPanel);
 
-  // Сохраняем "плавающее" состояние до докования (куда вернуть после расфокуса)
   let floatState = { parent: null, left: 0, top: 0, has: false };
-
-  // Режим "домой в топбар" (включается даблкликом)
   let homeMode = false;
 
-  // --- helpers ---
   function captureFloatState() {
     const rect = dot.getBoundingClientRect();
     floatState = {
@@ -36,8 +34,8 @@ export function setupDotMoveOnInput() {
       dot.style.left = floatState.left + 'px';
       dot.style.top = floatState.top + 'px';
       dot.style.transform = 'translate3d(0,0,0)';
+      updateDotContrast(dot);
     } else {
-      // Фоллбек: если нет floatState — вернем в топбар
       undockToTopbar();
     }
   }
@@ -48,31 +46,29 @@ export function setupDotMoveOnInput() {
     dot.style.left = '';
     dot.style.top = '';
     dot.style.transform = 'translate3d(0,0,0)';
+    updateDotContrast(dot);
   }
 
-  // --- докование при фокусе на инпуте ---
+  // Док при фокусе
   bottomPanel.addEventListener('focusin', (e) => {
     if (!e.target.classList.contains('chat-input')) return;
 
-    // Запоминаем текущую плавающую позицию, чтобы вернуть её после расфокуса
     captureFloatState();
-
     if (!bottomPanel.contains(dot)) {
       bottomPanel.appendChild(dot);
     }
-    // В доке позиционируемся через CSS-грid, сбрасываем фикс-позицию
     dot.style.position = '';
     dot.style.left = '';
     dot.style.top = '';
     dot.style.transform = 'translate3d(0,0,0)';
+    updateDotContrast(dot);
   });
 
-  // --- возврат из дока при потере фокуса всей панели ---
+  // Возврат при расфокусе всей панели
   bottomPanel.addEventListener('focusout', () => {
     setTimeout(() => {
       const active = document.activeElement;
-      if (bottomPanel.contains(active)) return; // фокус ушел, но все еще внутри панели
-
+      if (bottomPanel.contains(active)) return;
       if (homeMode) {
         undockToTopbar();
       } else {
@@ -81,7 +77,7 @@ export function setupDotMoveOnInput() {
     }, 0);
   });
 
-  // --- клик по DOT в доке = отправка ---
+  // Клик по DOT в доке — отправка
   dot.addEventListener('click', () => {
     if (!bottomPanel.contains(dot)) return;
     const input = bottomPanel.querySelector('.chat-input');
@@ -95,24 +91,83 @@ export function setupDotMoveOnInput() {
     input.focus();
   });
 
-  // --- плюс под инпутом ---
+  // Плюс — наружу событие
   bottomPanel.addEventListener('click', (e) => {
     const btn = e.target.closest('#add-folder-btn');
     if (!btn) return;
     window.dispatchEvent(new CustomEvent('dot:addFolder'));
   });
 
-  // --- управление режимами ---
-  // Любое "ручное" взаимодействие (drag стартует с pointerdown) — выходим из homeMode
+  // Управление режимами
   dot.addEventListener('pointerdown', () => { homeMode = false; }, { passive: true });
 
-  // Двойной клик — вернуть домой в топбар
   dot.addEventListener('dblclick', () => {
     homeMode = true;
     undockToTopbar();
   });
 
-  // UI-инфраструктура нижней панели (если ещё не создана)
+  // ===== Мини-копия автоконтраста для событий док/ан-док (то же правило ч/б) =====
+  function updateDotContrast(dotEl) {
+    const rect = dotEl.getBoundingClientRect();
+    const cx = Math.round(rect.left + rect.width / 2);
+    const cy = Math.round(rect.top + rect.height / 2);
+
+    const prevPE = dotEl.style.pointerEvents;
+    dotEl.style.pointerEvents = 'none';
+    let behind = document.elementFromPoint(cx, cy);
+    dotEl.style.pointerEvents = prevPE;
+
+    let rgba = null;
+    let guard = 0;
+    while (behind && guard++ < 20) {
+      const bg = getComputedStyle(behind).backgroundColor;
+      const parsed = parseCssColor(bg);
+      if (parsed && parsed[3] > 0) { rgba = parsed; break; }
+      behind = behind.parentElement;
+    }
+    if (!rgba) rgba = [255,255,255,1];
+
+    const [r,g,b,a] = rgba;
+    const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+    const hex = lum < 0.5 ? '#fff' : '#000';
+
+    dotEl.style.color = hex;
+    dotEl.style.setProperty('--dot-core-fg', hex);
+    dotEl.style.setProperty('--dot-core-border', hex);
+
+    try {
+      dotEl.querySelectorAll('svg').forEach(svg => {
+        svg.style.stroke = 'currentColor';
+        svg.style.fill = 'currentColor';
+      });
+    } catch(_) {}
+  }
+
+  function srgb(v) {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+  function parseCssColor(color) {
+    if (!color) return null;
+    if (color === 'transparent') return [0,0,0,0];
+    if (color.startsWith('rgb')) {
+      const m = color.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+(?:\.\d+)?))?\)/i);
+      if (!m) return null;
+      return [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10), m[4] ? parseFloat(m[4]) : 1];
+    }
+    if (color.startsWith('#')) {
+      let hex = color.slice(1);
+      if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+      if (hex.length !== 6) return null;
+      const r = parseInt(hex.slice(0,2),16);
+      const g = parseInt(hex.slice(2,4),16);
+      const b = parseInt(hex.slice(4,6),16);
+      return [r,g,b,1];
+    }
+    return null;
+  }
+
+  // Инфраструктура панели
   function ensureBottomActions(panel) {
     let actions = panel.querySelector('.bottom-actions');
     if (!actions) {
