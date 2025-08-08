@@ -1,20 +1,19 @@
 /* css/ui/drawer.css */
-/* Contacts drawer (left), backdrop, desktop trigger, and buttons.
-   Colors & shadows come from theme variables. */
+/* Левый дровер: адаптивная сетка, sticky header с кнопкой, нормальные поля. */
 
 .contacts-drawer {
   position: fixed;
   left: 0;
-  top: 48px; /* below top-bar */
+  top: var(--topbar-h);        /* ниже топ-бара */
   bottom: 0;
   width: min(86vw, 360px);
   transform: translateX(-100%);
   will-change: transform;
   transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* header (btn) / content / footer (logout) */
   padding: 12px;
-  gap: 8px;
+  gap: 12px;
 
   background: var(--panel-bg);
   color: var(--panel-fg);
@@ -22,10 +21,9 @@
   border-right: var(--panel-border);
   z-index: 1001;
 }
-.contacts-drawer.open {
-  transform: translateX(0);
-}
+.contacts-drawer.open { transform: translateX(0); }
 
+/* Backdrop */
 .contacts-drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -35,20 +33,15 @@
   transition: opacity .2s ease, visibility .2s ease;
   z-index: 1000;
 }
-.contacts-drawer-backdrop.active {
-  opacity: 1;
-  visibility: visible;
-}
+.contacts-drawer-backdrop.active { opacity: 1; visibility: visible; }
 
 /* Desktop trigger (left arrow) */
 .drawer-trigger {
   position: fixed;
   left: 8px;
-  top: 56px;
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
+  top: calc(var(--topbar-h) + 8px);
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
   border-radius: 8px;
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
@@ -59,11 +52,14 @@
   z-index: 999;
 }
 
-/* Add contact button at the top of the drawer */
+/* Header: Add contact button — sticky, чтобы всегда под рукой */
 .drawer-add-btn {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   appearance: none;
   border-radius: 10px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   font: inherit;
   line-height: 1;
   cursor: pointer;
@@ -75,28 +71,16 @@
 .drawer-add-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
 .drawer-add-btn:active { transform: scale(.985); }
 
-/* Logout button pinned at the bottom if you keep it there */
-.logout-btn {
-  margin-top: auto;
-  appearance: none;
-  border-radius: 10px;
-  padding: 8px 12px;
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
-  cursor: pointer;
-  transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
-}
-.logout-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
-.logout-btn:active { transform: scale(.985); }
-
-/* Contacts list (simple defaults — adjust if you have specific markup) */
+/* Content area */
 .contacts-wrapper {
+  min-height: 0; /* для грид-скролла */
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 10px;
+  overflow: hidden;
 }
 
+/* Input — на всю ширину, корректная типографика */
 .contacts-input {
   width: 100%;
   border-radius: 10px;
@@ -104,14 +88,15 @@
   background: var(--input-bg);
   color: var(--input-fg);
   padding: 10px 12px;
+  font: inherit;
 }
 .contacts-input::placeholder { color: var(--input-ph); }
 
+/* List */
 .contacts-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  list-style: none; margin: 0; padding: 0;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .contacts-list-item {
   padding: 10px 8px;
@@ -121,60 +106,17 @@
 .contacts-list-item:hover {
   background: color-mix(in oklab, var(--panel-fg), transparent 93%);
 }
-/* ==== Desktop trigger arrow (LEFT drawer opener) ==== */
-.drawer-trigger {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translate(-4px, -50%);      /* чуть выступает за край экрана */
-  z-index: 1001;
 
-  width: 28px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 6px;
-
-  border-radius: 0 10px 10px 0;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.9);
-  border-right: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 4px 0 18px rgba(0,0,0,0.22);
-  backdrop-filter: saturate(140%) blur(6px);
-
-  font-size: 18px;              /* если используешь символ-стрелку ‹ */
-  line-height: 1;
+/* Footer: logout btn внизу дровера */
+.logout-btn {
+  appearance: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-bg);
   cursor: pointer;
-  user-select: none;
-
-  opacity: 0.28;
-  transition: opacity .2s ease, transform .2s ease;
+  transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
 }
-
-.drawer-trigger:hover {
-  opacity: 0.65;
-  transform: translate(0, -50%); /* на ховере прячем зазор слева */
-}
-
-.drawer-trigger:active {
-  transform: translate(0, -50%) scale(0.98);
-}
-
-.drawer-trigger:focus-visible {
-  outline: 2px solid #ffd400;
-  outline-offset: 2px;
-}
-
-/* Светлая тема */
-body.theme-light .drawer-trigger {
-  background: rgba(0,0,0,0.06);
-  color: rgba(0,0,0,0.9);
-  border-right-color: rgba(0,0,0,0.16);
-  box-shadow: 4px 0 18px rgba(0,0,0,0.08);
-}
-
-/* Прячем на мобиле — только десктопный контрол */
-@media (max-width: 767px) {
-  .drawer-trigger { display: none; }
-}
+.logout-btn:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); }
+.logout-btn:active { transform: scale(.985); }
