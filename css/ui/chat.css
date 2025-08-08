@@ -78,4 +78,70 @@ body.theme-light .chat-input::placeholder {
 
 /* Сброс старых артефактов */
 input#chat-input::-ms-clear { display: none; }
+/* === Chat composer polish === */
+:root{
+  --composer-max-w: 740px;
+  --composer-h: 52px;
+  --composer-radius: 18px;
+}
+
+.bottom-panel{
+  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  background: linear-gradient(to top, rgba(0,0,0,.06), transparent);
+  z-index: 10010;
+}
+
+#chat-form{
+  max-width: var(--composer-max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* поле */
+#chat-input, .chat-input{
+  flex: 1 1 auto;
+  min-height: var(--composer-h);
+  font-size: 16px; /* iOS no-zoom */
+  line-height: 1.25;
+  border-radius: var(--composer-radius);
+  padding: 12px 14px;
+  background: var(--input-bg, #f0f2f4);
+  color: var(--input-fg, #101114);
+  border: 1px solid var(--input-border-color, rgba(0,0,0,.08));
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) inset;
+}
+#chat-input::placeholder, .chat-input::placeholder{
+  color: var(--input-ph, rgba(0,0,0,.45));
+}
+#chat-input:focus, .chat-input:focus{
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, currentColor 18%, transparent),
+    0 1px 0 rgba(0,0,0,.04) inset;
+}
+
+/* место под докнутого Дота */
+body.dot-dock #chat-input, body.dot-dock .chat-input{ padding-right: 62px; }
+
+/* старая кнопка — базовый вид + фолбэк */
+.chat-send-btn{
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--input-border-color, rgba(0,0,0,.08));
+  background: var(--btn-bg, #111);
+  color: var(--btn-fg, #fff);
+  display: grid; place-items: center;
+}
+.chat-send-btn[disabled]{ opacity:.4; pointer-events:none; }
+
+/* при доке Дота скрываем старую кнопку (если Дот есть) */
+body.dot-dock .chat-send-btn{ display: none !important; }
+/* если Дота нет — не скрываем никогда */
+body.no-dot-core .chat-send-btn{ display: grid !important; }
+
+@media (max-width: 480px){
+  :root{ --composer-h: 54px; }
+}
 
