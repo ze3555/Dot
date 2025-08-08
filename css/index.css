@@ -1,13 +1,17 @@
+/* css/index.css */
+
+/* Core & layout */
 @import "./core/dot-core.css";
 @import "./layout/topbar.css";
 @import "./layout/main.css";
+
+/* UI components */
 @import "./ui/login-modal.css";
 @import "./ui/drawer.css";
+@import "./ui/contacts.css";
+@import "./ui/dot-mini.css";
 @import "./ui/bottom-panel.css";
 @import "./ui/profile-drawer.css";
-/* ТЕПЕРЬ — ТЕМА, САМОЙ ПОСЛЕДНЕЙ */
+
+/* THEME MUST BE LAST */
 @import "./theme/light-dark.css";
-@import "./ui/contacts.css";
-
-
-
