@@ -199,16 +199,3 @@ body.dragging-dotcore {
   transition: all 0.25s ease;
   z-index: 9999;
 }
-
-.contacts-input {
-  display: block;
-  width: calc(100% - 32px);
-  margin: 16px auto 12px auto;
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #444);
-  background-color: var(--input-bg, #222);
-  color: var(--text-color, #fff);
-  font-size: 14px;
-  box-sizing: border-box;
-}
