@@ -52,7 +52,7 @@
   transition: opacity .2s ease, visibility 0s linear;
 }
 
-/* Grabber / "кромка" */
+/* Grabber / кромка */
 .profile-top-drawer .profile-grabber {
   position: relative;
   height: 18px;
@@ -126,9 +126,7 @@
 }
 
 /* Section */
-.profile-section {
-  margin-top: 10px;
-}
+.profile-section { margin-top: 10px; }
 .section-title {
   display: block;
   font-size: 12px;
@@ -161,7 +159,5 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .profile-top-drawer, .profile-top-backdrop {
-    transition: none;
-  }
+  .profile-top-drawer, .profile-top-backdrop { transition: none; }
 }
