@@ -11,7 +11,7 @@
   transition: box-shadow 0.25s, background 0.2s;
   position: relative;
   border: 3px solid var(--dot-core-border, #fff);
-  z-index: 10; /* НИЗКИЙ. Во время драга JS поднимает сам */
+  z-index: 10;
 }
 
 .dot-core:hover,
@@ -19,120 +19,31 @@
   box-shadow: 0 0 22px 0 rgba(0,0,0,0.18);
   outline: none;
 }
-.dot-core:active { transform: translateY(1px); }
 
-/* Темы */
-body.theme-light .dot-core { background: var(--dot-core-bg, #ffd400); border-color: #fff; }
-body.theme-dark  .dot-core {
+.dot-core:active {
+  transform: translateY(1px);
+}
+
+body.theme-light .dot-core {
+  background: var(--dot-core-bg, #ffd400);
+  border-color: #fff;
+}
+
+body.theme-dark .dot-core {
   background: var(--dot-core-bg-dark, #2f2f33);
   border-color: #3a3a3e;
   box-shadow: 0 0 18px 0 rgba(0,0,0,0.2);
 }
+
 body.theme-dark .dot-core:hover,
-body.theme-dark .dot-core:focus-visible { background: var(--dot-core-bg-dark-hover, #353538); }
-
-/* --- Меню (fixed) --- */
-.dot-core-menu {
-  display: none;
-  position: fixed;
-  min-width: 220px;
-  max-width: 96vw;
-  padding: 16px 22px;
-  background: var(--dot-menu-bg, #fff);
-  border-radius: 22px;
-  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.12);
-  border: 2px solid var(--dot-menu-border, #f2f2f2);
-  z-index: 99999;
-  flex-direction: row;
-  gap: 22px;
-  align-items: center;
-  transition: background 0.2s, color 0.2s;
-}
-.dot-core-menu.open { display: flex; }
-
-body.theme-dark .dot-core-menu {
-  background: var(--dot-menu-bg-dark, #232324);
-  border-color: #232324;
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.24);
-  color: #ededed;
+body.theme-dark .dot-core:focus-visible {
+  background: var(--dot-core-bg-dark-hover, #353538);
 }
 
-/* Контейнер кнопок */
-.dot-core-menu .menu-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-
-/* Кнопки меню */
-.dot-core-menu .btn,
-.dot-core-menu .pill,
-.dot-core-menu button,
-.dot-core-menu a[role="menuitem"],
-.dot-core-menu [role="menuitem"] {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid var(--dot-menu-pill-border, #e9e9e9);
-  background: var(--dot-menu-pill-bg, #fff);
-  color: var(--dot-menu-pill-fg, #111);
-  box-shadow: inset 0 1px 0 rgba(0,0,0,0.03);
-  transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .05s;
-}
-.dot-core-menu .btn:hover,
-.dot-core-menu .pill:hover,
-.dot-core-menu button:hover,
-.dot-core-menu a[role="menuitem"]:hover,
-.dot-core-menu [role="menuitem"]:hover { background: #f7f7f8; border-color: #dedede; }
-.dot-core-menu .btn:active,
-.dot-core-menu .pill:active,
-.dot-core-menu button:active,
-.dot-core-menu a[role="menuitem"]:active,
-.dot-core-menu [role="menuitem"]:active { transform: translateY(1px); }
-.dot-core-menu .btn:focus-visible,
-.dot-core-menu .pill:focus-visible,
-.dot-core-menu button:focus-visible,
-.dot-core-menu a[role="menuitem"]:focus-visible,
-.dot-core-menu [role="menuitem"]:focus-visible {
-  outline: 2px solid var(--dot-menu-item-hover-color, #ffd400);
-  outline-offset: 2px;
-}
-.dot-core-menu .btn[disabled],
-.dot-core-menu .pill[disabled],
-.dot-core-menu button[disabled],
-.dot-core-menu a[aria-disabled="true"],
-.dot-core-menu [role="menuitem"][aria-disabled="true"] { opacity: .5; pointer-events: none; }
-
-/* Заголовок/подвал (если используется) */
-.dot-core-menu .menu-title { color: #6b6b6b; font-size: 12px; margin: 0 0 8px 2px; }
-body.theme-dark .dot-core-menu .menu-title { color: #bdbdbd; }
-.dot-core-menu .content { display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
-.dot-core-menu .primary { font-weight: 600; }
-.dot-core-menu .footer-actions { display: flex; gap: 10px; margin-top: 6px; }
-
-/* Переменные */
+/* Переменные (оставлены только для .dot-core) */
 :root {
   --dot-core-bg: #ffd400;
   --dot-core-border: #fff;
-
   --dot-core-bg-dark: #2f2f33;
   --dot-core-bg-dark-hover: #353538;
-
-  --dot-menu-bg: #fff;
-  --dot-menu-border: #f2f2f2;
-
-  --dot-menu-bg-dark: #232324;
-
-  --dot-menu-pill-bg: #fff;
-  --dot-menu-pill-border: #e9e9e9;
-  --dot-menu-pill-fg: #111;
-
-  --dot-menu-item-hover-color: #ffd400;
 }
