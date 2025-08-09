@@ -19,7 +19,7 @@
 /* host */
 #dot-core{
   position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
-  z-index:10;
+  z-index:1002;
 
   display:grid; place-items:center;
   width:var(--dot-size); height:var(--dot-size);
@@ -60,26 +60,21 @@
 #dot-core.dot-pulse{ animation:dotPulse 240ms ease-out }
 @keyframes dotPulse{
   0%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
-  60%{ box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 50%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 50%) }
+  60%{ box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 40%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 60%) }
   100%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
 }
 
-/* states */
-#dot-core.dot-idle{ width:var(--dot-size); height:var(--dot-size); border-radius:999px }
-
-/* горизонтальный (центр) */
-#dot-core.dot-menu:not(.dot-vert),
-#dot-core.dot-theme:not(.dot-vert){
-  width:min(92vw,560px);
-  height:72px;
+/* Состояния */
+#dot-core.dot-menu,
+#dot-core.dot-theme{
+  width: min(92vw, 480px);
+  height: clamp(96px, calc(var(--dot-size) * 2.5), 160px);
   border-radius:18px;
-  padding:8px;
+  padding:10px;
   cursor:default;
-  /* якорь только для горизонта, чтобы «раскрывалось» от нужного края */
-  transform-origin: center center;
+  transform-origin:center center;
 }
 
-/* вертикальный (док у края) */
 #dot-core.dot-menu.dot-vert,
 #dot-core.dot-theme.dot-vert{
   width:var(--menu-vert-w);
@@ -110,49 +105,22 @@
   max-height: calc(100vh - 16px);
 }
 
-/* Не анимируем top при раскрытии/закрытии — чтобы точка не «ехала» */
-#dot-core.dot-menu,
-#dot-core.dot-theme,
-#dot-core.dot-contacts,
-#dot-core.dot-settings {
-  transition:
-    width var(--transition-med),
-    height var(--transition-med),
-    border-radius var(--transition-med),
-    transform var(--transition-med),
-    background var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    left var(--transition-med);
-  /* top намеренно исключён из transition */
+/* Временное отключение всех анимаций при клампе (исключаем визуальные сдвиги) */
+html.dot-nosmooth #dot-core,
+html.dot-nosmooth #dot-core *{
+  transition:none!important;
+  animation:none!important;
 }
 
-/* На всякий: в вертикальном режиме у края точно без анимации top */
-#dot-core.dot-menu.dot-vert,
-#dot-core.dot-theme.dot-vert{
-  transition:
-    width var(--transition-med),
-    height var(--transition-med),
-    border-radius var(--transition-med),
-    transform var(--transition-med),
-    background var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    left var(--transition-med);
-}
-
-/* Когда точку двигаем или докнули — выключаем все переходы,
-   чтобы не было «подпрыгиваний» при клампе/пересчётах */
-#dot-core.dot-free,
-#dot-core.dot-docked,
+/* dev overrides: принудительное отключение анимаций, если нужно */
 #dot-core,
 #dot-core.dot-menu,
 #dot-core.dot-theme,
 #dot-core.dot-contacts,
 #dot-core.dot-settings,
 #dot-core.dot-vert {
-  transition: none !important;      /* вырубаем все CSS-переходы */
-  animation: none !important;       /* вырубаем keyframe-анимации (morph/pulse) */
+  transition: none !important;
+  animation: none !important;
 }
 
 /* На всякий — внутренности тоже без анимаций/переходов */
