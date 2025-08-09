@@ -84,4 +84,24 @@
 #dot-core.dot-free{ transform:translate(0,0) }
 #dot-core.dot-docked{ transform:translate(0,0) scale(.94); opacity:.92 }
 #dot-core.dot-docked:hover{ opacity:1 }
+:root{
+  /* ...остальное как есть... */
+  --dot-stroke: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
+}
+
+/* host */
+#dot-core{
+  /* ... */
+  border: var(--dot-stroke);                /* тонкий обвод, чтобы glow не «срезало» экраном */
+  backdrop-filter: saturate(120%) blur(0px); /* лёгкий punch (без сильного blur) */
+}
+
+/* вертикальное меню у края — чуть «воздуха» снизу под iOS бар */
+#dot-core.dot-menu.dot-vert,
+#dot-core.dot-theme.dot-vert{
+  height: min(var(--menu-vert-h), calc(100vh - 16px - env(safe-area-inset-bottom)));
+  box-shadow:
+    0 12px 36px rgba(0,0,0,.35),
+    0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%); /* мягче glow */
+}
 #dot-core.dot-docked.dot-expanding{ transform:translate(0,0) scale(1); opacity:1 }
