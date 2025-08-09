@@ -64,3 +64,11 @@
   height:1px; background: color-mix(in oklab, var(--dot-fg), transparent 88%);
   pointer-events:none;
 }
+/* No-anim fallback: кнопки сразу видимы */
+.dot-menu button {
+  opacity: 1 !important;
+  transform: none !important;
+}
+.dot-menu.is-live button {
+  animation: none !important;
+}
