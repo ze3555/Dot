@@ -1,61 +1,32 @@
-import { getState, setState } from "./state.js";
+// js/core/gestures.js
+// Короткое/долгое нажатие (longpress)
+export function bindPress(node, { onTap, onLong, delay = 420 }) {
+  let tid = null, pressed = false, moved = false;
 
-/** Вешает long-press на элемент */
-export function attachLongPress(el, { threshold = 360, onLongPress }) {
-  let pressed = false, moved = false, id = null;
-
-  const clear = () => {
+  const start = (e) => {
+    pressed = true; moved = false;
+    tid = setTimeout(() => {
+      tid = null;
+      if (pressed && !moved && onLong) onLong(e);
+    }, delay);
+  };
+  const move = () => { if (pressed) moved = true; };
+  const end = (e) => {
+    const wasLong = tid == null && pressed && !moved;
+    clearTimeout(tid); tid = null;
+    if (pressed && !moved && !wasLong && onTap) onTap(e);
     pressed = false; moved = false;
-    if (id) { clearTimeout(id); id = null; }
-    document.body.classList.remove("no-select");
   };
 
-  el.addEventListener("pointerdown", (e) => {
-    document.body.classList.add("no-select"); // временно запрещаем выделение
-    pressed = true; moved = false;
-    id = setTimeout(() => { if (pressed && !moved) onLongPress(e); }, threshold);
-    // На некоторых мобилах помогает подавить выделение/лупу:
-    e.preventDefault();
-  });
+  node.addEventListener("pointerdown", start, { passive: true });
+  node.addEventListener("pointermove", move, { passive: true });
+  node.addEventListener("pointerup", end, { passive: true });
+  node.addEventListener("pointercancel", end, { passive: true });
 
-  el.addEventListener("pointermove", (e) => {
-    if (!pressed) return;
-    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 4) moved = true;
-  });
-
-  ["pointerup","pointercancel","pointerleave"].forEach(evt =>
-    el.addEventListener(evt, clear)
-  );
-
-  // Локально гасим контекст-меню (долгое касание) для этого элемента
-  el.addEventListener("contextmenu", (e) => e.preventDefault());
-}
-
-export function initGestures() {
-  const dot = document.getElementById("dot-core");
-  if (!dot) return;
-
-  // Надёжный outside-click via pointerdown origin
-  let startedInside = false;
-  document.addEventListener("pointerdown", (e) => {
-    startedInside = dot.contains(e.target);
-  }, { capture: true });
-
-  document.addEventListener("click", () => {
-    if (!startedInside) setState("idle");
-    startedInside = false;
-  }, { capture: true });
-
-  // Tap on Dot in idle -> menu
-  dot.addEventListener("click", (e) => {
-    if (getState() === "idle") {
-      e.stopPropagation();
-      setState("menu");
-    }
-  });
-
-  // ESC -> idle
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") setState("idle");
-  }, { passive: true });
+  return () => {
+    node.removeEventListener("pointerdown", start);
+    node.removeEventListener("pointermove", move);
+    node.removeEventListener("pointerup", end);
+    node.removeEventListener("pointercancel", end);
+  };
 }
