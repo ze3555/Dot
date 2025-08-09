@@ -1,29 +1,21 @@
 /* css/ui/dot-contacts.css
-   Контакты: капсула поиска + кнопка "добавить".
-   Цели:
-   - Инпут ЧЁТКО видим (не чёрный), контрастный в обеих темах.
-   - Плейсхолдер читаемый.
-   - Фокус‑ринг аккуратный, без дёрганий.
-   - iOS: font-size ≥16px, чтобы не было zoom on focus.
+   Контакты: поле + плюс справа.
+   Изменения:
+   - Убрали левую лупу.
+   - Инпут прозрачен (фон как у капсулы), НЕ белый.
+   - Плюс справа.
 */
 
-/* Контейнер капсулы внутри #dot-core в состоянии .dot-contacts */
+/* Контейнер в капсуле DOT */
 .dot-contacts-wrap {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto; /* только инпут + плюс */
   align-items: center;
   gap: 8px;
-
-  /* Высота берём от контейнера DOT (капсула разворачивается по высоте DOT) */
   height: 100%;
-
-  /* Небольшой входной аппер */
-  opacity: 1;
-  transform: none;
 }
 
-/* Кнопки слева/справа (лупа и плюс) */
-.dot-contacts-btn,
+/* Кнопка добавления (справа) */
 .dot-contacts-add {
   -webkit-tap-highlight-color: transparent;
   appearance: none;
@@ -43,18 +35,15 @@
               color .18s cubic-bezier(.2,.8,.2,1),
               box-shadow .18s cubic-bezier(.2,.8,.2,1);
 }
-
-.dot-contacts-btn:hover,
-.dot-contacts-add:hover {
+.dot-contacts-add:hover { 
   background: color-mix(in oklab, var(--panel-fg, #111), transparent 92%);
 }
-
 .dot-contacts-add:disabled {
   opacity: .5;
   cursor: default;
 }
 
-/* Сам инпут (капсула) */
+/* Поле ввода: фон как у капсулы (прозрачный), без белого */
 .dot-contacts-input {
   width: 100%;
   height: 40px;
@@ -66,57 +55,38 @@
   padding: 10px 14px;
   border-radius: 9999px;
 
-  /* Контрастные фон/текст из темы с фолбэками */
-  background: var(--panel-bg, #fff);
-  color: var(--panel-fg, #111);
-
-  /* Едва заметный бордер для отделения от фона */
-  border: 1px solid color-mix(in oklab, var(--panel-fg, #111), transparent 85%);
-
+  background: transparent;          /* ключевой момент — НЕ белый */
+  color: var(--panel-fg, #111);     /* контраст из темы */
+  border: 1px solid transparent;    /* без видимой рамки, чтобы не прыгало */
   outline: none;
-  box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 0 0 0 transparent;
-  transition: box-shadow .18s cubic-bezier(.2,.8,.2,1),
-              border-color .18s cubic-bezier(.2,.8,.2,1),
-              background-color .18s cubic-bezier(.2,.8,.2,1),
-              color .18s cubic-bezier(.2,.8,.2,1);
 
-  /* Текстовая каретка контрастная */
+  box-shadow: none;
+  transition: border-color .18s cubic-bezier(.2,.8,.2,1),
+              color .18s cubic-bezier(.2,.8,.2,1),
+              background-color .18s cubic-bezier(.2,.8,.2,1);
+
   caret-color: color-mix(in oklab, var(--panel-fg, #111), #4b8dff 40%);
 }
 
 /* Плейсхолдер читаемый */
 .dot-contacts-input::placeholder {
   color: color-mix(in oklab, var(--panel-fg, #111), transparent 55%);
-  opacity: 1; /* Safari */
+  opacity: 1;
 }
 
-/* Фокус на самом инпуте — тонкий и аккуратный */
+/* Фокус — тонкий, без внешнего свечения, чтобы капсула не дёргалась */
 .dot-contacts-input:focus {
   border-color: color-mix(in oklab, var(--panel-fg, #111), transparent 70%);
-  box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--panel-fg, #111), transparent 80%);
 }
 
-/* Фокус‑кольцо для всей капсулы (если нужно подсветить блок целиком) */
-#dot-core.dot-contacts:focus-within {
-  outline: 0;
-  box-shadow:
-    0 6px 22px rgba(0,0,0,.20),
-    0 0 0 4px color-mix(in oklab, var(--panel-fg, #111), transparent 80%);
-  border-radius: 16px; /* сгладить общий блок DOT на время фокуса */
-}
-
-/* Тёмная тема: гарантируем контраст, если переменные не заданы */
+/* Тёмная тема (страховка, если переменные не заданы) */
 body.theme-dark .dot-contacts-input {
-  background: var(--panel-bg, #161616);
   color: var(--panel-fg, #f5f5f5);
   border-color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 80%);
 }
-
 body.theme-dark .dot-contacts-input::placeholder {
   color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 55%);
 }
 
-/* Анимации входа/выхода — убраны, чтобы не было «езда» по вертикали
-   (синхронизировано с недавними правками drag/clamp) */
+/* Без входных анимаций — совпадает с clamp‑логикой drag */
 .dot-contacts-wrap.is-live { animation: none; }
