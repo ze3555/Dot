@@ -39,9 +39,27 @@
   overflow: hidden;
   cursor: pointer;
   will-change: width, height, border-radius, transform, left, top, box-shadow;
+
+  /* Гасим системные жесты и выделение для DOT */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+#dot-core * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
-/* Glow усиленный при наведении */
+/* Глобальный флаг во время long-press/drag */
+.no-select, .no-select * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Hover glow */
 #dot-core:hover {
   box-shadow:
     var(--dot-shadow),
@@ -68,60 +86,29 @@
 }
 
 /* idle circle */
-#dot-core.dot-idle {
-  width: var(--dot-size);
-  height: var(--dot-size);
-  border-radius: 999px;
-}
+#dot-core.dot-idle { width: var(--dot-size); height: var(--dot-size); border-radius: 999px }
 
 /* menu rectangle (и theme визуально как menu) */
 #dot-core.dot-menu,
-#dot-core.dot-theme {
-  width: min(92vw, 560px);
-  height: 72px;
-  border-radius: 18px;
-  padding: 8px;
-  cursor: default;
-}
+#dot-core.dot-theme { width: min(92vw, 560px); height: 72px; border-radius: 18px; padding: 8px; cursor: default }
 
 /* contacts capsule */
-#dot-core.dot-contacts {
-  width: min(94vw, 640px);
-  height: 56px;
-  border-radius: 999px;
-  padding: 6px 10px;
-}
+#dot-core.dot-contacts { width: min(94vw, 640px); height: 56px; border-radius: 999px; padding: 6px 10px }
 
 /* settings square */
-#dot-core.dot-settings {
-  width: min(92vw, 560px);
-  height: min(50vh, 520px);
-  border-radius: 16px;
-  padding: 12px;
-}
+#dot-core.dot-settings { width: min(92vw, 560px); height: min(50vh, 520px); border-radius: 16px; padding: 12px }
 
 /* content host */
-.dot-content {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  align-items: center;
-}
-.dot-swap-in {
-  animation: dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both;
-}
-@keyframes dotSwapIn {
-  from { opacity: 0; transform: translateY(6px) }
-  to   { opacity: 1; transform: translateY(0) }
-}
+.dot-content { width: 100%; height: 100%; display: grid; align-items: center }
+.dot-swap-in { animation: dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both }
+@keyframes dotSwapIn { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform: none } }
 
 /* === DRAG / DOCK MODES === */
 #dot-core.dot-free { transform: translate(0, 0) }
-#dot-core.dot-docked {
-  transform: translate(0, 0) scale(0.94);
-  opacity: 0.92;
-}
+#dot-core.dot-docked { transform: translate(0, 0) scale(0.94); opacity: 0.92 }
 #dot-core.dot-docked:hover { opacity: 1 }
+/* во время раскрытия прямоугольников убираем скейл дока */
+#dot-core.dot-docked.dot-expanding { transform: translate(0,0) scale(1); opacity: 1 }
 
 /* стороны докинга (модификаторы для логики раскрытия) */
 #dot-core.dot-docked-left  {}
@@ -129,19 +116,11 @@
 
 /* ----- Раскрытие внутрь от стороны прилипания (transform-origin) ----- */
 #dot-core.dot-menu.dot-origin-right,
-#dot-core.dot-theme.dot-origin-right {
-  transform-origin: right center;
-}
+#dot-core.dot-theme.dot-origin-right { transform-origin: right center; }
 #dot-core.dot-menu.dot-origin-left,
-#dot-core.dot-theme.dot-origin-left {
-  transform-origin: left center;
-}
+#dot-core.dot-theme.dot-origin-left  { transform-origin: left center; }
 
 #dot-core.dot-contacts.dot-origin-right,
-#dot-core.dot-settings.dot-origin-right {
-  transform-origin: right center;
-}
+#dot-core.dot-settings.dot-origin-right { transform-origin: right center; }
 #dot-core.dot-contacts.dot-origin-left,
-#dot-core.dot-settings.dot-origin-left {
-  transform-origin: left center;
-}
+#dot-core.dot-settings.dot-origin-left  { transform-origin: left center; }
