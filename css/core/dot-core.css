@@ -121,3 +121,32 @@
   max-width: calc(100vw - 16px);
   max-height: calc(100vh - 16px);
 }
+/* Не анимируем top при раскрытии/закрытии — чтобы точка не «ехала» */
+#dot-core.dot-menu,
+#dot-core.dot-theme,
+#dot-core.dot-contacts,
+#dot-core.dot-settings {
+  transition:
+    width var(--transition-med),
+    height var(--transition-med),
+    border-radius var(--transition-med),
+    transform var(--transition-med),
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    left var(--transition-med);
+  /* top намеренно исключён из transition */
+}
+
+/* На всякий: в вертикальном режиме у края точно без анимации top */
+#dot-core.dot-vert {
+  transition:
+    width var(--transition-med),
+    height var(--transition-med),
+    border-radius var(--transition-med),
+    transform var(--transition-med),
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    left var(--transition-med);
+}
