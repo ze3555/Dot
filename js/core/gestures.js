@@ -1,20 +1,21 @@
 import { getState, setState } from "./state.js";
 
-/**
- * Attach long press to element.
- * @param {Element} el
- * @param {{threshold?: number, onLongPress: (ev: PointerEvent)=>void}} opts
- */
+/** Вешает long-press на элемент */
 export function attachLongPress(el, { threshold = 360, onLongPress }) {
-  let t = 0, pressed = false, moved = false, id = null;
+  let pressed = false, moved = false, id = null;
 
-  const clear = () => { pressed = false; moved = false; if (id) { clearTimeout(id); id = null; } };
+  const clear = () => {
+    pressed = false; moved = false;
+    if (id) { clearTimeout(id); id = null; }
+    document.body.classList.remove("no-select");
+  };
 
   el.addEventListener("pointerdown", (e) => {
-    pressed = true; moved = false; t = performance.now();
-    id = setTimeout(() => {
-      if (pressed && !moved) onLongPress(e);
-    }, threshold);
+    document.body.classList.add("no-select"); // временно запрещаем выделение
+    pressed = true; moved = false;
+    id = setTimeout(() => { if (pressed && !moved) onLongPress(e); }, threshold);
+    // На некоторых мобилах помогает подавить выделение/лупу:
+    e.preventDefault();
   });
 
   el.addEventListener("pointermove", (e) => {
@@ -25,6 +26,9 @@ export function attachLongPress(el, { threshold = 360, onLongPress }) {
   ["pointerup","pointercancel","pointerleave"].forEach(evt =>
     el.addEventListener(evt, clear)
   );
+
+  // Локально гасим контекст-меню (долгое касание) для этого элемента
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
 export function initGestures() {
