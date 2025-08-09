@@ -1,1 +1,72 @@
 
+/* Contacts capsule inside #dot-core when .dot-contacts is active */
+
+.dot-contacts-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+/* Icon buttons (search, add) */
+.dot-contacts-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--dot-fg);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  opacity: .9;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+.dot-contacts-btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--dot-bg), white 8%);
+}
+.dot-contacts-btn:active {
+  transform: translateY(0) scale(.98);
+}
+
+/* Input */
+.dot-contacts-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--dot-fg);
+  font-size: 16px;           /* >=16px чтобы iOS не увеличивал масштаб */
+  line-height: 1.2;
+  padding: 6px 2px;
+}
+
+.dot-contacts-input::placeholder {
+  color: color-mix(in oklab, var(--dot-fg), transparent 60%);
+}
+
+/* Add button enabled/disabled */
+.dot-contacts-btn[data-act="add"][disabled] {
+  opacity: .45;
+  pointer-events: none;
+}
+
+/* Optional small helper under the capsule (suggestions/errors) */
+.dot-contacts-helper {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  opacity: .75;
+  padding: 4px 2px 0;
+}
+
+/* Focus ring for the whole capsule (uses focus-within) */
+#dot-core.dot-contacts:focus-within {
+  outline: 0;
+  box-shadow:
+    0 6px 22px rgba(0,0,0,.28),
+    0 0 0 4px color-mix(in oklab, var(--dot-fg), transparent 70%);
+}
