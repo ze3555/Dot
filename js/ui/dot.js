@@ -21,12 +21,14 @@ function sync(dot, state) {
   const host = document.createElement("div");
   host.className = "dot-content dot-fade-in";
 
-  // prevent outside-click handler from closing when interacting inside
-  host.addEventListener("click", (e) => e.stopPropagation());
+  // Глушим клики внутри DOT только когда он НЕ в idle
+  if (state !== "idle") {
+    host.addEventListener("click", (e) => e.stopPropagation());
+  }
 
   switch (state) {
     case "idle":
-      host.innerHTML = ""; // pure circle
+      host.innerHTML = ""; // чистый круг
       break;
 
     case "menu":
@@ -51,7 +53,7 @@ function sync(dot, state) {
       break;
 
     case "theme":
-      // Theme is instant; keep menu visible
+      // Theme — мгновенное действие; меню остаётся видно
       host.appendChild(renderMenu({
         onFunction: () => setState("function"),
         onTheme:    () => setState("theme"),
