@@ -107,3 +107,17 @@
 #dot-core.dot-docked{ transform:translate(0,0) scale(.94); opacity:.92 }
 #dot-core.dot-docked:hover{ opacity:1 }
 #dot-core.dot-docked.dot-expanding{ transform:translate(0,0) scale(1); opacity:1 }
+/* Жёсткий экранный кламп для дота и любых раскрытых состояний */
+#dot-core {
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  inset: auto; /* сброс лишних абсолютных inset, если есть */
+}
+
+#dot-core.dot-menu,
+#dot-core.dot-theme,
+#dot-core.dot-contacts,
+#dot-core.dot-settings {
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+}
