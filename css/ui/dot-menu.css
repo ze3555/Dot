@@ -1,4 +1,4 @@
-/* 4-button menu inside DOT */
+/* 4-button menu inside DOT with staggered entrance */
 .dot-menu {
   display: grid;
   grid-auto-flow: column;
@@ -18,6 +18,19 @@
   letter-spacing: .2px;
   cursor: pointer;
   transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+  opacity: 0; transform: translateY(6px);
+}
+
+/* stagger when .is-live is applied */
+.dot-menu.is-live button { animation: menuIn .26s cubic-bezier(.2,.8,.2,1) both }
+.dot-menu.is-live button:nth-child(1){ animation-delay: 20ms }
+.dot-menu.is-live button:nth-child(2){ animation-delay: 60ms }
+.dot-menu.is-live button:nth-child(3){ animation-delay: 100ms }
+.dot-menu.is-live button:nth-child(4){ animation-delay: 140ms }
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(6px) }
+  to   { opacity: 1; transform: translateY(0) }
 }
 
 .dot-menu button:hover { transform: translateY(-1px) }
