@@ -6,7 +6,7 @@
   --dot-fg: var(--text, #fff);
   --dot-shadow: 0 8px 24px rgba(0,0,0,.25);
   --transition-fast: 150ms ease;
-  --transition-med: 240ms cubic-bezier(.2,.8,.2,1);
+  --transition-med: 260ms cubic-bezier(.2,.8,.2,1);
 }
 
 /* host */
@@ -14,7 +14,7 @@
   position: fixed;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%); /* центр между панелями; можно потом скорректить формулой */
+  transform: translate(-50%, -50%);
   z-index: 10;
 
   display: grid;
@@ -31,9 +31,30 @@
     border-radius var(--transition-med),
     transform var(--transition-med),
     background var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
   overflow: hidden;
-  cursor: pointer; /* idle clickable */
+  cursor: pointer;
+  will-change: width, height, border-radius, transform;
+}
+
+/* morph tick on state change */
+#dot-core.dot-morph {
+  animation: dotMorph 220ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes dotMorph {
+  from { transform: translate(-50%, -50%) scale(.98) }
+  to   { transform: translate(-50%, -50%) scale(1) }
+}
+
+/* theme pulse */
+#dot-core.dot-pulse {
+  animation: dotPulse 240ms ease-out;
+}
+@keyframes dotPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--dot-fg), transparent 70%), var(--dot-shadow) }
+  60%  { box-shadow: 0 0 0 10px color-mix(in oklab, var(--dot-fg), transparent 90%), var(--dot-shadow) }
+  100% { box-shadow: var(--dot-shadow) }
 }
 
 /* idle: circle */
@@ -77,8 +98,11 @@
   align-items: center;
 }
 
-/* simple fade for internal swaps */
-.dot-fade-in {
-  animation: dotFade .18s ease both;
+/* unified content swap animation */
+.dot-swap-in {
+  animation: dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both;
 }
-@keyframes dotFade { from {opacity:0; transform: translateY(4px)} to {opacity:1; transform:none} }
+@keyframes dotSwapIn {
+  from { opacity: 0; transform: translateY(6px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
