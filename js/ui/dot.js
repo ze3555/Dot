@@ -228,7 +228,8 @@ export function initDot() {
   // визуальный вьюпорт (мобилки/клавиатура)
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", safeClamp);
-    window.visualViewport.addEventListener("scroll", safeClamp);
+    // ВАЖНО: НЕ клампим на scroll, чтобы дот не «ехал» со скроллом
+    // window.visualViewport.addEventListener("scroll", safeClamp);
   }
 
   // ГЛОБАЛЬНО: на фокус любого поля (включая composer) — глушим кламп
