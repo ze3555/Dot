@@ -20,7 +20,7 @@ const safeRight  = () => safeInt(getComputedStyle(document.documentElement).getP
 const safeTop    = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)"));
 const safeBottom = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)"));
 
-/** Прочитать/перекинуть док‑флаги */
+/** Прочитать/перекинуть док-флаги */
 function readDockFlags(dot){
   return {
     docked: dot.classList.contains("dot-docked"),
@@ -80,7 +80,7 @@ function clampByRect(dot, margin = MARGIN){
 function sync(dot, state){
   closePopover();
 
-  // сохранить док‑флаги до сброса классов
+  // сохранить док-флаги до сброса классов
   const dock = readDockFlags(dot);
 
   // сброс + базовый стейт
@@ -89,7 +89,7 @@ function sync(dot, state){
   dot.classList.add(`dot-${state}`, "dot-morph");
   setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
-  // вернуть док‑флаги
+  // вернуть док-флаги
   reapplyDockFlags(dot, dock);
 
   const isRect     = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
@@ -98,7 +98,7 @@ function sync(dot, state){
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // если у края — делаем меню/тему вертикальными и убираем dock‑scale
+  // если у края — делаем меню/тему вертикальными и убираем dock-scale
   if (isRect && dock.docked) {
     dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
@@ -174,7 +174,7 @@ export function initDot() {
   /** @type {{left:number, top:number, leftDock:boolean, rightDock:boolean} | null} */
   let lastIdlePos = null;
 
-  // --- подавление клампа вокруг фокуса/клавиатуры ---
+  // --- подавление клампа вокруг фокуса/клавиатуры (ГЛОБАЛЬНО) ---
   let suppressUntil = 0;
   let suppress = false;
   const SUPPRESS_AFTER_BLUR_MS = 550;
@@ -187,7 +187,7 @@ export function initDot() {
 
   // реагируем на смену состояния
   subscribe(({ prev, next }) => {
-    // Если выходим из idle — запоминаем точные координаты и док‑флаги
+    // Если выходим из idle — запоминаем точные координаты и док-флаги
     if (prev === "idle") {
       const r = dot.getBoundingClientRect();
       lastIdlePos = {
@@ -206,7 +206,7 @@ export function initDot() {
       dot.style.left = `${lastIdlePos.left}px`;
       dot.style.top  = `${lastIdlePos.top}px`;
       dot.style.transform = "translate(0,0)";
-      // док‑флаги вернуть (на случай сбросов)
+      // док-флаги вернуть (на случай сбросов)
       dot.classList.toggle("dot-docked-left",  !!lastIdlePos.leftDock);
       dot.classList.toggle("dot-docked-right", !!lastIdlePos.rightDock);
       dot.classList.toggle("dot-docked", !!(lastIdlePos.leftDock || lastIdlePos.rightDock));
@@ -231,23 +231,23 @@ export function initDot() {
     window.visualViewport.addEventListener("scroll", safeClamp);
   }
 
-  // На фокус любого поля внутри DOT — глушим кламп
-  dot.addEventListener("focusin", (e) => {
+  // ГЛОБАЛЬНО: на фокус любого поля (включая composer) — глушим кламп
+  document.addEventListener("focusin", (e) => {
     const t = e.target;
     if (!t) return;
-    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) {
+    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || t.getAttribute?.("role") === "textbox") {
       suppress = true;
     }
-  });
+  }, true);
 
   // После блюра — даём клавиатуре схлопнуться, затем кламп
-  dot.addEventListener("focusout", (e) => {
+  document.addEventListener("focusout", (e) => {
     const t = e.target;
     if (!t) return;
-    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) {
+    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || t.getAttribute?.("role") === "textbox") {
       suppress = false;
       suppressUntil = now() + SUPPRESS_AFTER_BLUR_MS;
       setTimeout(() => { if (canClamp()) clampByRect(dot, MARGIN); }, SUPPRESS_AFTER_BLUR_MS + 16);
     }
-  });
+  }, true);
 }
