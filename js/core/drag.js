@@ -32,11 +32,19 @@ export function initDotDrag() {
   };
 
   // ---- viewport memory to keep position stable on scroll URL-bar changes ----
-  // Сохраняем предыдущие размеры вьюпорта, чтобы пересчитать позицию пропорционально
-  // и не «прилипать» к углам при мелких изменениях высоты/ширины.
   let __lastVW = vvRect().w;
   let __lastVH = vvRect().h;
 
+  const numPx = (v, fallback) => {
+    const n = parseFloat(String(v));
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  /**
+   * Корректируем позицию при изменении размеров вьюпорта:
+   *  - X: док слева/справа — оставляем у края; иначе — масштабируем пропорционально ширине
+   *  - Y: сохраняем зазор до БЛИЖАЙШЕГО края (top/bottom anchor), чтобы не тянуть к верху
+   */
   function adjustForViewportDelta(prevVW, prevVH, vw, vh) {
     try {
       const r = dot.getBoundingClientRect();
@@ -45,30 +53,28 @@ export function initDotDrag() {
       let left = numPx(dot.style.left, r.left);
       let top  = numPx(dot.style.top,  r.top);
 
-      // Горизонталь: если докнуто — пересчитываем по стороне дока; иначе — масштабируем.
+      // ---- X (горизонталь)
       if (dot.classList.contains("dot-docked")) {
         const dockRight = dot.classList.contains("dot-docked-right");
         left = dockRight
           ? Math.max(MARGIN + sl, vw - DOT_SIZE - MARGIN - sr)
           : Math.max(MARGIN + sl, MARGIN + sl);
       } else if (prevVW && vw && Math.abs(prevVW - vw) > 0.5) {
-        const ratioW = vw / prevVW;
-        left = left * ratioW;
+        left = left * (vw / prevVW);
       }
 
-      // Вертикаль: если близко к краю (≤24px) — сохраняем отступ до этого края; иначе — масштабируем.
-      const gapTopPrev = r.top - (MARGIN + st);
-      const gapBottomPrev = (prevVH - (r.top + r.height)) - (MARGIN + sb);
-
+      // ---- Y (вертикаль) — anchor к ближайшему краю
       if (prevVH && vh && Math.abs(prevVH - vh) > 0.5) {
-        if (gapTopPrev <= 24) {
-          top = Math.max(MARGIN + st, top);
-        } else if (gapBottomPrev <= 24) {
-          const newGapBottom = Math.max(MARGIN + sb, gapBottomPrev);
-          top = vh - r.height - newGapBottom;
+        const topGapPrev    = r.top - (MARGIN + st);
+        const bottomGapPrev = (prevVH - (r.top + r.height)) - (MARGIN + sb);
+
+        const anchorTop = topGapPrev <= bottomGapPrev; // ближе к верху — держим верхний зазор, иначе нижний
+        if (anchorTop) {
+          const gap = Math.max(MARGIN + st, topGapPrev);
+          top = gap; // сохраняем прежний зазор сверху
         } else {
-          const ratioH = vh / prevVH;
-          top = top * ratioH;
+          const gap = Math.max(MARGIN + sb, bottomGapPrev);
+          top = vh - r.height - gap; // сохраняем прежний зазор снизу
         }
       }
 
@@ -77,11 +83,6 @@ export function initDotDrag() {
       dot.style.transform = "translate(0,0)";
     } catch (_) { /* noop */ }
   }
-
-  const numPx = (v, fallback) => {
-    const n = parseFloat(String(v));
-    return Number.isFinite(n) ? n : fallback;
-  };
 
   function clampToViewport() {
     const { w: vw, h: vh } = vvRect();
