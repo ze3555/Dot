@@ -1,4 +1,3 @@
-// js/ui/dot.js
 import { mount } from "../core/dom.js";
 import { getState, setState, subscribe } from "../core/state.js";
 import { renderMenu } from "./dot-menu.js";
@@ -13,17 +12,14 @@ export function initDot() {
   sync(dot, getState());
   subscribe(({ next }) => sync(dot, next));
 
-  // Актуализируем якорь при ресайзе экрана
   window.addEventListener("resize", () => {
     if (!anchorLock) return;
     if (!dot.classList.contains("dot-docked")) return;
-    // под экран и перезапоминаем
-    clampByRect(dot, 8);
-    lockPosition(dot);
+    applyLock(dot); // подтянем под новый вьюпорт и перелочим
   });
 }
 
-/* ===== anchor lock (фиксация позиции на время открытого меню) ===== */
+/* ===== anchor lock ===== */
 let anchorLock = null; // { left, top } | null
 
 function lockPosition(dot) {
@@ -33,21 +29,18 @@ function lockPosition(dot) {
   dot.style.top  = `${anchorLock.top}px`;
   dot.style.transform = "translate(0,0)";
 }
-
 function applyLock(dot) {
-  // Подтянуть внутрь экрана с учётом реального размера и пересохранить координаты
-  clampByRect(dot, 8);
+  clampByRect(dot, 8); // сначала в экран
   const r = dot.getBoundingClientRect();
-  anchorLock = { left: Math.round(r.left), top: Math.round(r.top) };
+  anchorLock = { left: Math.round(r.left), top: Math.round(r.top) }; // пересохраняем
   dot.style.left = `${anchorLock.left}px`;
   dot.style.top  = `${anchorLock.top}px`;
   dot.style.transform = "translate(0,0)";
 }
-
-function releaseLock() { anchorLock = null; }
+function releaseLock(){ anchorLock = null }
 
 /* ===== helpers ===== */
-const DOT_SIZE = 64; // sync с --dot-size в CSS
+const DOT_SIZE = 64; // sync с --dot-size
 const MARGIN   = 16;
 
 function readDockFlags(dot) {
@@ -64,7 +57,7 @@ function reapplyDockFlags(dot, f) {
   dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
 }
 
-// первичная фиксация X к стороне дока (до рендера контента)
+/* первичная фиксация X к стороне дока до рендера */
 function pinLeftByDock(dot) {
   if (!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
@@ -76,13 +69,12 @@ function pinLeftByDock(dot) {
   dot.style.transform = "translate(0,0)";
 }
 
-/** Жёсткий кламп по реальному прямоугольнику (учитывает safe-area) */
+/* кламп по реальному прямоугольнику (обе стороны + вертикаль) */
 function clampByRect(dot, margin = 8) {
   if (!dot.classList.contains("dot-docked")) return;
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-
   const sl = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-left)")  || "0", 10) || 0;
   const sr = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-right)") || "0", 10) || 0;
 
@@ -107,36 +99,34 @@ function clampByRect(dot, margin = 8) {
 function sync(dot, state) {
   closePopover();
 
-  // 1) Сохраняем флаги докинга ДО сброса классов
+  // сохранить флаги дока
   const dock = readDockFlags(dot);
 
-  // 2) Сбрасываем и ставим базовые классы состояния
+  // сброс + стейт
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`, "dot-morph");
   setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
-  // 3) Возвращаем флаги докинга
+  // вернуть док‑флаги
   reapplyDockFlags(dot, dock);
 
   const isRect     = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
   const isMenuLike = (state === "menu" || state === "theme");
 
-  // theme визуально = menu
+  // Theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // 4) У края: меню/тема → вертикальный режим + убираем dock-scale
+  // док → вертикальный режим только для меню/темы, и убираем scale
   if (isRect && dock.docked) {
     dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
-
-    // Если якорь ещё не зафиксирован — прикидываем X по стороне дока до рендера
-    if (!anchorLock) pinLeftByDock(dot);
+    if (!anchorLock) pinLeftByDock(dot); // до рендера
   } else {
-    dot.classList.remove("dot-expanding", "dot-vert");
+    dot.classList.remove("dot-expanding","dot-vert");
   }
 
-  // 5) Монтируем содержимое
+  // содержимое
   const host = document.createElement("div");
   host.className = "dot-content dot-swap-in";
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
@@ -182,21 +172,17 @@ function sync(dot, state) {
 
   mount(dot, host);
 
-  // 6) После монтирования: один раз выравниваем в экран и фиксируем позицию.
-  //    Далее при переключениях — просто обновляем lock под текущие размеры.
+  // после монтирования: подтянуть в экран и зафиксировать координаты с учётом реальной ширины/высоты
   if (isRect && dock.docked) {
     if (!anchorLock) {
       requestAnimationFrame(() => {
-        applyLock(dot);               // кламп + запись лока
-        requestAnimationFrame(() => { // на случай доанимации ширины
-          applyLock(dot);
-        });
+        applyLock(dot);
+        requestAnimationFrame(() => applyLock(dot)); // на случай доанимации
       });
     } else {
       requestAnimationFrame(() => applyLock(dot));
     }
   }
 
-  // 7) Выход в idle — снимаем фикс
   if (state === "idle") releaseLock();
 }
