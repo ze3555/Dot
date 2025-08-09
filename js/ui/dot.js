@@ -29,15 +29,13 @@ function readDockFlags(dot){
   };
 }
 function reapplyDockFlags(dot, f){
-  if (!f.docked) return;
-  dot.classList.add("dot-docked");
-  dot.classList.toggle("dot-docked-left",  !!f.left && !f.right);
-  dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
+  dot.classList.toggle("dot-docked", f.docked);
+  dot.classList.toggle("dot-docked-left",  f.left);
+  dot.classList.toggle("dot-docked-right", f.right);
 }
 
-/** Зафиксировать X к стороне дока (до монтирования контента) */
+/** При доке прижать по X к соответствующей стороне */
 function pinLeftByDock(dot){
-  if (!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
   if (dot.classList.contains("dot-docked-right")) {
     dot.style.left = `${Math.max(MARGIN + safeLeft(), vw - DOT_SIZE - MARGIN - safeRight())}px`;
@@ -59,6 +57,21 @@ function clampByRect(dot, margin = MARGIN){
   const st = safeTop();
   const sb = safeBottom();
 
+  // учесть липкие бары (sticky) сверху и снизу, чтобы DOT не «лип» к краям
+  let stickyTop = 0, stickyBottom = 0;
+  const topbar = document.getElementById("topbar");
+  if (topbar) {
+    const rTop = topbar.getBoundingClientRect();
+    // Высота topbar включает safe-area-inset-top → вычитаем st, чтобы не удваивать
+    stickyTop = Math.max(0, Math.round(rTop.height - st));
+  }
+  const bp = document.getElementById("bottom-panel");
+  if (bp) {
+    const rBot = bp.getBoundingClientRect();
+    // Аналогично: padding-bottom использует safe-area-inset-bottom
+    stickyBottom = Math.max(0, Math.round(rBot.height - sb));
+  }
+
   const r = dot.getBoundingClientRect();
 
   // горизонталь
@@ -66,10 +79,11 @@ function clampByRect(dot, margin = MARGIN){
   const maxLeft = vw - sr - r.width - margin;
   let left = Math.min(Math.max(r.left, minLeft), Math.max(minLeft, maxLeft));
 
-  // вертикаль
-  const minTop = margin + st;
-  const maxTop = vh - sb - r.height - margin;
-  let top = Math.min(Math.max(r.top, minTop), Math.max(minTop, maxTop));
+  // вертикаль (с учётом sticky баров)
+  const minTop = margin + st + stickyTop;
+  const maxTop = vh - r.height - margin - sb - stickyBottom;
+  const clampedMaxTop = Math.max(minTop, maxTop); // страховка от инверсии при сверхмалых vh
+  let top = Math.min(Math.max(r.top, minTop), clampedMaxTop);
 
   dot.style.left = `${Math.round(left)}px`;
   dot.style.top  = `${Math.round(top)}px`;
@@ -140,29 +154,27 @@ function sync(dot, state){
       break;
     }
     case "contacts": {
-      const m = renderContacts({ onBack: () => setState("idle") });
-      if (dock.docked) m.classList.add("is-vert");
-      queueMicrotask(() => m.classList.add("is-live"));
-      host.appendChild(m);
+      host.appendChild(renderContacts());
       break;
     }
     case "settings": {
-      const m = renderSettings({ onBack: () => setState("idle") });
-      if (dock.docked) m.classList.add("is-vert");
-      queueMicrotask(() => m.classList.add("is-live"));
-      host.appendChild(m);
+      host.appendChild(renderSettings());
       break;
     }
   }
 
-  mount(dot, host);
+  // заменить содержимое
+  dot.innerHTML = "";
+  dot.appendChild(host);
 
-  // после монтирования: поджать внутрь экрана по фактическим размерам
-  requestAnimationFrame(() => {
-    clampByRect(dot, MARGIN);
-    // ещё раз, если размеры доанимировались (тени/бордер/ширина)
-    requestAnimationFrame(() => clampByRect(dot, MARGIN));
-  });
+  // док-фикс после монтирования
+  if (isRect && dock.docked) {
+    pinLeftByDock(dot);
+  }
+
+  // финальный кламп
+  clampByRect(dot, MARGIN);
+  requestAnimationFrame(() => clampByRect(dot, MARGIN));
 }
 
 /** ===== public ===== */
@@ -182,27 +194,28 @@ export function initDot() {
   const canClamp = () => !suppress && now() > suppressUntil;
   const safeClamp = () => { if (canClamp()) clampByRect(dot, MARGIN); };
 
-  // первый рендер
-  sync(dot, getState());
+  // На входе — привести DOT в штатное состояние
+  dot.style.transform = "translate(-50%, -50%)";
+  dot.style.left = "50%";
+  dot.style.top = "50%";
+  reapplyDockFlags(dot, { docked:false, left:false, right:false });
 
-  // реагируем на смену состояния
-  subscribe(({ prev, next }) => {
-    // Если выходим из idle — запоминаем точные координаты и док-флаги
+  // синхронизация со стейтом
+  subscribe((state, prev) => {
+    // перед уходом из idle — запомнить позицию (для возврата)
     if (prev === "idle") {
       const r = dot.getBoundingClientRect();
       lastIdlePos = {
-        left: Math.round(r.left),
-        top: Math.round(r.top),
+        left: r.left, top: r.top,
         leftDock: dot.classList.contains("dot-docked-left"),
         rightDock: dot.classList.contains("dot-docked-right"),
       };
     }
 
-    // обычная синхронизация UI
-    sync(dot, next);
+    sync(dot, state);
 
-    // Если возвращаемся в idle — восстановить ровно исходную позицию
-    if (next === "idle" && lastIdlePos) {
+    // Возврат в idle — восстановить позицию
+    if (state === "idle" && lastIdlePos) {
       dot.style.left = `${lastIdlePos.left}px`;
       dot.style.top  = `${lastIdlePos.top}px`;
       dot.style.transform = "translate(0,0)";
@@ -218,21 +231,19 @@ export function initDot() {
       // в остальных состояниях — обычный кламп после раскладки контента
       requestAnimationFrame(() => {
         safeClamp();
-        requestAnimationFrame(safeClamp);
       });
     }
   });
 
-  // клампить на ресайз (без реснапа — только удерживаем в экране)
+  // события: resize/visualViewport.resize — клампим аккуратно
   window.addEventListener("resize", safeClamp);
-  // визуальный вьюпорт (мобилки/клавиатура)
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", safeClamp);
-    // ВАЖНО: НЕ клампим на scroll, чтобы дот не «ехал» со скроллом
+    // не слушаем scroll — чтобы не ездить за URL-баром
     // window.visualViewport.addEventListener("scroll", safeClamp);
   }
 
-  // ГЛОБАЛЬНО: на фокус любого поля (включая composer) — глушим кламп
+  // подавление клампа вокруг фокуса (клава)
   document.addEventListener("focusin", (e) => {
     const t = e.target;
     if (!t) return;
