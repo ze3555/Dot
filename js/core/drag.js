@@ -3,8 +3,8 @@ import { getState, setState } from "./state.js";
 
 /**
  * Drag DOT в idle + кламп в пределах экрана.
- * Фикс «прыжка» ПОСЛЕ закрытия фокуса: на время фокуса
- * и ~550ms после blur мы глушим кламп на resize/visualViewport.
+ * Фикс «езда со скроллом»: не слушаем visualViewport.scroll
+ * и клампим только если действительно вышли за границы (EPS).
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
@@ -13,6 +13,7 @@ export function initDotDrag() {
   // ---- geometry/safe areas ----
   const MARGIN = 8;
   const DOT_SIZE = 64; // синхронизировано с CSS --dot-size
+  const EPS = 4;       // порог, чтобы не трогать позицию при микро-движениях вьюпорта
 
   const safeInt = (v) => {
     const n = parseInt(String(v || "0").trim(), 10);
@@ -40,16 +41,21 @@ export function initDotDrag() {
     const sl = safeLeft(), sr = safeRight(), st = safeTop(), sb = safeBottom();
 
     const r = dot.getBoundingClientRect();
-    const curLeft = numPx(dot.style.left, r.left);
-    const curTop  = numPx(dot.style.top,  r.top);
 
     const minLeft = MARGIN + sl;
     const maxLeft = Math.max(minLeft, vw - sr - r.width  - MARGIN);
     const minTop  = MARGIN + st;
     const maxTop  = Math.max(minTop,  vh - sb - r.height - MARGIN);
 
-    const nextLeft = Math.min(Math.max(curLeft, minLeft), maxLeft);
-    const nextTop  = Math.min(Math.max(curTop,  minTop ), maxTop);
+    const needLeft = (r.left < (minLeft - EPS)) || (r.left > (maxLeft + EPS));
+    const needTop  = (r.top  < (minTop  - EPS)) || (r.top  > (maxTop  + EPS));
+    if (!needLeft && !needTop) return; // внутри окна — не трогаем
+
+    const curLeft = numPx(dot.style.left, r.left);
+    const curTop  = numPx(dot.style.top,  r.top);
+
+    const nextLeft = needLeft ? Math.min(Math.max(curLeft, minLeft), maxLeft) : curLeft;
+    const nextTop  = needTop  ? Math.min(Math.max(curTop,  minTop ), maxTop) : curTop;
 
     dot.style.left = `${Math.round(nextLeft)}px`;
     dot.style.top  = `${Math.round(nextTop)}px`;
@@ -90,14 +96,12 @@ export function initDotDrag() {
   }
 
   function snapDock() {
-    // Док только в idle
     if (getState() !== "idle") return;
 
     const { w: vw } = vvRect();
     const r = dot.getBoundingClientRect();
     const centerX = r.left + r.width / 2;
 
-    // если body отключил док — просто клампим и выходим
     if (document.body.classList.contains("dot-dock-off")) {
       clampToViewport();
       dot.classList.remove("dot-docked", "dot-docked-left", "dot-docked-right");
@@ -126,7 +130,6 @@ export function initDotDrag() {
     if (moved) {
       snapDock();
     } else {
-      // тап по докнутому в idle → меню
       if (getState() === "idle" && dot.classList.contains("dot-docked")) {
         setState("menu");
         e.stopPropagation();
@@ -149,7 +152,6 @@ export function initDotDrag() {
   const canClamp = () => !suppress && now() > suppressUntil;
   const safeClamp = () => { if (canClamp()) clampToViewport(); };
 
-  // Любой фокус поля (включая нижний composer) — глушим кламп
   document.addEventListener("focusin", (e) => {
     const t = e.target;
     if (!t) return;
@@ -158,7 +160,6 @@ export function initDotDrag() {
     }
   }, true);
 
-  // После блюра — ждём схлопывание клавы и клампим
   document.addEventListener("focusout", (e) => {
     const t = e.target;
     if (!t) return;
@@ -173,7 +174,8 @@ export function initDotDrag() {
   window.addEventListener("resize", safeClamp);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", safeClamp);
-    window.visualViewport.addEventListener("scroll", safeClamp);
+    // ВАЖНО: scroll не слушаем — иначе дот «ездит» вместе со скроллом
+    // window.visualViewport.addEventListener("scroll", safeClamp);
   }
 
   // стартовый кламп
