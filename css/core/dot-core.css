@@ -1,155 +1,205 @@
+/* css/core/dot-core.css */
+/* Базовый дот: центр экрана, прозрачный, с лёгким свечением, не мешает чтению */
 :root{
-  --dot-size:64px;
-  --dot-radius:999px;
-  --dot-bg:var(--surface-2,#151515);
-  --dot-fg:var(--text,#fff);
-  --dot-shadow:0 8px 24px rgba(0,0,0,.25);
-  --dot-glow:0 0 12px color-mix(in oklab,var(--dot-fg),transparent 60%);
-  --transition-fast:150ms ease;
-  --transition-med:260ms cubic-bezier(.2,.8,.2,1);
-
-  /* Вертикальное меню у края */
-  --menu-vert-count:4;
-  --menu-vert-btn-h:40px;
-  --menu-vert-gap:6px;
-  --menu-vert-pad:8px;
-  --menu-vert-w: clamp(96px, calc(var(--dot-size) * 1.7), 240px);
+  --dot-size: 64px;
+  --dot-bg: rgba(180,180,200,0.15);
+  --dot-glow: 0 0 24px rgba(120,150,255,0.35);
+  --dot-border: rgba(200,210,255,0.35);
+  --panel-bg: rgba(20,20,28,0.94);
+  --panel-border: 1px solid rgba(255,255,255,0.08);
+  --panel-radius: 12px;
+  --panel-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  --text-color: #e6e6ea;
+  --muted: #a9a9b3;
+  --accent: #6ea8ff;
 }
 
-/* host */
-#dot-core{
-  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
-  z-index:1002;
-
-  display:grid; place-items:center;
-  width:var(--dot-size); height:var(--dot-size);
-  background:var(--dot-bg); color:var(--dot-fg);
-  border-radius:var(--dot-radius);
-  box-shadow:var(--dot-shadow), var(--dot-glow);
-  border: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
-  box-sizing: border-box;
-
-  transition:
-    width var(--transition-med),
-    height var(--transition-med),
-    border-radius var(--transition-med),
-    transform var(--transition-med),
-    background var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    left var(--transition-med),
-    top var(--transition-med),
-    opacity var(--transition-fast);
-
-  overflow:hidden; cursor:pointer; will-change:width,height,border-radius,transform,left,top,box-shadow;
+html[data-theme="light"]{
+  --panel-bg: rgba(255,255,255,0.98);
+  --text-color: #1b1b1f;
+  --muted: #5c5f66;
+  --dot-bg: rgba(80,90,120,0.1);
+  --dot-glow: 0 0 18px rgba(120,150,255,0.28);
+  --dot-border: rgba(40,60,120,0.25);
 }
 
-.no-select, .no-select *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
-.no-select, .no-select *{ -webkit-user-select:none!important; user-select:none!important; -webkit-touch-callout:none!important }
-
-#dot-core:hover{
-  box-shadow:var(--dot-shadow),
-    0 0 16px color-mix(in oklab,var(--dot-fg),transparent 40%),
-    0 0 32px color-mix(in oklab,var(--dot-fg),transparent 60%);
+body {
+  color: var(--text-color);
 }
 
-/* micro anims */
-#dot-core.dot-morph{ animation:dotMorph 220ms cubic-bezier(.2,.8,.2,1) }
-@keyframes dotMorph{ from{ transform:translate(-50%,-50%) scale(.98) } to{ transform:translate(-50%,-50%) scale(1) } }
+.dot-core {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--dot-bg);
+  box-shadow: var(--dot-glow), inset 0 0 0 1px var(--dot-border);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  cursor: pointer;
+  transition: box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
+}
+.dot-core.dot-dragging { transition: none; }
+.dot-core.dot-pulse { transform: translate(-50%, -50%) scale(1.06); }
 
-#dot-core.dot-pulse{ animation:dotPulse 240ms ease-out }
-@keyframes dotPulse{
-  0%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
-  60%{ box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 40%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 60%) }
-  100%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
+.dot-snap-center {
+  animation: dotSnap 0.35s ease;
+}
+@keyframes dotSnap {
+  from { transform: translate(-50%, -50%) scale(0.96); }
+  to   { transform: translate(-50%, -50%) scale(1); }
 }
 
-/* Состояния */
-#dot-core.dot-menu,
-#dot-core.dot-theme{
-  width: min(92vw, 480px);
-  height: clamp(96px, calc(var(--dot-size) * 2.5), 160px);
-  border-radius:18px;
-  padding:10px;
-  cursor:default;
-  transform-origin:center center;
+/* Вертикальное узкое меню */
+.dot-menu {
+  position: fixed;
+  top: calc(50% + 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  z-index: 1001;
+  width: 220px;
+  animation: dropIn 140ms ease-out;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.dot-menu-btn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
+  color: var(--text-color);
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: left;
+  font: 500 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+.dot-menu-btn:hover{ border-color: rgba(255,255,255,0.18); }
+.dot-menu-btn:active{ background: rgba(255,255,255,0.04); }
+
+/* Универсальные вертикальные панели */
+.dot-panel{
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 56px);
+  transform: translateX(-50%);
+  width: min(92vw, 360px);
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  padding: 14px 14px 16px;
+  z-index: 1002;
+  display: grid;
+  gap: 10px;
+  animation: dropIn 140ms ease-out;
+}
+.dot-panel-title{
+  margin: 0 0 6px 2px;
+  font: 600 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--muted);
 }
 
-#dot-core.dot-menu.dot-vert,
-#dot-core.dot-theme.dot-vert{
-  width:var(--menu-vert-w);
-  height: calc(
-    var(--menu-vert-count) * var(--menu-vert-btn-h) +
-    var(--menu-vert-btn-h)/3 +
-    var(--menu-vert-count) * 8px +
-    var(--menu-vert-gap)*(var(--menu-vert-count) - 1)
-  );
-  border-radius:18px;
-  padding:var(--menu-vert-pad);
-  transform-origin: center center;
-}
-
-/* contacts/settings — прямоугольные окна */
-#dot-core.dot-contacts,
-#dot-core.dot-settings{
-  width:min(92vw,560px);
-  height: min(50vh, 520px);
-  border-radius:18px;
-  padding:10px;
-  cursor:default;
-  transform-origin:center center;
-}
-
-#dot-core.dot-settings {
-  max-width: calc(100vw - 16px);
-  max-height: calc(100vh - 16px);
-}
-
-/* Временное отключение всех анимаций при клампе (исключаем визуальные сдвиги) */
-html.dot-nosmooth #dot-core,
-html.dot-nosmooth #dot-core *{
-  transition:none!important;
-  animation:none!important;
-}
-
-/* dev overrides: принудительное отключение анимаций, если нужно */
-#dot-core,
-#dot-core.dot-menu,
-#dot-core.dot-theme,
-#dot-core.dot-contacts,
-#dot-core.dot-settings,
-#dot-core.dot-vert {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* На всякий — внутренности тоже без анимаций/переходов */
-#dot-core * {
-  transition: none !important;
-  animation: none !important;
-}
-/* --- Unread badge on DOT --- */
-#dot-core[data-unread]:not([data-unread="0"])::after {
-  content: attr(data-unread);
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+/* Contacts — горизонтальная капсула-поиск, без иконок, только растяжение по X */
+.dot-contacts-wrap{
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%) scaleX(0.6);
+  width: min(92vw, 560px);
+  height: 44px;
+  background: var(--panel-bg);
+  border: var(--panel-border);
   border-radius: 999px;
-  display: inline-flex;
+  box-shadow: var(--panel-shadow);
+  z-index: 1002;
+  display: grid;
   align-items: center;
-  justify-content: center;
-  font: 600 11px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: #fff;
-  background: var(--accent, #4a8cff);
-  box-shadow: 0 2px 6px rgba(0,0,0,.22);
-  transform-origin: 100% 100%;
-  animation: dotBadgeIn .18s ease-out;
+  padding: 0 14px;
+  animation: contactsExpand 180ms ease-out forwards;
+}
+@keyframes contactsExpand {
+  to { transform: translate(-50%,-50%) scaleX(1); }
+}
+.dot-contacts-input{
+  width: 100%;
+  background: transparent;
+  color: var(--text-color);
+  border: none;
+  outline: none;
+  font: 500 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-@keyframes dotBadgeIn {
-  0%   { transform: scale(.6); opacity: 0; }
-  100% { transform: scale(1);  opacity: 1; }
+/* Functions */
+.dot-fn-card{
+  display: grid;
+  gap: 8px;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px;
+}
+.dot-fn-name{ font: 600 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.dot-fn-desc{ color: var(--muted); font-size: 12px; }
+.dot-fn-input{
+  resize: vertical;
+  min-height: 68px;
+  max-height: 40vh;
+  background: rgba(255,255,255,0.03);
+  color: var(--text-color);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.dot-fn-actions{ display: flex; justify-content: flex-end; }
+.dot-fn-run{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: transparent;
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.dot-fn-run:hover{ border-color: rgba(255,255,255,0.28); }
+
+/* Settings */
+.dot-set-row{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+.dot-set-label{ color: var(--muted); }
+.dot-set-select{
+  background: transparent;
+  color: var(--text-color);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.dot-set-checkbox{ width: 18px; height: 18px; }
+.dot-set-actions{ display:flex; justify-content:flex-end; gap:8px; }
+.dot-set-btn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: transparent;
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* Специальная панель Fine‑Tune (высотой побольше по умолчанию) */
+.dot-settings.dot-settings-fine{
+  width: min(92vw, 420px);
 }
