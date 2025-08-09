@@ -2,9 +2,9 @@
 import { getState, setState } from "./state.js";
 
 /**
- * Drag DOT in IDLE. On release, snap to nearest side (dock),
- * unless body has .dot-dock-off => then return to center.
- * No top-jumps: resize only clamps current position (no re-snap).
+ * Drag DOT в IDLE и кламп в вьюпорт.
+ * Фикс «прыжка» после фокуса поля: на время фокуса инпутов
+ * отключаем кламп, и ещё на ~450ms после blur (когда прячется клавиатура).
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
@@ -14,142 +14,164 @@ export function initDotDrag() {
   let startX = 0, startY = 0;
   let originLeft = 0, originTop = 0;
   let moved = false;
-  let suppressClickOnce = false;
 
-  const ORIGIN_MARGIN = 16;
-  const getRect = () => dot.getBoundingClientRect();
+  // --- SUPPRESS CLAMP WHILE KEYBOARD ANIMATES ---
+  let suppressClamp = false;
+  let suppressUntil = 0;
+  const SUPPRESS_AFTER_BLUR_MS = 500;
 
-  /** switch to free positioning (left/top) */
-  function enterFree() {
-    dot.classList.add("dot-free");
-    const r = getRect();
-    dot.style.left = `${r.left}px`;
-    dot.style.top  = `${r.top}px`;
-    dot.style.transform = "translate(0,0)";
+  function now() { return performance.now(); }
+  function canClamp() { return !suppressClamp && now() > suppressUntil; }
+
+  function withSuppress(fn) {
+    const prev = suppressClamp; suppressClamp = true;
+    try { fn(); } finally { suppressClamp = prev; }
   }
 
-  /** return to centered idle (no docking) */
-  function returnToCenter() {
-    dot.classList.remove("dot-free","dot-docked","dot-docked-left","dot-docked-right");
-    dot.style.left = "";
-    dot.style.top = "";
-    dot.style.transform = "translate(-50%, -50%)";
+  // --- HELPERS ---
+  function getNumberPx(v) {
+    const n = parseFloat(String(v || 0));
+    return Number.isFinite(n) ? n : 0;
   }
 
-  /** snap to nearest left/right side and clamp vertically */
-  function snapToSide() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const r = getRect();
-    const cx = r.left + r.width / 2;
-    const sideRight = cx > vw / 2;
-
-    // vertical clamp with margins
-    const margin = 8;
-    let y = Math.max(margin, Math.min(r.top, vh - r.height - margin));
-
-    dot.classList.add("dot-docked");
-    dot.classList.toggle("dot-docked-right", sideRight);
-    dot.classList.toggle("dot-docked-left", !sideRight);
-
-    const x = sideRight ? (vw - r.width - ORIGIN_MARGIN) : ORIGIN_MARGIN;
-    dot.style.left = `${x}px`;
-    dot.style.top  = `${y}px`;
-    dot.style.transform = "translate(0,0)";
+  function getViewportRect() {
+    // Предпочтительно visualViewport (iOS корректно учитывает клавиатуру)
+    const vv = window.visualViewport;
+    if (vv) {
+      return {
+        x: vv.offsetLeft || 0,
+        y: vv.offsetTop  || 0,
+        w: vv.width,
+        h: vv.height
+      };
+    }
+    return { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight };
   }
 
-  /** clamp current position inside viewport WITHOUT changing dock side */
   function clampToViewport() {
-    const margin = 8;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const r = getRect();
+    if (!canClamp()) return;
 
-    let left = r.left;
-    let top  = r.top;
+    const margin = 8; // безопасный отступ со всех сторон
+    const vp = getViewportRect();
+    const rect = dot.getBoundingClientRect();
 
-    // horizontal bounds
-    const maxLeft = vw - r.width - margin;
-    if (left < margin) left = margin;
-    if (left > maxLeft) left = maxLeft;
+    // Текущие абсолютные left/top (через style, т.к. #dot-core position:fixed)
+    const currentLeft = getNumberPx(dot.style.left) || rect.left;
+    const currentTop  = getNumberPx(dot.style.top)  || rect.top;
 
-    // vertical bounds
-    const maxTop = vh - r.height - margin;
-    if (top < margin) top = margin;
-    if (top > maxTop) top = maxTop;
+    let nextLeft = currentLeft;
+    let nextTop  = currentTop;
 
-    dot.style.left = `${Math.round(left)}px`;
-    dot.style.top  = `${Math.round(top)}px`;
-    dot.style.transform = "translate(0,0)";
+    const maxLeft = vp.x + vp.w - rect.width  - margin;
+    const maxTop  = vp.y + vp.h - rect.height - margin;
+    const minLeft = vp.x + margin;
+    const minTop  = vp.y + margin;
+
+    if (nextLeft < minLeft) nextLeft = minLeft;
+    if (nextTop  < minTop ) nextTop  = minTop;
+    if (nextLeft > maxLeft) nextLeft = maxLeft;
+    if (nextTop  > maxTop ) nextTop  = maxTop;
+
+    // Изменяем без переходов, чтобы не было рывков
+    withSuppress(() => {
+      dot.style.left = `${nextLeft}px`;
+      dot.style.top  = `${nextTop}px`;
+      dot.classList.add("dot-free"); // фиксируем, что он свободно перемещаемый
+    });
   }
 
-  // ----- pointer flow -----
-  dot.addEventListener("pointerdown", (e) => {
-    // drag only from idle and when drag enabled
+  // --- DRAG (только в idle) ---
+  function onPointerDown(e) {
     if (getState() !== "idle") return;
-    if (document.body.classList.contains("dot-drag-off")) return;
+    if (e.button !== 0 && e.pointerType !== "touch") return;
 
     dragging = true;
     moved = false;
-    suppressClickOnce = false;
 
-    dot.setPointerCapture(e.pointerId);
-
-    const r = getRect();
+    const rect = dot.getBoundingClientRect();
     startX = e.clientX;
     startY = e.clientY;
-    originLeft = r.left;
-    originTop  = r.top;
+    originLeft = rect.left;
+    originTop  = rect.top;
 
-    enterFree();
-    e.stopPropagation();
-  });
+    dot.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }
 
-  dot.addEventListener("pointermove", (e) => {
+  function onPointerMove(e) {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
 
-    dot.style.left = `${originLeft + dx}px`;
-    dot.style.top  = `${originTop + dy}px`;
-  });
+    const nextLeft = originLeft + dx;
+    const nextTop  = originTop  + dy;
 
-  function endDrag(e) {
+    suppressClamp = true; // пока тащим — не клампим
+    dot.style.left = `${nextLeft}px`;
+    dot.style.top  = `${nextTop}px`;
+    dot.classList.add("dot-free");
+  }
+
+  function onPointerUp(e) {
     if (!dragging) return;
     dragging = false;
-    dot.releasePointerCapture(e.pointerId);
+    suppressClamp = false;
 
-    if (moved) {
-      suppressClickOnce = true;
-      if (document.body.classList.contains("dot-dock-off")) {
-        returnToCenter();
-      } else {
-        snapToSide();
-      }
-    }
-  }
-  dot.addEventListener("pointerup", endDrag);
-  dot.addEventListener("pointercancel", endDrag);
+    // По отпусканию — просто клампим в вьюпорт, без «snap to side»
+    clampToViewport();
 
-  // When docked & idle: open menu IN PLACE (no returnToCenter jump)
-  dot.addEventListener("click", (e) => {
-    if (suppressClickOnce) {
-      e.stopPropagation();
-      suppressClickOnce = false;
-      return;
-    }
-    if (getState() === "idle" && dot.classList.contains("dot-docked")) {
+    dot.releasePointerCapture?.(e.pointerId);
+
+    // Тап по докнутому доту открывает меню (сохраняем твою логику)
+    if (!moved && getState() === "idle" && dot.classList.contains("dot-docked")) {
       setState("menu");
       e.stopPropagation();
     }
-  });
+  }
 
-  // ----- viewport changes (URL bar, orientation, etc.) -----
-  // Important: DO NOT re-snap on resize. Only clamp current position.
-  window.addEventListener("resize", () => {
+  dot.addEventListener("pointerdown", onPointerDown, { passive: false });
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
+  window.addEventListener("pointerup", onPointerUp, { passive: true });
+  window.addEventListener("pointercancel", onPointerUp, { passive: true });
+
+  // --- RESIZE/KEYBOARD HANDLERS ---
+  function onAnyResize() {
+    // Клампим только если разрешено
     if (dot.classList.contains("dot-docked") || dot.classList.contains("dot-free")) {
       clampToViewport();
     }
+  }
+
+  // window.resize (универсально)
+  window.addEventListener("resize", onAnyResize);
+
+  // visualViewport (лучше на iOS)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", onAnyResize);
+    window.visualViewport.addEventListener("scroll", onAnyResize);
+  }
+
+  // --- SUPPRESS AROUND INPUT FOCUS ---
+  // Когда любой input/textarea внутри DOT получает фокус — глушим кламп.
+  dot.addEventListener("focusin", (e) => {
+    const t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+      suppressClamp = true;
+    }
   });
+
+  // После blur — даём клавиатуре схлопнуться и только потом снова клампим.
+  dot.addEventListener("focusout", (e) => {
+    const t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+      suppressClamp = false;
+      suppressUntil = now() + SUPPRESS_AFTER_BLUR_MS;
+      // Через небольшой таймаут — безопасный кламп.
+      setTimeout(() => clampToViewport(), SUPPRESS_AFTER_BLUR_MS + 16);
+    }
+  });
+
+  // На старте — один раз убедимся, что DOT в пределах экрана.
+  requestAnimationFrame(() => clampToViewport());
 }
