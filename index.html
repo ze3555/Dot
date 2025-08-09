@@ -4,53 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DOT Messenger</title>
+
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" sizes="192x192" href="img/dot192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="img/dot512.png" />
+
+  <!-- Базовые стили проекта -->
   <link rel="stylesheet" href="css/index.css" />
+
+  <!-- Стили DOT (существуют в архиве) -->
+  <link rel="stylesheet" href="css/core/dot-core.css" />
+  <link rel="stylesheet" href="css/ui/dot-menu.css" />
 </head>
 <body>
 
   <!-- Top Bar -->
-  <header id="topbar">
+  <header id="topbar" class="top-bar" role="banner" aria-label="Top Bar">
     <div class="topbar-title">DOT</div>
   </header>
 
-  <!-- Main Content -->
-  <main id="main-content">
-    <div id="messages"></div>
-    <div id="dot-core" class="dot-idle"></div>
+  <!-- Основная область чата -->
+  <main id="app" role="main">
+    <section id="chat" class="chat">
+      <!-- Лента сообщений: требуется js/chat/messages.js (#messages) -->
+      <div id="messages" class="messages" aria-live="polite" aria-label="Messages"></div>
+
+      <!-- Композер: требуется js/chat/composer.js (#chat-composer + #chat-input) -->
+      <form id="chat-composer" class="composer" autocomplete="off">
+        <input id="chat-input" class="composer-input" type="text" placeholder="Message…" aria-label="Type a message" />
+      </form>
+    </section>
   </main>
 
-  <!-- Bottom Panel -->
-  <footer id="bottom-panel">
-    <form id="chat-composer">
-      <button type="button" class="composer-extra">+</button>
-      <input
-        type="text"
-        id="chat-input"
-        placeholder="Type a message..."
-        autocomplete="off"
-        enterkeyhint="send"
-      />
-      <button type="submit" class="composer-send">➤</button>
-    </form>
-  </footer>
+  <!-- Узел DOT (можно не добавлять — dot.js создаст сам, но пусть будет явно) -->
+  <div id="dot-core" aria-label="DOT" role="button" tabindex="0"></div>
 
-  <!-- Scripts -->
-  <script src="js/core/state.js" type="module"></script>
-  <script src="js/core/dom.js" type="module"></script>
-  <script src="js/core/gestures.js" type="module"></script>
-  <script src="js/ui/dot.js" type="module"></script>
-  <script src="js/ui/dot-menu.js" type="module"></script>
-  <script src="js/ui/dot-contacts.js" type="module"></script>
-  <script src="js/ui/dot-settings.js" type="module"></script>
-  <!-- dot-functions.js УДАЛЁН -->
-  <script src="js/ui/dot-popover.js" type="module"></script>
-  <script src="js/ui/theme-gallery.js" type="module"></script>
-  <script src="js/ui/quick-tools.js" type="module"></script>
-  <script src="js/ui/fine-tune-popover.js" type="module"></script>
-  <script src="js/chat/composer.js" type="module"></script>
-  <script src="js/chat/messages.js" type="module"></script>
-  <script src="js/index.js" type="module"></script>
+  <!-- Скрипты: только рабочие модули -->
+  <script type="module" src="main.js"></script>
+  <script type="module" src="js/chat/messages.js"></script>
+  <script type="module" src="js/chat/composer.js"></script>
 
+  <!-- (не подключаем старые js/ui/dot-*.js и js/index.js — они ломают запуск) -->
 </body>
 </html>
