@@ -67,3 +67,45 @@ html, body {
 
 /* reserve space above bottom panel when scrolled to end */
 #main-content { padding-bottom: calc(var(--bp-h) + env(safe-area-inset-bottom)); }
+
+/* --- Chat minimal UI --- */
+#messages {
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+
+.day-sep {
+  position: sticky;
+  top: calc(var(--topbar-h, 48px));
+  z-index: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim, #888);
+  padding: 4px 0;
+  backdrop-filter: blur(2px);
+}
+
+.msg {
+  max-width: 70%;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--surface-2, #1f1f1f);
+  color: var(--text, #fff);
+  line-height: 1.2;
+  word-wrap: break-word;
+}
+
+.msg.me {
+  justify-self: end;
+  background: var(--accent, #4a8cff);
+  color: #fff;
+}
+
+.msg.peer {
+  justify-self: start;
+  background: var(--surface-3, #2a2a2a);
+}
+
+/* reserve space above bottom panel when scrolled to end */
+#main-content { padding-bottom: calc(var(--bp-h) + env(safe-area-inset-bottom)); }
