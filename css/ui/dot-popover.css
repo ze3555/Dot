@@ -1,0 +1,56 @@
+/* Lightweight popover anchored to the Dot */
+
+.dot-popover {
+  position: fixed;
+  min-width: 220px;
+  max-width: 320px;
+  background: color-mix(in oklab, var(--dot-bg, #151515), white 6%);
+  color: var(--dot-fg, #fff);
+  border: 1px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 86%);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.35);
+  padding: 10px;
+  z-index: 1001;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: dotPopIn .18s cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes dotPopIn { to { opacity: 1; transform: none } }
+
+.dot-popover__grid {
+  display: grid;
+  gap: 8px;
+}
+
+.dot-popover__row {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
+.dot-popover__btn, .dot-popover__tile {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 86%);
+  background: color-mix(in oklab, var(--dot-bg, #151515), white 4%);
+  color: var(--dot-fg, #fff);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.dot-popover__btn:hover, .dot-popover__tile:hover {
+  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--dot-bg, #151515), white 10%);
+  border-color: color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
+}
+
+.dot-popover__tile {
+  display: grid;
+  place-items: center;
+  height: 64px;
+  font-weight: 700;
+}
+
+/* theme tiles look */
+.tile-light { background: #f1f1f1; color: #111; }
+.tile-dark  { background: #0f0f10; color: #fff; border-color: #2a2a2a; }
