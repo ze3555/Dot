@@ -1,5 +1,5 @@
 // js/services/chats.js
-// Локальное мок-хранилище чатов c persistence в localStorage.
+// Локальный мок-хранилище чатов с persistence в localStorage.
 // Структура: { [peer: string]: { messages: Msg[] } }
 // Msg: { id: string, from: 'me'|'peer', text: string, ts: number, status: 'sent' }
 
@@ -19,13 +19,13 @@ function load() {
     if (obj && typeof obj === "object") {
       STORE = obj;
     }
-  } catch (_) { /* ignore */ }
+  } catch (_) {}
 }
 
 function save() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(STORE));
-  } catch (_) { /* ignore */ }
+  } catch (_) {}
 }
 
 function ensurePeer(peer) {
