@@ -4,60 +4,43 @@ export function renderContacts({ onBack } = {}) {
   const root = document.createElement("div");
   root.className = "dot-contacts-wrap";
 
-  const btnSearch = document.createElement("button");
-  btnSearch.type = "button";
-  btnSearch.className = "dot-contacts-btn";
-  btnSearch.dataset.act = "search";
-  btnSearch.setAttribute("aria-label", "Search");
-  btnSearch.textContent = "🔍";
-
   const input = document.createElement("input");
   input.className = "dot-contacts-input";
   input.type = "text";
-  input.placeholder = "Search or add by username…";
   input.autocomplete = "off";
-  input.inputMode = "text";
-  input.enterKeyHint = "search";
+  input.autocapitalize = "none";
+  input.spellcheck = false;
+  input.placeholder = "username";
+  input.setAttribute("aria-label", "Username");
 
   const btnAdd = document.createElement("button");
   btnAdd.type = "button";
-  btnAdd.className = "dot-contacts-btn";
+  btnAdd.className = "dot-contacts-add";
   btnAdd.dataset.act = "add";
   btnAdd.setAttribute("aria-label", "Add contact");
-  btnAdd.textContent = "＋";
-  btnAdd.disabled = true;
+  btnAdd.textContent = "➕";
 
-  const helper = document.createElement("div");
-  helper.className = "dot-contacts-helper";
-  helper.hidden = true;
+  root.append(input, btnAdd);
 
-  root.append(btnSearch, input, btnAdd);
-
-  root.addEventListener("click", (e) => e.stopPropagation());
-
-  // live entrance + autofocus
-  queueMicrotask(() => {
-    root.classList.add("is-live");
-    input.focus();
-  });
-
+  // валидация
   function syncValidity() {
-    const value = input.value.trim().toLowerCase();
-    const ok = RE_USERNAME.test(value);
+    const v = input.value.trim().toLowerCase();
+    const ok = RE_USERNAME.test(v);
     btnAdd.disabled = !ok;
-    helper.hidden = ok || !value;
-    if (!ok && value) {
-      helper.textContent = "Username: a–z, 0–9, _ (3–20)";
-    }
+    root.dataset.valid = ok ? "1" : "0";
   }
-
   input.addEventListener("input", syncValidity);
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { e.stopPropagation(); onBack?.(); }
-    if (e.key === "Enter")  { e.preventDefault(); if (!btnAdd.disabled) triggerAdd(); }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!btnAdd.disabled) triggerAdd();
+    } else if (e.key === "Escape") {
+      input.blur();
+      if (typeof onBack === "function") onBack();
+    }
   });
+  syncValidity();
 
-  btnSearch.addEventListener("click", () => input.focus());
   btnAdd.addEventListener("click", triggerAdd);
 
   function triggerAdd() {
