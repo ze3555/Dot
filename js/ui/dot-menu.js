@@ -3,6 +3,7 @@ import { attachLongPress } from "../core/gestures.js";
 import { showPopover, closePopover } from "./dot-popover.js";
 import { renderThemeGallery } from "./theme-gallery.js";
 import { renderQuickTools } from "./quick-tools.js";
+import { renderFineTunePopover } from "./fine-tune-popover.js";
 
 export function renderMenu(callbacks) {
   const wrap = document.createElement("div");
@@ -14,7 +15,7 @@ export function renderMenu(callbacks) {
     <button type="button" data-act="contacts" aria-label="Contacts">Contacts</button>
   `;
 
-  // clicks
+  // tap handlers
   wrap.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -22,25 +23,32 @@ export function renderMenu(callbacks) {
 
     if (act === "theme") {
       toggleTheme();
-      // pulse on host
       const dot = document.getElementById("dot-core");
       dot?.classList.add("dot-pulse");
       setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+      callbacks.onTheme?.();
     }
 
-    if (act === "function") callbacks.onFunction?.();
+    if (act === "function") {
+      const content = renderQuickTools({
+        onPick: (key) => {
+          console.log("[QuickTool]", key);
+          closePopover();
+        }
+      });
+      showPopover(content, { side: "top", offset: 12 });
+    }
+
     if (act === "settings") callbacks.onSettings?.();
     if (act === "contacts") callbacks.onContacts?.();
-    if (act === "theme")    callbacks.onTheme?.();
   });
 
-  // long-press on Theme -> theme gallery
+  // long-press on Theme → gallery (как было)
   const btnTheme = wrap.querySelector('[data-act="theme"]');
   attachLongPress(btnTheme, {
     onLongPress: () => {
       const content = renderThemeGallery({
         onPicked: () => {
-          // маленький фидбек и закрытие
           const dot = document.getElementById("dot-core");
           dot?.classList.add("dot-pulse");
           setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
@@ -51,20 +59,12 @@ export function renderMenu(callbacks) {
     }
   });
 
-  // long-press on Function -> quick tools pop
+  // long-press on Function → FineTune popover (снизу)
   const btnFunc = wrap.querySelector('[data-act="function"]');
   attachLongPress(btnFunc, {
     onLongPress: () => {
-      const content = renderQuickTools({
-        onPick: (key) => {
-          console.log("[QuickTool]", key);
-          closePopover();
-          // можно сразу открывать Function и переходить на Tools,
-          // но без бэкенда пока просто лог
-          callbacks.onFunction?.();
-        }
-      });
-      showPopover(content, { side: "top", offset: 12 });
+      const content = renderFineTunePopover();
+      showPopover(content, { side: "bottom", offset: 12 });
     }
   });
 
