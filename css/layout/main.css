@@ -1,0 +1,16 @@
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-color);
+}
+
+.msg {
+  padding: 8px;
+}
+
+.day-sep {
+  text-align: center;
+  font-size: 0.8em;
+  padding: 4px;
+  color: var(--text-muted);
+}
