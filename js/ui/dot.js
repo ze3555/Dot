@@ -14,14 +14,16 @@ export function initDot() {
 }
 
 function sync(dot, state) {
-  dot.className = ""; // reset
+  // reset classes and apply state class
+  dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
 
   const host = document.createElement("div");
   host.className = "dot-content dot-fade-in";
 
-  // Глушим клики внутри DOT только когда он НЕ в idle
+  // ВАЖНО: глушим клики внутри только в не-idle состояниях,
+  // чтобы тап по кругу доходил до обработчика на самом #dot-core
   if (state !== "idle") {
     host.addEventListener("click", (e) => e.stopPropagation());
   }
@@ -53,7 +55,7 @@ function sync(dot, state) {
       break;
 
     case "theme":
-      // Theme — мгновенное действие; меню остаётся видно
+      // мгновенное действие; оставляем меню на экране
       host.appendChild(renderMenu({
         onFunction: () => setState("function"),
         onTheme:    () => setState("theme"),
