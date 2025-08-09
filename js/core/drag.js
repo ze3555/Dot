@@ -31,6 +31,53 @@ export function initDotDrag() {
       : { w: window.innerWidth, h: window.innerHeight };
   };
 
+  // ---- viewport memory to keep position stable on scroll URL-bar changes ----
+  // Сохраняем предыдущие размеры вьюпорта, чтобы пересчитать позицию пропорционально
+  // и не «прилипать» к углам при мелких изменениях высоты/ширины.
+  let __lastVW = vvRect().w;
+  let __lastVH = vvRect().h;
+
+  function adjustForViewportDelta(prevVW, prevVH, vw, vh) {
+    try {
+      const r = dot.getBoundingClientRect();
+      const sl = safeLeft(), sr = safeRight(), st = safeTop(), sb = safeBottom();
+
+      let left = numPx(dot.style.left, r.left);
+      let top  = numPx(dot.style.top,  r.top);
+
+      // Горизонталь: если докнуто — пересчитываем по стороне дока; иначе — масштабируем.
+      if (dot.classList.contains("dot-docked")) {
+        const dockRight = dot.classList.contains("dot-docked-right");
+        left = dockRight
+          ? Math.max(MARGIN + sl, vw - DOT_SIZE - MARGIN - sr)
+          : Math.max(MARGIN + sl, MARGIN + sl);
+      } else if (prevVW && vw && Math.abs(prevVW - vw) > 0.5) {
+        const ratioW = vw / prevVW;
+        left = left * ratioW;
+      }
+
+      // Вертикаль: если близко к краю (≤24px) — сохраняем отступ до этого края; иначе — масштабируем.
+      const gapTopPrev = r.top - (MARGIN + st);
+      const gapBottomPrev = (prevVH - (r.top + r.height)) - (MARGIN + sb);
+
+      if (prevVH && vh && Math.abs(prevVH - vh) > 0.5) {
+        if (gapTopPrev <= 24) {
+          top = Math.max(MARGIN + st, top);
+        } else if (gapBottomPrev <= 24) {
+          const newGapBottom = Math.max(MARGIN + sb, gapBottomPrev);
+          top = vh - r.height - newGapBottom;
+        } else {
+          const ratioH = vh / prevVH;
+          top = top * ratioH;
+        }
+      }
+
+      dot.style.left = `${Math.round(left)}px`;
+      dot.style.top  = `${Math.round(top)}px`;
+      dot.style.transform = "translate(0,0)";
+    } catch (_) { /* noop */ }
+  }
+
   const numPx = (v, fallback) => {
     const n = parseFloat(String(v));
     return Number.isFinite(n) ? n : fallback;
@@ -73,21 +120,21 @@ export function initDotDrag() {
     if (e.button !== 0 && e.pointerType !== "touch") return;
 
     const r = dot.getBoundingClientRect();
+    originLeft = numPx(dot.style.left, r.left);
+    originTop  = numPx(dot.style.top,  r.top);
     startX = e.clientX;
     startY = e.clientY;
-    originLeft = r.left;
-    originTop  = r.top;
-    moved = false;
     dragging = true;
+    moved = false;
 
     dot.setPointerCapture?.(e.pointerId);
-    e.preventDefault();
   }
 
   function onPointerMove(e) {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+
     if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
 
     dot.style.left = `${originLeft + dx}px`;
@@ -127,7 +174,10 @@ export function initDotDrag() {
     if (!dragging) return;
     dragging = false;
 
+    dot.classList.remove("dot-free");
+
     if (moved) {
+      clampToViewport();
       snapDock();
     } else {
       if (getState() === "idle" && dot.classList.contains("dot-docked")) {
@@ -150,7 +200,16 @@ export function initDotDrag() {
   const SUPPRESS_AFTER_BLUR_MS = 550;
   const now = () => performance.now();
   const canClamp = () => !suppress && now() > suppressUntil;
-  const safeClamp = () => { if (canClamp()) clampToViewport(); };
+  const safeClamp = () => {
+    if (!canClamp()) return;
+    const prevVW = __lastVW, prevVH = __lastVH;
+    const { w: vw, h: vh } = vvRect();
+    if (vw !== prevVW || vh !== prevVH) {
+      adjustForViewportDelta(prevVW, prevVH, vw, vh);
+      __lastVW = vw; __lastVH = vh;
+    }
+    clampToViewport();
+  };
 
   document.addEventListener("focusin", (e) => {
     const t = e.target;
