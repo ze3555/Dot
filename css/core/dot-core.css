@@ -91,3 +91,23 @@
 /* left/right modifiers (for potential future specific tweaks) */
 #dot-core.dot-docked-left  {}
 #dot-core.dot-docked-right {}
+/* ----- Expand origin depending on dock side ----- */
+#dot-core.dot-menu.dot-origin-right,
+#dot-core.dot-theme.dot-origin-right {
+  transform-origin: right center;
+}
+
+#dot-core.dot-menu.dot-origin-left,
+#dot-core.dot-theme.dot-origin-left {
+  transform-origin: left center;
+}
+
+/* (опционально) для квадратов и капсулы можно тоже привязать якорь */
+#dot-core.dot-settings.dot-origin-right,
+#dot-core.dot-contacts.dot-origin-right {
+  transform-origin: right center;
+}
+#dot-core.dot-settings.dot-origin-left,
+#dot-core.dot-contacts.dot-origin-left {
+  transform-origin: left center;
+}
