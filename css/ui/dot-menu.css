@@ -1,55 +1,7 @@
 /* css/ui/dot-menu.css */
-/* Вертикальный стек + системный читаемый шрифт */
-.dot-menu{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  width:100%;
-  height:auto;               /* сжимаемся по контенту */
-  padding:8px;
-  box-sizing:border-box;
-
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.2;
-  color: var(--dot-fg, #fff);
-}
-
-/* Сжать сам контейнер DOT в состоянии меню под контент */
-#dot-core.dot-menu .dot-host { height:auto; }
-
-/* Кнопки — без эмодзи, ровные кликабельные зоны */
-.dot-menu__btn{
-  appearance:none;
-  -webkit-appearance:none;
-  border:1px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
-  background: color-mix(in oklab, var(--dot-bg, #111), transparent 10%);
-  color: var(--dot-fg, #fff);
-
-  border-radius:12px;
-  min-height:44px;          /* комфортный тап-таргет */
-  padding:10px 14px;
-  width:100%;
-  text-align:center;
-
-  cursor:pointer;
-  transition:
-    transform var(--transition-fast,150ms ease),
-    background var(--transition-fast,150ms ease),
-    border-color var(--transition-fast,150ms ease);
-
-  white-space:nowrap;       /* текст не ломаем */
-  overflow:visible;
-  text-overflow:clip;       /* и не обрезаем троеточием */
-  font:inherit;
-}
-
-.dot-menu__btn:hover{ transform: translateY(-1px); }
-.dot-menu__btn:active{ transform: translateY(0) scale(.98); }
-
-.dot-menu__btn:focus-visible{
-  outline:2px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
-  outline-offset:2px;
+/* Файл оставлен для совместимости (основные стили меню уже в core) */
+/* Здесь можно добавить тонкие медиаправки при необходимости */
+@media (max-height: 560px){
+  .dot-menu { top: calc(50% + 36px); }
+  .dot-panel{ top: calc(50% + 44px); }
 }
