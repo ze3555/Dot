@@ -1,71 +1,102 @@
-import { toggleTheme } from "../services/theme.js";
-import { attachLongPress } from "../core/gestures.js";
-import { showPopover, closePopover } from "./dot-popover.js";
-import { renderThemeGallery } from "./theme-gallery.js";
-import { renderQuickTools } from "./quick-tools.js";
-import { renderFineTunePopover } from "./fine-tune-popover.js";
+// js/ui/dot-menu.js
+// Минимальное, без внешних зависимостей. Делает 4 действия через колбэки.
 
-export function renderMenu(callbacks) {
+export function renderMenu(callbacks = {}) {
+  const { onFunction, onTheme, onSettings, onContacts } = callbacks;
+
   const wrap = document.createElement("div");
   wrap.className = "dot-menu";
   wrap.innerHTML = `
-    <button type="button" data-act="function" aria-label="Functions">Function</button>
-    <button type="button" data-act="theme" aria-label="Toggle theme">Theme</button>
-    <button type="button" data-act="settings" aria-label="Settings">Settings</button>
-    <button type="button" data-act="contacts" aria-label="Contacts">Contacts</button>
+    <button type="button" class="dot-menu__btn" data-act="function" aria-label="Functions">
+      <span class="dot-menu__icon" aria-hidden="true">⚙️</span>
+      <span class="dot-menu__label">Function</span>
+    </button>
+    <button type="button" class="dot-menu__btn" data-act="theme" aria-label="Theme">
+      <span class="dot-menu__icon" aria-hidden="true">🎨</span>
+      <span class="dot-menu__label">Theme</span>
+    </button>
+    <button type="button" class="dot-menu__btn" data-act="settings" aria-label="Settings">
+      <span class="dot-menu__icon" aria-hidden="true">🛠</span>
+      <span class="dot-menu__label">Settings</span>
+    </button>
+    <button type="button" class="dot-menu__btn" data-act="contacts" aria-label="Contacts">
+      <span class="dot-menu__icon" aria-hidden="true">👥</span>
+      <span class="dot-menu__label">Contacts</span>
+    </button>
   `;
 
-  // tap handlers
+  // Делегирование кликов
   wrap.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
+    const btn = e.target.closest("button[data-act]");
     if (!btn) return;
     const act = btn.dataset.act;
-
-    if (act === "theme") {
-      toggleTheme();
-      const dot = document.getElementById("dot-core");
-      dot?.classList.add("dot-pulse");
-      setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
-      callbacks.onTheme?.();
-    }
-
-    if (act === "function") {
-      const content = renderQuickTools({
-        onPick: (key) => {
-          console.log("[QuickTool]", key);
-          closePopover();
-        }
-      });
-      showPopover(content, { side: "top", offset: 12 });
-    }
-
-    if (act === "settings") callbacks.onSettings?.();
-    if (act === "contacts") callbacks.onContacts?.();
-  });
-
-  // long-press on Theme → gallery (как было)
-  const btnTheme = wrap.querySelector('[data-act="theme"]');
-  attachLongPress(btnTheme, {
-    onLongPress: () => {
-      const content = renderThemeGallery({
-        onPicked: () => {
-          const dot = document.getElementById("dot-core");
-          dot?.classList.add("dot-pulse");
-          setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
-          closePopover();
-        }
-      });
-      showPopover(content, { side: "top", offset: 12 });
+    switch (act) {
+      case "function":
+        onFunction && onFunction();
+        break;
+      case "theme":
+        onTheme && onTheme();
+        break;
+      case "settings":
+        onSettings && onSettings();
+        break;
+      case "contacts":
+        onContacts && onContacts();
+        break;
     }
   });
 
-  // long-press on Function → FineTune popover (снизу)
-  const btnFunc = wrap.querySelector('[data-act="function"]');
-  attachLongPress(btnFunc, {
-    onLongPress: () => {
-      const content = renderFineTunePopover();
-      showPopover(content, { side: "bottom", offset: 12 });
+  // Простейшая клавиатурная навигация
+  wrap.addEventListener("keydown", (e) => {
+    const items = Array.from(wrap.querySelectorAll('.dot-menu__btn'));
+    const idx = items.indexOf(document.activeElement);
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      items[(idx + 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0]?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (e.key === "Enter" || e.key === " ") {
+      // Нажать активную
+      const el = document.activeElement;
+      if (el && el.matches('.dot-menu__btn')) el.click();
     }
+  });
+
+  // Ориентация: горизонтальная/вертикальная
+  const dot = document.getElementById("dot-core");
+  const setOrientation = () => {
+    const vert =
+      dot?.classList.contains("dot-vert") ||
+      dot?.classList.contains("dot-docked") ||
+      dot?.classList.contains("dot-docked-left") ||
+      dot?.classList.contains("dot-docked-right");
+    wrap.classList.toggle("is-vert", !!vert);
+  };
+  setOrientation();
+
+  // Следим за изменением классов DOT (при смене состояния/дока)
+  if (dot) {
+    const mo = new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type === "attributes" && m.attributeName === "class") {
+          setOrientation();
+        }
+      }
+    });
+    mo.observe(dot, { attributes: true });
+  }
+
+  // Автофокус на первую кнопку при показе меню
+  queueMicrotask(() => {
+    const first = wrap.querySelector(".dot-menu__btn");
+    first?.focus();
   });
 
   return wrap;
