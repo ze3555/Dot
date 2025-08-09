@@ -6,26 +6,13 @@ import { renderContacts } from "./dot-contacts.js";
 import { renderSettings } from "./dot-settings.js";
 import { closePopover } from "./dot-popover.js";
 
-export function initDot() {
-  const dot = document.getElementById("dot-core");
-  if (!dot) throw new Error("#dot-core not found");
+/** Геометрия DOT в idle (круг) и минимальные отступы */
+const DOT_SIZE = 64;
+const MARGIN = 8;
 
-  // первый рендер
-  sync(dot, getState());
-
-  // реагируем на смену состояния
-  subscribe(({ next }) => sync(dot, next));
-
-  // при изменении вьюпорта тоже держим в экране
-  window.addEventListener("resize", () => clampByRect(dot, 8));
-}
-
-/* ===== helpers ===== */
-const DOT_SIZE = 64; // синхронизирован с --dot-size в CSS
-const MARGIN   = 16;
-
-const safeInt = v => {
-  const n = parseInt(v || "0", 10);
+/** Безопасное чтение int из CSS env(...) */
+const safeInt = (v) => {
+  const n = parseInt(String(v).trim(), 10);
   return Number.isFinite(n) ? n : 0;
 };
 const safeLeft   = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-left)"));
@@ -33,6 +20,7 @@ const safeRight  = () => safeInt(getComputedStyle(document.documentElement).getP
 const safeTop    = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)"));
 const safeBottom = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)"));
 
+/** Прочитать/перекинуть док‑флаги */
 function readDockFlags(dot){
   return {
     docked: dot.classList.contains("dot-docked"),
@@ -47,20 +35,20 @@ function reapplyDockFlags(dot, f){
   dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
 }
 
-/* первичная фиксация X к стороне дока до монтирования контента */
+/** Зафиксировать X к стороне дока (до монтирования контента) */
 function pinLeftByDock(dot){
   if (!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
   if (dot.classList.contains("dot-docked-right")) {
-    dot.style.left = `${Math.max(8 + safeLeft(), vw - DOT_SIZE - MARGIN - safeRight())}px`;
+    dot.style.left = `${Math.max(MARGIN + safeLeft(), vw - DOT_SIZE - MARGIN - safeRight())}px`;
   } else if (dot.classList.contains("dot-docked-left")) {
-    dot.style.left = `${Math.max(8 + safeLeft(), MARGIN + safeLeft())}px`;
+    dot.style.left = `${Math.max(MARGIN + safeLeft(), MARGIN + safeLeft())}px`;
   }
   dot.style.transform = "translate(0,0)";
 }
 
-/* жёсткий кламп по реальному прямоугольнику — никуда не выползает */
-function clampByRect(dot, margin = 8){
+/** Жёсткий кламп по реальному прямоугольнику — никуда не выползает */
+function clampByRect(dot, margin = MARGIN){
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
@@ -86,7 +74,7 @@ function clampByRect(dot, margin = 8){
   dot.style.transform = "translate(0,0)";
 }
 
-/* ===== core ===== */
+/** ===== core render/sync ===== */
 function sync(dot, state){
   closePopover();
 
@@ -135,26 +123,29 @@ function sync(dot, state){
         onContacts: () => setState("contacts"),
       });
       if (dock.docked) menu.classList.add("is-vert");
-      queueMicrotask(() => menu.classList.add("is-live"));
+      host.appendChild(menu);
+      break;
+    }
+    case "theme": {
+      // визуально совпадает с menu, само переключение темы делает services/theme.js
+      const menu = renderMenu({
+        onTheme:    () => setState("menu"),
+        onSettings: () => setState("settings"),
+        onContacts: () => setState("contacts"),
+      });
+      if (dock.docked) menu.classList.add("is-vert");
       host.appendChild(menu);
       break;
     }
     case "contacts": {
-      const c = renderContacts({ onBack: () => setState("menu") });
-      queueMicrotask(() => c.classList.add("is-live"));
-      host.appendChild(c);
+      const m = renderContacts({ onBack: () => setState("idle") });
+      if (dock.docked) m.classList.add("is-vert");
+      queueMicrotask(() => m.classList.add("is-live"));
+      host.appendChild(m);
       break;
     }
     case "settings": {
-      host.appendChild(renderSettings({ onBack: () => setState("menu") }));
-      break;
-    }
-    case "theme": {
-      const m = renderMenu({
-        onTheme:    () => setState("theme"),
-        onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
-      });
+      const m = renderSettings({ onBack: () => setState("idle") });
       if (dock.docked) m.classList.add("is-vert");
       queueMicrotask(() => m.classList.add("is-live"));
       host.appendChild(m);
@@ -166,8 +157,62 @@ function sync(dot, state){
 
   // после монтирования: поджать внутрь экрана по фактическим размерам
   requestAnimationFrame(() => {
-    clampByRect(dot, 8);
+    clampByRect(dot, MARGIN);
     // ещё раз, если размеры доанимировались (тени/бордер/ширина)
-    requestAnimationFrame(() => clampByRect(dot, 8));
+    requestAnimationFrame(() => clampByRect(dot, MARGIN));
   });
+}
+
+/** ===== public ===== */
+export function initDot() {
+  const dot = document.getElementById("dot-core");
+  if (!dot) throw new Error("#dot-core not found");
+
+  /** Снимок позиции при выходе из idle → восстановление при возврате */
+  /** @type {{left:number, top:number, leftDock:boolean, rightDock:boolean} | null} */
+  let lastIdlePos = null;
+
+  // первый рендер
+  sync(dot, getState());
+
+  // реагируем на смену состояния
+  subscribe(({ prev, next }) => {
+    // Если выходим из idle — запоминаем точные координаты и док‑флаги
+    if (prev === "idle") {
+      const r = dot.getBoundingClientRect();
+      lastIdlePos = {
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        leftDock: dot.classList.contains("dot-docked-left"),
+        rightDock: dot.classList.contains("dot-docked-right"),
+      };
+    }
+
+    // обычная синхронизация UI
+    sync(dot, next);
+
+    // Если возвращаемся в idle — восстановить ровно исходную позицию
+    if (next === "idle" && lastIdlePos) {
+      dot.style.left = `${lastIdlePos.left}px`;
+      dot.style.top  = `${lastIdlePos.top}px`;
+      dot.style.transform = "translate(0,0)";
+      // док‑флаги вернуть (на случай сбросов)
+      dot.classList.toggle("dot-docked-left",  !!lastIdlePos.leftDock);
+      dot.classList.toggle("dot-docked-right", !!lastIdlePos.rightDock);
+      dot.classList.toggle("dot-docked", !!(lastIdlePos.leftDock || lastIdlePos.rightDock));
+
+      // финальный кламп (если вьюпорт поменялся)
+      requestAnimationFrame(() => clampByRect(dot, MARGIN));
+      lastIdlePos = null;
+    } else {
+      // в остальных состояниях — обычный кламп после раскладки контента
+      requestAnimationFrame(() => {
+        clampByRect(dot, MARGIN);
+        requestAnimationFrame(() => clampByRect(dot, MARGIN));
+      });
+    }
+  });
+
+  // клампить на ресайз (без реснапа — только удерживаем в экране)
+  window.addEventListener("resize", () => clampByRect(dot, MARGIN));
 }
