@@ -1,7 +1,17 @@
 /* css/ui/dot-contacts.css
-   Контакты: инпут прозрачный (фон = капсула DOT), контент окрашен через --dot-fg,
-   чтобы всегда быть контрастным к --dot-bg (даже в светлой теме).
+   Контакты: инпут прозрачный (фон = капсула DOT), контент окрашен через --dot-fg.
+   ФИКС прыжка после закрытия фокуса: без зависимости от vh.
 */
+
+/* --- Контейнер DOT в состоянии contacts: стабильная высота --- */
+/* Базовый фолбэк (если нет svh) */
+#dot-core.dot-contacts {
+  height: min(50vh, 520px);
+}
+/* Современные браузеры: используем svh, чтобы высота не прыгала при исчезновении клавиатуры */
+@supports (height: 1svh) {
+  #dot-core.dot-contacts { height: min(50svh, 520px); }
+}
 
 /* Контейнер в капсуле DOT */
 .dot-contacts-wrap {
@@ -70,13 +80,15 @@
   border-color: color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
 }
 
-/* Список контактов (растёт вниз под полем) */
+/* Список контактов (растёт вниз под полем) — БЕЗ vh, отталкивается от высоты контейнера */
 .dot-contacts-list {
   grid-column: 1 / -1;
   display: grid;
   gap: 6px;
   margin-top: 6px;
-  max-height: calc(50vh - 56px);
+
+  /* раньше тут мог быть calc(50vh - 56px); это и давало прыжок */
+  max-height: calc(100% - 56px);
   overflow: auto;
 }
 
