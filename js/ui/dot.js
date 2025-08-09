@@ -29,13 +29,15 @@ function readDockFlags(dot){
   };
 }
 function reapplyDockFlags(dot, f){
-  dot.classList.toggle("dot-docked", f.docked);
-  dot.classList.toggle("dot-docked-left",  f.left);
-  dot.classList.toggle("dot-docked-right", f.right);
+  if (!f.docked) return;
+  dot.classList.add("dot-docked");
+  dot.classList.toggle("dot-docked-left",  !!f.left && !f.right);
+  dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
 }
 
-/** При доке прижать по X к соответствующей стороне */
+/** Зафиксировать X к стороне дока (до монтирования контента) */
 function pinLeftByDock(dot){
+  if (!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
   if (dot.classList.contains("dot-docked-right")) {
     dot.style.left = `${Math.max(MARGIN + safeLeft(), vw - DOT_SIZE - MARGIN - safeRight())}px`;
@@ -57,18 +59,16 @@ function clampByRect(dot, margin = MARGIN){
   const st = safeTop();
   const sb = safeBottom();
 
-  // учесть липкие бары (sticky) сверху и снизу, чтобы DOT не «лип» к краям
+  // учитывать sticky topbar/bottom-panel, чтобы DOT не оказывался под ними
   let stickyTop = 0, stickyBottom = 0;
   const topbar = document.getElementById("topbar");
   if (topbar) {
     const rTop = topbar.getBoundingClientRect();
-    // Высота topbar включает safe-area-inset-top → вычитаем st, чтобы не удваивать
     stickyTop = Math.max(0, Math.round(rTop.height - st));
   }
   const bp = document.getElementById("bottom-panel");
   if (bp) {
     const rBot = bp.getBoundingClientRect();
-    // Аналогично: padding-bottom использует safe-area-inset-bottom
     stickyBottom = Math.max(0, Math.round(rBot.height - sb));
   }
 
@@ -79,10 +79,10 @@ function clampByRect(dot, margin = MARGIN){
   const maxLeft = vw - sr - r.width - margin;
   let left = Math.min(Math.max(r.left, minLeft), Math.max(minLeft, maxLeft));
 
-  // вертикаль (с учётом sticky баров)
+  // вертикаль (+ sticky)
   const minTop = margin + st + stickyTop;
   const maxTop = vh - r.height - margin - sb - stickyBottom;
-  const clampedMaxTop = Math.max(minTop, maxTop); // страховка от инверсии при сверхмалых vh
+  const clampedMaxTop = Math.max(minTop, maxTop);
   let top = Math.min(Math.max(r.top, minTop), clampedMaxTop);
 
   dot.style.left = `${Math.round(left)}px`;
@@ -143,7 +143,6 @@ function sync(dot, state){
       break;
     }
     case "theme": {
-      // визуально совпадает с menu, само переключение темы делает services/theme.js
       const menu = renderMenu({
         onTheme:    () => setState("menu"),
         onSettings: () => setState("settings"),
@@ -198,7 +197,6 @@ export function initDot() {
   dot.style.transform = "translate(-50%, -50%)";
   dot.style.left = "50%";
   dot.style.top = "50%";
-  reapplyDockFlags(dot, { docked:false, left:false, right:false });
 
   // синхронизация со стейтом
   subscribe((state, prev) => {
@@ -231,19 +229,21 @@ export function initDot() {
       // в остальных состояниях — обычный кламп после раскладки контента
       requestAnimationFrame(() => {
         safeClamp();
+        requestAnimationFrame(safeClamp);
       });
     }
   });
 
-  // события: resize/visualViewport.resize — клампим аккуратно
+  // клампить на ресайз (без реснапа — только удерживаем в экране)
   window.addEventListener("resize", safeClamp);
+  // визуальный вьюпорт (мобилки/клавиатура)
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", safeClamp);
-    // не слушаем scroll — чтобы не ездить за URL-баром
+    // ВАЖНО: НЕ клампим на scroll, чтобы дот не «ехал» со скроллом
     // window.visualViewport.addEventListener("scroll", safeClamp);
   }
 
-  // подавление клампа вокруг фокуса (клава)
+  // ГЛОБАЛЬНО: на фокус любого поля (включая composer) — глушим кламп
   document.addEventListener("focusin", (e) => {
     const t = e.target;
     if (!t) return;
