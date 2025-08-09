@@ -3,77 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DOT</title>
-
-  <link rel="stylesheet" href="./css/index.css" />
+  <title>DOT Messenger</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#ffd400" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" sizes="192x192" href="/img/dot192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="/img/dot512.png">
-
-  <!-- Firebase compat CDN (нужны app+auth+firestore до main.js) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-  <!-- Инициализация Firebase (глобально) -->
-  <script src="./js/firebase/config.js"></script>
+  <link rel="stylesheet" href="css/index.css" />
 </head>
-<body class="theme-dark">
-  <!-- TopBar -->
-  <div class="top-bar">
-    <div class="dot-core"></div>
-  </div>
+<body>
 
-  <!-- Основная зона -->
-  <main id="main-content"></main>
+  <!-- Top Bar -->
+  <header id="topbar">
+    <div class="topbar-title">DOT</div>
+    <!-- Можно добавить иконку профиля или статус -->
+  </header>
 
-  <!-- Contacts Drawer -->
-  <div id="contacts-drawer" class="contacts-drawer">
-    <!-- ваш контент контактов -->
-    <button id="logout-btn" class="logout-btn">Logout</button>
-  </div>
-  <div id="contacts-backdrop" class="contacts-drawer-backdrop"></div>
-
-  <!-- Profile Top Drawer (верхняя шторка профиля) -->
-  <aside id="profile-top" class="profile-top-drawer" aria-hidden="true">
-    <div class="profile-sheet-scroll">
-      <header class="profile-header">
-        <div class="avatar" aria-hidden="true">P</div>
-        <div class="user-meta">
-          <div class="username-row">
-            <span id="profile-username" class="username-chip">—</span>
-            <button id="edit-username-btn" class="profile-action">Edit</button>
-          </div>
-          <button id="copy-id-btn" class="profile-action subtle">Copy ID</button>
-        </div>
-        <button id="close-profile-top" class="profile-action subtle" aria-label="Close">Close</button>
-      </header>
-
-      <section class="profile-section">
-        <label class="section-title">Contacts</label>
-        <div class="add-username-row">
-          <input id="add-username-input" class="profile-input" type="text"
-                 placeholder="Add by username" autocomplete="off" />
-          <button id="add-username-btn" class="profile-action">Add</button>
-        </div>
-      </section>
+  <!-- Main Content -->
+  <main id="main-content">
+    <div id="messages"></div>
+    <!-- DOT Core -->
+    <div id="dot-core" class="dot-idle">
+      <!-- В режиме menu тут появятся 4 кнопки -->
     </div>
-  </aside>
-  <div id="profile-top-backdrop" class="profile-top-backdrop"></div>
+  </main>
 
   <!-- Bottom Panel -->
-  <div class="bottom-panel">
-    <form id="chat-form" autocomplete="off">
-      <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." />
-      <!-- Кнопку отправки скрываем при dock Дота через CSS -->
-      <button type="submit" class="chat-send-btn" aria-label="Send"></button>
+  <footer id="bottom-panel">
+    <form id="chat-composer">
+      <button type="button" class="composer-extra">+</button>
+      <input
+        type="text"
+        id="chat-input"
+        placeholder="Type a message..."
+        autocomplete="off"
+        enterkeyhint="send"
+      />
+      <button type="submit" class="composer-send">➤</button>
     </form>
-  </div>
+  </footer>
 
-  <!-- Основной JS -->
-  <script type="module" src="./main.js"></script>
+  <!-- Scripts -->
+  <script src="js/core/state.js" type="module"></script>
+  <script src="js/core/dom.js" type="module"></script>
+  <script src="js/core/gestures.js" type="module"></script>
+  <script src="js/ui/dot.js" type="module"></script>
+  <script src="js/ui/dotMenu.js" type="module"></script>
+  <script src="js/ui/dotContacts.js" type="module"></script>
+  <script src="js/ui/dotSettings.js" type="module"></script>
+  <script src="js/ui/dotFunctions.js" type="module"></script>
+  <script src="js/chat/composer.js" type="module"></script>
+  <script src="js/chat/messages.js" type="module"></script>
+  <script src="js/main.js" type="module"></script>
+
 </body>
 </html>
