@@ -12,56 +12,79 @@ export function initDot() {
   subscribe(({ next }) => sync(dot, next));
 }
 
-/** Возвращает целевую высоту раскрытого контейнера для клампа по вертикали */
-function getTargetHeight(state) {
-  switch (state) {
-    case "menu":
-    case "theme":
-      return 72; // высота прямоугольника меню
-    case "contacts":
-      return 56; // высота капсулы
-    case "settings":
-      return Math.min(Math.floor(window.innerHeight * 0.5), 520); // квадрат ~50vh
-    default:
-      return 0;
+/* --- sizes used in CSS, дублируем логикой в JS --- */
+function targetWidthPx(state) {
+  const vw = window.innerWidth;
+  if (state === "menu" || state === "theme" || state === "settings") {
+    return Math.min(0.92 * vw, 560); // matches: min(92vw, 560px)
   }
+  if (state === "contacts") {
+    return Math.min(0.94 * vw, 640); // matches: min(94vw, 640px)
+  }
+  return null; // idle
+}
+function targetHeightPx(state) {
+  const vh = window.innerHeight;
+  if (state === "menu" || state === "theme") return 72;
+  if (state === "contacts") return 56;
+  if (state === "settings") return Math.min(Math.floor(0.5 * vh), 520);
+  return 0;
 }
 
-/** Привязываем origin в зависимости от стороны прилипания */
+/* якорь раскрытия от стороны прилипания (для визуального ощущения) */
 function applyOriginClass(dot) {
   dot.classList.remove("dot-origin-left", "dot-origin-right");
-  if (dot.classList.contains("dot-docked-right")) {
-    dot.classList.add("dot-origin-right"); // раскрывать влево
-  } else if (dot.classList.contains("dot-docked-left")) {
-    dot.classList.add("dot-origin-left"); // раскрывать вправо
-  }
+  if (dot.classList.contains("dot-docked-right")) dot.classList.add("dot-origin-right");
+  else if (dot.classList.contains("dot-docked-left")) dot.classList.add("dot-origin-left");
 }
 
-/** Делаем так, чтобы верх контейнера не выезжал за экран при доке */
-function clampTopIfDocked(dot, targetHeight, margin = 8) {
+/* держим прямоугольник в пределах экрана по вертикали */
+function clampTopIfDocked(dot, targetH, margin = 8) {
   if (!dot.classList.contains("dot-docked")) return;
   const vh = window.innerHeight;
   const r = dot.getBoundingClientRect();
   let top = r.top;
-  top = Math.max(margin, Math.min(top, vh - targetHeight - margin));
+  top = Math.max(margin, Math.min(top, vh - targetH - margin));
   dot.style.top = `${top}px`;
+}
+
+/* ключ: при доке справа левую координату считаем от правого края с учётом целевой ширины */
+function adjustLeftForDock(dot, state, margin = 16) {
+  if (!dot.classList.contains("dot-docked")) return;
+  const tw = targetWidthPx(state);
+  if (!tw) return; // idle
+
+  const vw = window.innerWidth;
+  if (dot.classList.contains("dot-docked-right")) {
+    // правый край = vw - margin
+    const left = Math.max(8, vw - tw - margin);
+    dot.style.left = `${left}px`;
+    dot.style.transform = "translate(0,0)"; // важнo: убираем центрирование
+  } else if (dot.classList.contains("dot-docked-left")) {
+    // левый край = margin
+    const left = Math.max(8, margin);
+    dot.style.left = `${left}px`;
+    dot.style.transform = "translate(0,0)";
+  }
 }
 
 function sync(dot, state) {
   closePopover();
 
-  // сброс + базовые классы состояния
+  // сброс + состояния
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`, "dot-morph");
   setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
-  // если открываем прямоугольную форму — выставим origin и подправим top
+  // theme визуально = menu
+  if (state === "theme") dot.classList.add("dot-menu");
+
+  // если раскрываемся прямоугольником — ориентируемся и корректируем позиции
   if (state === "menu" || state === "theme" || state === "contacts" || state === "settings") {
     applyOriginClass(dot);
-    // theme визуально = menu
-    if (state === "theme") dot.classList.add("dot-menu");
-    clampTopIfDocked(dot, getTargetHeight(state), 8);
+    adjustLeftForDock(dot, state, 16);
+    clampTopIfDocked(dot, targetHeightPx(state), 8);
   }
 
   const host = document.createElement("div");
@@ -94,7 +117,6 @@ function sync(dot, state) {
       break;
     }
     case "theme": {
-      // оставляем меню на экране
       const m = renderMenu({
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
