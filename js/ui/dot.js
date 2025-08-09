@@ -5,78 +5,40 @@ import { renderContacts } from "./dot-contacts.js";
 import { renderSettings } from "./dot-settings.js";
 import { closePopover } from "./dot-popover.js";
 
-export function initDot() {
+export function initDot(){
   const dot = document.getElementById("dot-core");
-  if (!dot) throw new Error("#dot-core not found");
+  if(!dot) throw new Error("#dot-core not found");
   sync(dot, getState());
   subscribe(({ next }) => sync(dot, next));
 }
 
-/* sizes (в пикселях, соответствуют CSS) */
-function targetWidthPx(state) {
-  const vw = window.innerWidth;
-  if (state === "menu" || state === "theme" || state === "settings") return Math.min(0.92 * vw, 560);
-  if (state === "contacts") return Math.min(0.94 * vw, 640);
-  return null;
-}
-function targetHeightPx(state) {
+/* Константы для позиционирования у края */
+const DOT_SIZE = 64;     // синхронизирован с --dot-size
+const MARGIN   = 16;
+
+/* Клампим top, чтобы вертикальный блок влезал в экран */
+function clampTop(dot, targetH, margin = 8){
   const vh = window.innerHeight;
-  if (state === "menu" || state === "theme") return 72;
-  if (state === "contacts") return 56;
-  if (state === "settings") return Math.min(Math.floor(0.5 * vh), 520);
-  return 0;
-}
-
-/* safe-area helpers */
-function safe(n) { return Number.isFinite(n) ? n : 0; }
-function getSafeInsetLeft() {
-  const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-left)") || "0", 10);
-  return safe(v);
-}
-function getSafeInsetRight() {
-  const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-right)") || "0", 10);
-  return safe(v);
-}
-
-/* визуальный origin для ощущения раскрытия */
-function applyOriginClass(dot) {
-  dot.classList.remove("dot-origin-left", "dot-origin-right");
-  if (dot.classList.contains("dot-docked-right")) dot.classList.add("dot-origin-right");
-  else if (dot.classList.contains("dot-docked-left")) dot.classList.add("dot-origin-left");
-}
-
-/* вертикальный кламп при доке */
-function clampTopIfDocked(dot, targetH, margin = 8) {
-  if (!dot.classList.contains("dot-docked")) return;
-  const vh = window.innerHeight;
-  const r = dot.getBoundingClientRect();
-  let top = r.top;
+  const r  = dot.getBoundingClientRect();
+  let top  = r.top;
   top = Math.max(margin, Math.min(top, vh - targetH - margin));
   dot.style.top = `${top}px`;
 }
 
-/* Ключ: при доке справа считаем left от правого края с учётом safe-area и целевой ширины */
-function adjustLeftForDock(dot, state, margin = 16) {
-  if (!dot.classList.contains("dot-docked")) return;
-  const tw = targetWidthPx(state);
-  if (!tw) return;
-
+/* Фиксируем left при доке (узкая ширина = DOT_SIZE) */
+function fixLeftWhenDocked(dot){
+  if(!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
-  const leftInset  = getSafeInsetLeft();
-  const rightInset = getSafeInsetRight();
-
-  if (dot.classList.contains("dot-docked-right")) {
-    const left = Math.max(8 + leftInset, vw - rightInset - tw - margin);
-    dot.style.left = `${left}px`;
+  if(dot.classList.contains("dot-docked-right")){
+    dot.style.left = `${Math.max(8, vw - DOT_SIZE - MARGIN)}px`;
     dot.style.transform = "translate(0,0)";
-  } else if (dot.classList.contains("dot-docked-left")) {
-    const left = Math.max(8 + leftInset, margin + leftInset);
-    dot.style.left = `${left}px`;
+  }else if(dot.classList.contains("dot-docked-left")){
+    dot.style.left = `${Math.max(8, MARGIN)}px`;
     dot.style.transform = "translate(0,0)";
   }
 }
 
-function sync(dot, state) {
+function sync(dot, state){
   closePopover();
 
   // базовые классы
@@ -85,57 +47,74 @@ function sync(dot, state) {
   dot.classList.add(`dot-${state}`, "dot-morph");
   setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
-  // theme визуально = menu
-  if (state === "theme") dot.classList.add("dot-menu");
-
-  // раскрываем прямоугольник: убираем док-скейл, настраиваем origin и координаты
+  const docked = dot.classList.contains("dot-docked");
   const isRect = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
-  if (isRect) {
-    if (dot.classList.contains("dot-docked")) dot.classList.add("dot-expanding"); // отмена scale(.94)
-    applyOriginClass(dot);
-    adjustLeftForDock(dot, state, 16);
-    clampTopIfDocked(dot, targetHeightPx(state), 8);
-  } else {
-    dot.classList.remove("dot-expanding");
+
+  // theme визуально = menu
+  if(state === "theme") dot.classList.add("dot-menu");
+
+  // Включаем вертикальный режим ТОЛЬКО для главного меню/темы, когда докнуты
+  if(isRect){
+    if(docked){
+      dot.classList.add("dot-expanding"); // убираем док-скейл
+      // вертикальный режим только для menu/theme
+      if(state === "menu" || state === "theme"){
+        dot.classList.add("dot-vert");
+        fixLeftWhenDocked(dot);
+        // высота из CSS переменной, но ограничим в JS тоже (не обязательно, просто безопасно)
+        const computedH = Math.min(
+          // Примерно тот же расчёт, что в CSS
+          (8*2) + (40 * 4) + (6 * 3),
+          window.innerHeight - 16
+        );
+        clampTop(dot, computedH, 8);
+      }else{
+        dot.classList.remove("dot-vert");
+      }
+    }else{
+      dot.classList.remove("dot-expanding","dot-vert");
+    }
+  }else{
+    dot.classList.remove("dot-expanding","dot-vert");
   }
 
   const host = document.createElement("div");
   host.className = "dot-content dot-swap-in";
-  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
+  if(state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
-  switch (state) {
-    case "idle":
+  switch(state){
+    case "idle":{
       host.innerHTML = "";
       break;
-
-    case "menu": {
+    }
+    case "menu":{
       const menu = renderMenu({
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
+        onContacts: () => setState("contacts")
       });
+      if(docked) menu.classList.add("is-vert");  // вертикальное расположение кнопок
       queueMicrotask(() => menu.classList.add("is-live"));
       host.appendChild(menu);
       break;
     }
-
-    case "contacts": {
+    case "contacts":{
       const c = renderContacts({ onBack: () => setState("menu") });
       queueMicrotask(() => c.classList.add("is-live"));
       host.appendChild(c);
       break;
     }
-
-    case "settings":
+    case "settings":{
       host.appendChild(renderSettings({ onBack: () => setState("menu") }));
       break;
-
-    case "theme": {
+    }
+    case "theme":{
       const m = renderMenu({
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
+        onContacts: () => setState("contacts")
       });
+      if(docked) m.classList.add("is-vert");
       queueMicrotask(() => m.classList.add("is-live"));
       host.appendChild(m);
       break;
