@@ -66,9 +66,12 @@
 /* Вертикальное меню/тема (у края): узкое, как ширина Дота, и влезает по высоте экрана */
 #dot-core.dot-menu.dot-vert,
 #dot-core.dot-theme.dot-vert{
-  width:var(--dot-size);
-  height:min(var(--menu-vert-h), calc(100vh - 16px));
-  border-radius:16px; padding:var(--menu-vert-pad); cursor:default;
+  width: calc(var(--dot-size) * 1.6); /* шире для текста */
+  max-width: calc(100vw - 16px);      /* ограничение по правой границе */
+  height: min(var(--menu-vert-h), calc(100vh - 16px));
+  border-radius: 16px;
+  padding: var(--menu-vert-pad);
+  cursor: default;
 }
 
 /* Contacts / Settings (без изменений) */
