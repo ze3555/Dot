@@ -150,3 +150,20 @@
     box-shadow var(--transition-fast),
     left var(--transition-med);
 }
+/* ===== NO-MOVE OPEN/CLOSE ===== */
+/* Любые раскрытия/закрытия — без анимаций и без сдвигов */
+#dot-core,
+#dot-core.dot-menu,
+#dot-core.dot-theme,
+#dot-core.dot-contacts,
+#dot-core.dot-settings,
+#dot-core.dot-vert {
+  transition: none !important;      /* вырубаем все CSS-переходы */
+  animation: none !important;       /* вырубаем keyframe-анимации (morph/pulse) */
+}
+
+/* На всякий — внутренности тоже без анимаций/переходов */
+#dot-core * {
+  transition: none !important;
+  animation: none !important;
+}
