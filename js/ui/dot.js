@@ -17,34 +17,41 @@ function sync(dot, state) {
   // reset classes and apply state class
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`);
+  dot.classList.add(`dot-${state}`, "dot-morph"); // morph tick
+  // remove morph after tick
+  setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
   const host = document.createElement("div");
-  host.className = "dot-content dot-fade-in";
+  // unified content swap anim
+  host.className = "dot-content dot-swap-in";
 
-  // ВАЖНО: глушим клики внутри только в не-idle состояниях,
-  // чтобы тап по кругу доходил до обработчика на самом #dot-core
-  if (state !== "idle") {
-    host.addEventListener("click", (e) => e.stopPropagation());
-  }
+  // Глушим клики внутри только когда не idle
+  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
   switch (state) {
     case "idle":
-      host.innerHTML = ""; // чистый круг
+      host.innerHTML = "";
       break;
 
-    case "menu":
-      host.appendChild(renderMenu({
+    case "menu": {
+      const menu = renderMenu({
         onFunction: () => setState("function"),
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts")
-      }));
+      });
+      // stagger start on next frame
+      queueMicrotask(() => menu.classList.add("is-live"));
+      host.appendChild(menu);
       break;
+    }
 
-    case "contacts":
-      host.appendChild(renderContacts({ onBack: () => setState("menu") }));
+    case "contacts": {
+      const c = renderContacts({ onBack: () => setState("menu") });
+      queueMicrotask(() => c.classList.add("is-live"));
+      host.appendChild(c);
       break;
+    }
 
     case "settings":
       host.appendChild(renderSettings({ onBack: () => setState("menu") }));
@@ -55,13 +62,15 @@ function sync(dot, state) {
       break;
 
     case "theme":
-      // мгновенное действие; оставляем меню на экране
-      host.appendChild(renderMenu({
+      // keep menu visible; pulse handled by Theme button
+      const m = renderMenu({
         onFunction: () => setState("function"),
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts")
-      }));
+      });
+      queueMicrotask(() => m.classList.add("is-live"));
+      host.appendChild(m);
       break;
   }
 
