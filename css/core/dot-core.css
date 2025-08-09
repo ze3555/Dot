@@ -90,6 +90,15 @@
   padding: 12px;
 }
 
+/* THEME = same sizing as MENU (alias) */
+#dot-core.dot-theme {
+  width: min(92vw, 560px);
+  height: 72px;
+  border-radius: 18px;
+  padding: 8px;
+  cursor: default;
+}
+
 /* inner content host */
 .dot-content {
   width: 100%;
