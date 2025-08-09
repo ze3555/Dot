@@ -1,36 +1,30 @@
-/* css/layout/topbar.css */
-.top-bar {
+/* Top bar: fixed, safe-area aware */
+:root {
+  --topbar-h: 56px;
+  --topbar-bg: var(--surface-1, #0f0f10);
+  --topbar-fg: var(--text, #fff);
+  --hairline: color-mix(in oklab, var(--topbar-fg), transparent 90%);
+}
+
+#topbar {
   position: sticky;
   top: 0;
   z-index: 1000;
-  height: var(--topbar-h);
+  height: calc(var(--topbar-h) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 12px;
+  justify-content: center;
   background: var(--topbar-bg);
   color: var(--topbar-fg);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+  border-bottom: 1px solid var(--hairline);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  backdrop-filter: saturate(120%) blur(8px);
 }
 
-.topbar-title { font-weight: 600; letter-spacing: .02em; }
-
-.topbar-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
+#topbar .topbar-title {
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  opacity: .9;
 }
-.topbar-actions button {
-  appearance: none;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: currentColor;
-  padding: 6px 10px;
-  border-radius: 10px;
-  line-height: 1;
-  cursor: pointer;
-  transition: opacity .12s ease, transform .12s ease, border-color .12s ease;
-  opacity: .95;
-}
-.topbar-actions button:hover { opacity: 1; }
-.topbar-actions button:active { transform: scale(.98); }
