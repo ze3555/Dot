@@ -1,10 +1,9 @@
-
 import { $, mount } from "../core/dom.js";
 import { getState, setState, subscribe } from "../core/state.js";
-import { renderMenu } from "./dotMenu.js";
-import { renderContacts } from "./dotContacts.js";
-import { renderSettings } from "./dotSettings.js";
-import { renderFunctions } from "./dotFunctions.js";
+import { renderMenu } from "./dot-menu.js";
+import { renderContacts } from "./dot-contacts.js";
+import { renderSettings } from "./dot-settings.js";
+import { renderFunctions } from "./dot-functions.js";
 
 export function initDot() {
   const dot = $("#dot-core");
@@ -53,7 +52,7 @@ function sync(dot, state) {
 
     case "theme":
       // Theme is instant action; after pulse we return to menu
-      // Keep minimal pulse UI here; actual theme switch handled in dotMenu
+      // Keep minimal pulse UI here; actual theme switch handled in dot-menu
       setTimeout(() => { /* visual pulse only */ }, 0);
       // fall-through to menu UI so buttons remain visible
       host.appendChild(renderMenu({
