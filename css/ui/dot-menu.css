@@ -1,38 +1,43 @@
-/* 4-button menu inside DOT with staggered entrance */
-.dot-menu {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 8px;
-  height: 100%;
+/* Горизонтальный режим (центр) */
+.dot-menu{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  gap:8px;
+  height:100%;
 }
 
-.dot-menu button {
-  appearance: none;
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: color-mix(in oklab, var(--dot-bg), white 6%);
-  color: var(--dot-fg);
-  font-weight: 600;
-  letter-spacing: .2px;
-  cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
-  opacity: 0; transform: translateY(6px);
+/* Вертикальный режим (у края) */
+.dot-menu.is-vert{
+  grid-auto-flow:row;
+  grid-auto-columns:unset;
+  grid-template-rows:repeat(var(--menu-vert-count,4), var(--menu-vert-btn-h,40px));
+  gap:var(--menu-vert-gap,6px);
 }
 
-/* stagger when .is-live is applied */
-.dot-menu.is-live button { animation: menuIn .26s cubic-bezier(.2,.8,.2,1) both }
-.dot-menu.is-live button:nth-child(1){ animation-delay: 20ms }
-.dot-menu.is-live button:nth-child(2){ animation-delay: 60ms }
-.dot-menu.is-live button:nth-child(3){ animation-delay: 100ms }
-.dot-menu.is-live button:nth-child(4){ animation-delay: 140ms }
-
-@keyframes menuIn {
-  from { opacity: 0; transform: translateY(6px) }
-  to   { opacity: 1; transform: translateY(0) }
+.dot-menu button{
+  appearance:none; border:0; border-radius:12px;
+  padding:10px 12px;
+  background:color-mix(in oklab, var(--dot-bg), white 6%);
+  color:var(--dot-fg); font-weight:600; letter-spacing:.2px;
+  cursor:pointer;
+  transition:transform 120ms ease, background 120ms ease, opacity 120ms ease;
+  opacity:0; transform:translateY(6px);
 }
 
-.dot-menu button:hover { transform: translateY(-1px) }
-.dot-menu button:active { transform: translateY(0) scale(.98) }
-.dot-menu button:focus-visible { outline: 2px solid color-mix(in oklab, var(--dot-fg), transparent 70%) }
+/* Кнопки в вертикальном режиме — на всю ширину столбца и центрируем текст */
+.dot-menu.is-vert button{
+  width:100%; justify-self:stretch; text-align:center; padding:8px 10px;
+}
+
+/* Stagger */
+.dot-menu.is-live button{ animation:menuIn .26s cubic-bezier(.2,.8,.2,1) both }
+.dot-menu.is-live button:nth-child(1){ animation-delay:20ms }
+.dot-menu.is-live button:nth-child(2){ animation-delay:60ms }
+.dot-menu.is-live button:nth-child(3){ animation-delay:100ms }
+.dot-menu.is-live button:nth-child(4){ animation-delay:140ms }
+@keyframes menuIn{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:translateY(0) } }
+
+.dot-menu button:hover{ transform:translateY(-1px) }
+.dot-menu button:active{ transform:translateY(0) scale(.98) }
+.dot-menu button:focus-visible{ outline:2px solid color-mix(in oklab, var(--dot-fg), transparent 70%) }
