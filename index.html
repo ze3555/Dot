@@ -1,17 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOT</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/index.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DOT — Minimal Start</title>
+  <link rel="stylesheet" href="./css/layout/topbar.css">
+  <link rel="stylesheet" href="./css/layout/bottom-panel.css">
+  <link rel="stylesheet" href="./css/layout/main.css">
+  <link rel="stylesheet" href="./css/core/dot-core.css">
 </head>
 <body>
-  <div class="top-bar"></div>
-  <main class="main-content"></main>
-  <div class="bottom-panel"></div>
-  <div id="dot-core" class="dot-core"></div>
-  <script type="module" src="main.js"></script>
+  <!-- Top bar -->
+  <header class="top-bar" role="banner">
+    <div class="top-title">DOT</div>
+    <div class="top-actions">
+      <!-- зарезервировано под иконки/статусы -->
+    </div>
+  </header>
+
+  <!-- Main content area -->
+  <main class="main-area" role="main" aria-live="polite">
+    <div class="messages">
+      <!-- Заглушка для прокрутки/чтения -->
+      <div class="msg">Welcome to DOT. Scroll and read — the center DOT is translucent.</div>
+      <div class="msg">Long-press Function → Themes. Long-press Settings → FineTune.</div>
+      <div class="msg">Contacts turns into a horizontal search field.</div>
+      <div class="msg">Open Settings to toggle features.</div>
+      <div class="msg">This is just starter layout. Plug your chat later.</div>
+      <div class="msg">…</div>
+      <div class="msg">…</div>
+      <div class="msg">…</div>
+    </div>
+
+    <!-- DOT (center) -->
+    <button id="dot-core"
+            class="dot-core"
+            aria-haspopup="true"
+            aria-controls="dot-menu"
+            aria-expanded="false"
+            title="Open DOT menu">
+    </button>
+
+    <!-- Vertical menu -->
+    <nav id="dot-menu" class="dot-menu" aria-label="DOT menu" hidden>
+      <button class="dot-btn" data-action="function" title="Function">Function</button>
+      <button class="dot-btn" data-action="contacts" title="Contacts">Contacts</button>
+      <button class="dot-btn" data-action="settings" title="Settings">Settings</button>
+    </nav>
+
+    <!-- Function → Popover -->
+    <div id="function-pop" class="popover" role="dialog" aria-modal="false" hidden>
+      <div class="pop-title">Functions</div>
+      <button class="item" data-fn="chatgpt">ChatGPT</button>
+    </div>
+
+    <!-- Themes panel (via long-press on Function) -->
+    <section id="themes-panel" class="panel medium" role="dialog" aria-modal="true" hidden>
+      <header class="panel-h">
+        <div>Themes</div>
+        <button class="panel-x" data-close="#themes-panel" aria-label="Close">✕</button>
+      </header>
+      <div class="panel-b">
+        <button class="chip" data-theme="light">Light</button>
+        <button class="chip" data-theme="dark">Dark</button>
+        <button class="chip" data-theme="system">System</button>
+      </div>
+    </section>
+
+    <!-- Contacts → morph to search -->
+    <section id="contacts-bar" class="contacts-bar" hidden>
+      <input id="contacts-search" type="search" placeholder="Search contacts…" autocomplete="off" />
+      <button class="contacts-close" aria-label="Close contacts" data-close="#contacts-bar">✕</button>
+    </section>
+
+    <!-- Settings (tap) -->
+    <section id="settings-panel" class="panel medium" role="dialog" aria-modal="true" hidden>
+      <header class="panel-h">
+        <div>Settings</div>
+        <button class="panel-x" data-close="#settings-panel" aria-label="Close">✕</button>
+      </header>
+      <div class="panel-b">
+        <label class="row">
+          <span>Enable drag for DOT</span>
+          <input id="toggle-drag" type="checkbox" />
+        </label>
+        <label class="row">
+          <span>Reduce glow</span>
+          <input id="toggle-glow" type="checkbox" />
+        </label>
+      </div>
+    </section>
+
+    <!-- FineTune (long-press on Settings) -->
+    <section id="finetune-panel" class="panel large" role="dialog" aria-modal="true" hidden>
+      <header class="panel-h">
+        <div>FineTune</div>
+        <button class="panel-x" data-close="#finetune-panel" aria-label="Close">✕</button>
+      </header>
+      <div class="panel-b">
+        <div class="row">
+          <span>DOT drag</span>
+          <input id="ft-drag" type="checkbox" />
+        </div>
+        <div class="row">
+          <span>Snap to center on close</span>
+          <input id="ft-snap" type="checkbox" checked />
+        </div>
+        <div class="row">
+          <span>Haptic (simulated)</span>
+          <input id="ft-haptic" type="checkbox" checked />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom composer -->
+  <footer class="bottom-bar" role="contentinfo">
+    <div class="composer">
+      <input id="chat-input" placeholder="Message…" autocomplete="off" />
+      <button id="send-btn" title="Send">➤</button>
+    </div>
+  </footer>
+
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
