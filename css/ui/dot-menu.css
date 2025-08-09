@@ -1,81 +1,55 @@
 /* css/ui/dot-menu.css */
-/* Контейнер меню заполняет внутреннюю область DOT */
+/* Вертикальный стек + системный читаемый шрифт */
 .dot-menu{
-  display:grid;
-  grid-auto-flow:column;
-  grid-auto-columns:1fr;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
   width:100%;
+  height:auto;               /* сжимаемся по контенту */
   padding:8px;
   box-sizing:border-box;
+
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+  color: var(--dot-fg, #fff);
 }
 
-/* Вертикальная ориентация у края/в доке */
-.dot-menu.is-vert{
-  grid-auto-flow:row;
-  grid-auto-rows:var(--menu-vert-btn-h,40px);
-  gap:var(--menu-vert-gap,6px);
-  padding:var(--menu-vert-pad,8px);
-}
+/* Сжать сам контейнер DOT в состоянии меню под контент */
+#dot-core.dot-menu .dot-host { height:auto; }
 
-/* Кнопка */
+/* Кнопки — без эмодзи, ровные кликабельные зоны */
 .dot-menu__btn{
   appearance:none;
   -webkit-appearance:none;
   border:1px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
   background: color-mix(in oklab, var(--dot-bg, #111), transparent 10%);
-  color:var(--dot-fg, #fff);
+  color: var(--dot-fg, #fff);
+
   border-radius:12px;
-  padding:10px 12px;
-  min-height:40px;
-  display:grid;
-  grid-template-columns:auto 1fr;
-  align-items:center;
-  gap:8px;
+  min-height:44px;          /* комфортный тап-таргет */
+  padding:10px 14px;
+  width:100%;
+  text-align:center;
+
   cursor:pointer;
-  transition:transform var(--transition-fast,150ms ease),
-             background var(--transition-fast,150ms ease),
-             border-color var(--transition-fast,150ms ease);
+  transition:
+    transform var(--transition-fast,150ms ease),
+    background var(--transition-fast,150ms ease),
+    border-color var(--transition-fast,150ms ease);
+
+  white-space:nowrap;       /* текст не ломаем */
+  overflow:visible;
+  text-overflow:clip;       /* и не обрезаем троеточием */
   font:inherit;
-  text-align:left;
 }
 
-.dot-menu__icon{
-  display:inline-grid;
-  place-items:center;
-  width:22px;
-  min-width:22px;
-  line-height:1;
-  opacity:.9;
-}
+.dot-menu__btn:hover{ transform: translateY(-1px); }
+.dot-menu__btn:active{ transform: translateY(0) scale(.98); }
 
-.dot-menu__label{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-/* Ховеры/актив */
-.dot-menu__btn:hover{ transform:translateY(-1px) }
-.dot-menu__btn:active{ transform:translateY(0) scale(.98) }
-
-/* Фокус */
 .dot-menu__btn:focus-visible{
   outline:2px solid color-mix(in oklab, var(--dot-fg, #fff), transparent 70%);
   outline-offset:2px;
-}
-
-/* В вертикали добавим тонкий разделитель между кнопками */
-.dot-menu.is-vert .dot-menu__btn + .dot-menu__btn{
-  position:relative;
-}
-.dot-menu.is-vert .dot-menu__btn + .dot-menu__btn::before{
-  content:"";
-  position:absolute;
-  top:-3px; left:14%; right:14%;
-  height:1px;
-  background: color-mix(in oklab, var(--dot-fg, #fff), transparent 85%);
 }
