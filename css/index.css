@@ -6,7 +6,7 @@
 @import url("./ui/bottom-panel.css");
 @import url("./ui/dot-menu.css");
 @import url("./ui/dot-contacts.css"); /* ← NEW */
-
+@import url("./ui/dot-popover.css");
 /* Base */
 :root {
   --dot-size: 64px;
