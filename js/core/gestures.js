@@ -7,15 +7,26 @@ export function initGestures() {
   // Тап по Доту в idle -> меню (и не даём этому же клику схлопнуть меню)
   dot.addEventListener("click", (e) => {
     if (getState() === "idle") {
-      e.stopPropagation();      // не пускаем событие на document
+      e.stopPropagation();
       setState("menu");
     }
   });
 
-  // Клик вне Дота -> idle
+  // Надёжный outside-click:
+  // 1) Запоминаем, где начался pointer (внутри/снаружи)
+  // 2) Закрываем на click только если pointerdown был СНАРУЖИ
+  let startedInside = false;
+
+  document.addEventListener("pointerdown", (e) => {
+    startedInside = dot.contains(e.target);
+  }, { capture: true }); // захват, чтобы сработало до ремаута
+
   document.addEventListener("click", (e) => {
-    if (!dot.contains(e.target)) setState("idle");
-  });
+    if (!startedInside) {
+      setState("idle");
+    }
+    startedInside = false; // сброс
+  }, { capture: true });
 
   // ESC -> idle
   document.addEventListener("keydown", (e) => {
