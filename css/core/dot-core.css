@@ -15,6 +15,7 @@
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
+
   display: grid;
   place-items: center;
   width: var(--dot-size);
@@ -54,60 +55,85 @@
 }
 
 /* idle circle */
-#dot-core.dot-idle { width: var(--dot-size); height: var(--dot-size); border-radius: 999px }
+#dot-core.dot-idle {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 999px;
+}
 
-/* menu rectangle */
+/* menu rectangle (и theme визуально как menu) */
 #dot-core.dot-menu,
-#dot-core.dot-theme { width: min(92vw, 560px); height: 72px; border-radius: 18px; padding: 8px; cursor: default }
+#dot-core.dot-theme {
+  width: min(92vw, 560px);
+  height: 72px;
+  border-radius: 18px;
+  padding: 8px;
+  cursor: default;
+}
 
 /* contacts capsule */
-#dot-core.dot-contacts { width: min(94vw, 640px); height: 56px; border-radius: 999px; padding: 6px 10px }
+#dot-core.dot-contacts {
+  width: min(94vw, 640px);
+  height: 56px;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
 
 /* settings square */
-#dot-core.dot-settings { width: min(92vw, 560px); height: min(50vh, 520px); border-radius: 16px; padding: 12px }
+#dot-core.dot-settings {
+  width: min(92vw, 560px);
+  height: min(50vh, 520px);
+  border-radius: 16px;
+  padding: 12px;
+}
 
 /* content host */
-.dot-content { width: 100%; height: 100%; display: grid; align-items: center }
-.dot-swap-in { animation: dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both }
-@keyframes dotSwapIn { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform: none } }
+.dot-content {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-items: center;
+}
+.dot-swap-in {
+  animation: dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes dotSwapIn {
+  from { opacity: 0; transform: translateY(6px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
 
 /* === DRAG / DOCK MODES === */
 
-/* when dragging or freely positioned, we cancel center translate and use left/top */
-#dot-core.dot-free {
-  /* left/top set inline via JS */
-  transform: translate(0, 0);
-}
+/* свободное положение (drag) — используем left/top */
+#dot-core.dot-free { transform: translate(0, 0) }
 
-/* docked look: slightly smaller & more transparent so it doesn't distract */
+/* пристыкован — чуть меньше и полупрозрачный, чтобы не мешал */
 #dot-core.dot-docked {
   transform: translate(0, 0) scale(0.94);
   opacity: 0.92;
 }
+#dot-core.dot-docked:hover { opacity: 1 }
 
-/* optional subtle hover when docked */
-#dot-core.dot-docked:hover { opacity: 1; }
-
-/* left/right modifiers (for potential future specific tweaks) */
+/* стороны докинга (модификаторы для логики раскрытия) */
 #dot-core.dot-docked-left  {}
 #dot-core.dot-docked-right {}
-/* ----- Expand origin depending on dock side ----- */
+
+/* ----- Раскрытие внутрь от стороны прилипания (transform-origin) ----- */
 #dot-core.dot-menu.dot-origin-right,
 #dot-core.dot-theme.dot-origin-right {
   transform-origin: right center;
 }
-
 #dot-core.dot-menu.dot-origin-left,
 #dot-core.dot-theme.dot-origin-left {
   transform-origin: left center;
 }
 
-/* (опционально) для квадратов и капсулы можно тоже привязать якорь */
-#dot-core.dot-settings.dot-origin-right,
-#dot-core.dot-contacts.dot-origin-right {
+/* По желанию — та же логика для капсулы/квадрата */
+#dot-core.dot-contacts.dot-origin-right,
+#dot-core.dot-settings.dot-origin-right {
   transform-origin: right center;
 }
-#dot-core.dot-settings.dot-origin-left,
-#dot-core.dot-contacts.dot-origin-left {
+#dot-core.dot-contacts.dot-origin-left,
+#dot-core.dot-settings.dot-origin-left {
   transform-origin: left center;
 }
