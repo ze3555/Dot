@@ -1,75 +1,124 @@
-// js/services/contacts.js
-// Локальное мок‑хранилище контактов с persistence в localStorage.
-// Формат записи: { username: string, addedAt: number }
-
-const LS_KEY = "dot.contacts.v1";
+// js/ui/dot-contacts.js
 const RE_USERNAME = /^[a-z0-9_]{3,20}$/;
 
-let CONTACTS = [];
+import { initContactsStore, search as searchContacts, add as addContact, remove as removeContact, canAdd as canAddContact } from "../services/contacts.js";
 
-function load() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) {
-        CONTACTS = arr
-          .filter(x => x && typeof x.username === "string")
-          .map(x => ({ username: String(x.username), addedAt: Number(x.addedAt) || Date.now() }));
-      }
+export function renderContacts({ onBack } = {}) {
+  // гарантируем, что стор прогружен (safe для повторных вызовов)
+  initContactsStore();
+
+  const root = document.createElement("div");
+  root.className = "dot-contacts-wrap";
+
+  // INPUT
+  const input = document.createElement("input");
+  input.className = "dot-contacts-input";
+  input.type = "text";
+  input.autocomplete = "off";
+  input.autocapitalize = "none";
+  input.spellcheck = false;
+  input.placeholder = "username";
+  input.setAttribute("aria-label", "Username");
+
+  // ADD (+)
+  const btnAdd = document.createElement("button");
+  btnAdd.type = "button";
+  btnAdd.className = "dot-contacts-add";
+  btnAdd.dataset.act = "add";
+  btnAdd.setAttribute("aria-label", "Add contact");
+  btnAdd.textContent = "➕";
+  btnAdd.disabled = true;
+
+  // LIST
+  const list = document.createElement("div");
+  list.className = "dot-contacts-list";
+
+  root.append(input, btnAdd, list);
+
+  function renderList(items) {
+    list.innerHTML = "";
+    if (!items || items.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "dot-contacts-empty";
+      empty.textContent = "Пусто. Добавь username через плюс справа.";
+      list.appendChild(empty);
+      return;
     }
-  } catch {}
-}
-function save() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(CONTACTS)); } catch {}
-}
+    for (const c of items) {
+      const row = document.createElement("div");
+      row.className = "dot-contacts-row";
 
-// простая шина событий для UI
-function emitChanged() {
-  window.dispatchEvent(new CustomEvent("dot:contacts-changed", { detail: { total: CONTACTS.length } }));
-}
+      const name = document.createElement("div");
+      name.className = "dot-contacts-name";
+      name.textContent = c.username;
 
-export function initContactsStore() {
-  load();
-  // первичная инициализация — можно закинуть примеры, если пусто:
-  if (CONTACTS.length === 0) {
-    CONTACTS = [
-      { username: "alpha", addedAt: Date.now() - 86400000 * 2 },
-      { username: "bravo_dev", addedAt: Date.now() - 86400000 },
-    ];
-    save();
+      const actions = document.createElement("div");
+      actions.className = "dot-contacts-actions";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "dot-contacts-remove";
+      removeBtn.setAttribute("aria-label", `Remove ${c.username}`);
+      removeBtn.textContent = "✕";
+
+      removeBtn.addEventListener("click", () => {
+        if (removeContact(c.username)) {
+          refresh();
+          // вернуть фокус в инпут для скорости набора
+          input.focus();
+        }
+      });
+
+      actions.append(removeBtn);
+      row.append(name, actions);
+      list.appendChild(row);
+    }
   }
-  emitChanged();
-}
 
-export function all() {
-  return [...CONTACTS].sort((a,b) => a.username.localeCompare(b.username));
-}
+  function refresh() {
+    const q = input.value.trim().toLowerCase();
+    renderList(searchContacts(q));
+    syncValidity();
+  }
 
-export function search(prefix) {
-  const q = String(prefix || "").trim().toLowerCase();
-  if (!q) return all();
-  return all().filter(c => c.username.startsWith(q));
-}
+  function syncValidity() {
+    const v = input.value.trim().toLowerCase();
+    const ok = RE_USERNAME.test(v) && canAddContact(v);
+    btnAdd.disabled = !ok;
+    root.dataset.valid = ok ? "1" : "0";
+  }
 
-export function canAdd(username) {
-  const u = String(username || "").trim().toLowerCase();
-  return RE_USERNAME.test(u) && !CONTACTS.some(c => c.username === u);
-}
+  function triggerAdd() {
+    const username = input.value.trim().toLowerCase();
+    if (!RE_USERNAME.test(username)) return;
+    if (!canAddContact(username)) return;
+    if (addContact(username)) {
+      input.value = "";
+      refresh();
+      input.focus();
+    }
+  }
 
-export function add(username) {
-  const u = String(username || "").trim().toLowerCase();
-  if (!RE_USERNAME.test(u)) return false;
-  if (CONTACTS.some(c => c.username === u)) return false;
-  CONTACTS.push({ username: u, addedAt: Date.now() });
-  save(); emitChanged();
-  return true;
-}
+  // events
+  input.addEventListener("input", () => {
+    refresh();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!btnAdd.disabled) triggerAdd();
+    } else if (e.key === "Escape") {
+      input.blur();
+      if (typeof onBack === "function") onBack();
+    }
+  });
+  btnAdd.addEventListener("click", triggerAdd);
 
-export function remove(username) {
-  const u = String(username || "").trim().toLowerCase();
-  const prevLen = CONTACTS.length;
-  CONTACTS = CONTACTS.filter(c => c.username !== u);
-  if (CONTACTS.length !== prevLen) { save(); emitChanged(); return true; }
-  return false;
+  // кросс-обновление, если лист изменён извне
+  window.addEventListener("dot:contacts-changed", refresh);
+
+  // первичная отрисовка
+  refresh();
+
+  return root;
 }
