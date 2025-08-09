@@ -1,7 +1,8 @@
+// js/core/drag.js
 import { getState, setState } from "./state.js";
 
 /**
- * Enable dragging the Dot in IDLE. On release, snap to nearest side (dock),
+ * Drag DOT in IDLE. On release, snap to nearest side (dock),
  * unless body has .dot-dock-off => then return to center.
  */
 export function initDotDrag() {
@@ -12,7 +13,6 @@ export function initDotDrag() {
   let startX = 0, startY = 0;
   let originLeft = 0, originTop = 0;
   let moved = false;
-
   let suppressClickOnce = false;
 
   const getDotRect = () => dot.getBoundingClientRect();
@@ -21,7 +21,7 @@ export function initDotDrag() {
     dot.classList.add("dot-free");
     const r = getDotRect();
     dot.style.left = `${r.left}px`;
-    dot.style.top = `${r.top}px`;
+    dot.style.top  = `${r.top}px`;
     dot.style.transform = "translate(0,0)";
   };
 
@@ -35,8 +35,8 @@ export function initDotDrag() {
   const ORIGIN_MARGIN = 16;
 
   function snapToSide() {
-    const safeTop = 8 + getSafeInsetTop();
-    const safeBottom = 8 + getSafeInsetBottom();
+    const safeTop = 8;
+    const safeBottom = 8;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const r = getDotRect();
@@ -53,15 +53,6 @@ export function initDotDrag() {
     dot.style.left = `${x}px`;
     dot.style.top  = `${y}px`;
     dot.style.transform = "translate(0,0)";
-  }
-
-  function getSafeInsetTop() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)") || "0", 10);
-    return isNaN(v) ? 0 : v;
-  }
-  function getSafeInsetBottom() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)") || "0", 10);
-    return isNaN(v) ? 0 : v;
   }
 
   dot.addEventListener("pointerdown", (e) => {
@@ -112,16 +103,18 @@ export function initDotDrag() {
   dot.addEventListener("pointerup", endDrag);
   dot.addEventListener("pointercancel", endDrag);
 
+  // ✅ Главное: когда дот пристыкован и мы в idle — просто открываем меню на месте
   dot.addEventListener("click", (e) => {
     if (suppressClickOnce) {
       e.stopPropagation();
       suppressClickOnce = false;
-    } else {
-      if (getState() === "idle" && dot.classList.contains("dot-docked")) {
-        returnToCenter();
-        queueMicrotask(() => setState("menu"));
-        e.stopPropagation();
-      }
+      return;
+    }
+    if (getState() === "idle" && dot.classList.contains("dot-docked")) {
+      // БЫЛО: returnToCenter();  // ← это и тянуло точку вверх
+      // СТАЛО: остаёмся на месте и открываем меню
+      setState("menu");
+      e.stopPropagation();
     }
   });
 
