@@ -1,21 +1,18 @@
 /* css/ui/dot-contacts.css
-   Контакты: поле + плюс справа.
-   Изменения:
-   - Убрали левую лупу.
-   - Инпут прозрачен (фон как у капсулы), НЕ белый.
-   - Плюс справа.
+   Контакты: поле ввода (прозрачное, цвет капсулы) + плюс справа + список контактов ниже.
 */
 
 /* Контейнер в капсуле DOT */
 .dot-contacts-wrap {
   display: grid;
-  grid-template-columns: 1fr auto; /* только инпут + плюс */
+  grid-template-columns: 1fr auto; /* input | + */
+  grid-auto-rows: min-content;
   align-items: center;
   gap: 8px;
   height: 100%;
 }
 
-/* Кнопка добавления (справа) */
+/* Плюс справа */
 .dot-contacts-add {
   -webkit-tap-highlight-color: transparent;
   appearance: none;
@@ -43,21 +40,18 @@
   cursor: default;
 }
 
-/* Поле ввода: фон как у капсулы (прозрачный), без белого */
+/* Поле ввода: фон как у капсулы (прозрачный) */
 .dot-contacts-input {
   width: 100%;
   height: 40px;
-
-  /* iOS zoom fix */
-  font-size: 16px;
+  font-size: 16px; /* iOS no-zoom */
   line-height: 20px;
-
   padding: 10px 14px;
   border-radius: 9999px;
 
-  background: transparent;          /* ключевой момент — НЕ белый */
-  color: var(--panel-fg, #111);     /* контраст из темы */
-  border: 1px solid transparent;    /* без видимой рамки, чтобы не прыгало */
+  background: transparent;          
+  color: var(--panel-fg, #111);     
+  border: 1px solid transparent;    
   outline: none;
 
   box-shadow: none;
@@ -67,26 +61,74 @@
 
   caret-color: color-mix(in oklab, var(--panel-fg, #111), #4b8dff 40%);
 }
-
-/* Плейсхолдер читаемый */
 .dot-contacts-input::placeholder {
   color: color-mix(in oklab, var(--panel-fg, #111), transparent 55%);
   opacity: 1;
 }
-
-/* Фокус — тонкий, без внешнего свечения, чтобы капсула не дёргалась */
 .dot-contacts-input:focus {
   border-color: color-mix(in oklab, var(--panel-fg, #111), transparent 70%);
 }
 
-/* Тёмная тема (страховка, если переменные не заданы) */
-body.theme-dark .dot-contacts-input {
-  color: var(--panel-fg, #f5f5f5);
-  border-color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 80%);
-}
-body.theme-dark .dot-contacts-input::placeholder {
-  color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 55%);
+/* Список контактов (растёт вниз под полем) */
+.dot-contacts-list {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  max-height: calc(50vh - 56px); /* чтобы не вылезал за рамки 50vh квадрата/капсулы */
+  overflow: auto;
 }
 
-/* Без входных анимаций — совпадает с clamp‑логикой drag */
-.dot-contacts-wrap.is-live { animation: none; }
+/* Пустое состояние */
+.dot-contacts-empty {
+  font-size: 13px;
+  opacity: .6;
+  padding: 6px 2px;
+}
+
+/* Ряд контакта */
+.dot-contacts-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--panel-fg, #111), transparent 95%);
+}
+.dot-contacts-name {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dot-contacts-actions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.dot-contacts-remove {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+
+  display: inline-grid;
+  place-items: center;
+
+  color: var(--panel-fg, #111);
+}
+.dot-contacts-remove:hover {
+  background: color-mix(in oklab, var(--panel-fg, #111), transparent 90%);
+}
+
+/* Dark страховка */
+body.theme-dark .dot-contacts-remove,
+body.theme-dark .dot-contacts-add {
+  color: var(--panel-fg, #f5f5f5);
+}
