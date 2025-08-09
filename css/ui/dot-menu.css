@@ -1,1 +1,25 @@
 
+/* 4-button menu inside DOT */
+.dot-menu {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  height: 100%;
+}
+.dot-menu button {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in oklab, var(--dot-bg), white 6%);
+  color: var(--dot-fg);
+  font-weight: 600;
+  letter-spacing: .2px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+.dot-menu button:hover { transform: translateY(-1px) }
+.dot-menu button:active { transform: translateY(0) scale(.98) }
+.dot-menu button:focus-visible { outline: 2px solid color-mix(in oklab, var(--dot-fg), transparent 70%) }
+.dot-menu .danger { background: color-mix(in oklab, crimson, black 40%) }
