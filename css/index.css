@@ -5,6 +5,7 @@
 @import url("./theme/light-dark.css");
 @import url("./ui/bottom-panel.css");
 @import url("./ui/dot-menu.css");
+@import url("./ui/dot-contacts.css"); /* ← NEW */
 
 /* Base */
 :root {
@@ -26,16 +27,14 @@ body {
 }
 
 /* Center DOT within main-content */
-#main-content {
-  position: relative;
-}
+#main-content { position: relative; }
 #dot-core {
   position: fixed;
   left: 50%;
-  top: calc(50% - 32px); /* visually centered between topbar and bottom-panel */
+  top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
 }
 
-/* Messages area placeholder (keeps space for future) */
+/* Messages area placeholder */
 #messages { min-height: 40vh; }
