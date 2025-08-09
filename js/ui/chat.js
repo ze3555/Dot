@@ -1,101 +1,118 @@
-// js/ui/chat.js — Chat composer (ChatGPT-style docked DOT)
-(() => {
-  const body = document.body;
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('chat-input');
-  const sendBtn = document.querySelector('.chat-send-btn');
-  const DOT = document.querySelector('.dot-core'); // ваш квадрат
+// js/ui/chat.js
+import { sendMessage, subscribeToMessages } from "../firebase/db.js";
+import { getCurrentUser } from "../firebase/auth.js";
 
-  // --- Safety: стартовое состояние
-  body.classList.remove('dot-dock');     // ничего не докнуто изначально
-  body.classList.remove('dot-send-ready');
-  if (!DOT) body.classList.add('no-dot-core'); else body.classList.remove('no-dot-core');
+let unsubscribe = null;
 
-  // --- iOS zoom fix (без приближения)
-  if (input) input.style.fontSize = '16px';
+export async function renderChatUI() {
+  const main = document.getElementById("main-content");
+  if (!main) return;
 
-  // --- Авто‑рост textarea + ready‑state
-  const syncReadyState = () => {
-    const hasText = !!input.value.trim();
-    body.classList.toggle('dot-send-ready', hasText);
-  };
-  const autoresize = () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 160) + 'px';
-  };
+  // Рисуем только окно сообщений: форма уже в index.html (bottom-panel)
+  main.innerHTML = `
+    <div class="chat-window">
+      <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+    </div>
+  `;
 
-  // --- Отправка
-  const doSend = () => {
-    const text = input.value.trim();
+  // ===== Stream сообщений =====
+  if (unsubscribe) { try { unsubscribe(); } catch {} }
+  unsubscribe = subscribeToMessages((messages) => {
+    const box = document.getElementById("chat-messages");
+    if (!box) return;
+
+    box.innerHTML = messages.map(() => `
+      <div class="chat-message">
+        <div class="msg-text"></div>
+      </div>
+    `).join("");
+
+    // безопасно кладём текст
+    const nodes = box.querySelectorAll(".msg-text");
+    messages.forEach((m, i) => { nodes[i].textContent = m?.text || ""; });
+
+    // автоскролл
+    box.scrollTop = box.scrollHeight;
+  });
+
+  // ===== Composer / отправка =====
+  const form    = document.getElementById("chat-form");
+  const input   = document.getElementById("chat-input");
+  const dot     = document.querySelector(".dot-core");
+  const sendBtn = document.querySelector(".chat-send-btn");
+  if (!form || !input) return;
+
+  // Если Дота нет — не скрываем старую кнопку
+  if (!dot) document.body.classList.add("no-dot-core");
+
+  // просьба клавиатуре: показывать “Send”
+  input.setAttribute("enterkeyhint", "send");
+
+  // общая функция отправки (для формы / Дота / старой кнопки)
+  async function doSend() {
+    const text = (input.value || "").trim();
     if (!text) return;
-    // здесь остаётся ваша фактическая отправка сообщения
-    form?.dispatchEvent(new Event('dot:send', { bubbles: true })); // хук, если нужен
-    form?.submit?.(); // если у вас перехват onsubmit — он сработает
+    const user = getCurrentUser();
+    const uid  = user?.uid || "anon";
+    await sendMessage(text, uid);
+    input.value = "";
+    syncSendReady();     // выключим кнопку
+    input.focus();       // оставим фокус для быстрого набора
+  }
 
-    input.value = '';
-    autoresize();
-    syncReadyState();
-
-    // Опционально: оставляем фокус и док‑режим активным, как в ChatGPT
-    input.focus();
+  // сабмит формы
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    doSend().catch(err => console.error("[chat] sendMessage failed:", err));
   };
 
-  // --- Dock: активируем ТОЛЬКО на фокусе, снимаем на blur
-  let blurTimer = null;
-  const enableDock = () => {
-    if (!DOT) return;
-    body.classList.add('dot-dock');
-  };
-  const disableDock = () => {
-    if (!DOT) return;
-    body.classList.remove('dot-dock');
-  };
-
-  input?.addEventListener('focus', () => {
-    clearTimeout(blurTimer);
-    enableDock();
-  });
-
-  // даём 120мс, чтобы тап по ДОТ/кнопке не терялся
-  input?.addEventListener('blur', () => {
-    clearTimeout(blurTimer);
-    blurTimer = setTimeout(disableDock, 120);
-  });
-
-  // --- Слушатель на ДОТ: один раз, работает каждый клик в док‑режиме
-  if (DOT) {
-    DOT.addEventListener('click', (e) => {
-      if (!body.classList.contains('dot-dock')) return; // только когда докнут
+  // старая кнопка — как фолбэк и на десктопе
+  if (sendBtn) {
+    sendBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      doSend();
+      doSend().catch(console.error);
     });
   }
 
-  // --- Кнопка Send (fallback / desktop)
-  sendBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    doSend();
-  });
+  // ===== Dock Dot → Send рядом с полем =====
+  const syncSendReady = () => {
+    const ready = !!input.value.trim();
+    document.body.classList.toggle("dot-send-ready", ready);
+    if (sendBtn) sendBtn.toggleAttribute("disabled", !ready);
+  };
 
-  // --- Форма
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    doSend();
-  });
+  const onFocus = () => {
+    document.body.classList.add("dot-dock");
+    syncSendReady();
+  };
 
-  // --- Ввод
-  input?.addEventListener('input', () => {
-    autoresize();
-    syncReadyState();
-  });
+  const onBlur = () => {
+    // задержка, чтобы тап по Доту не терялся из-за blur
+    setTimeout(() => {
+      document.body.classList.remove("dot-dock");
+      document.body.classList.remove("dot-send-ready");
+    }, 120);
+  };
 
-  // --- Тап по зоне сообщений снимает фокус (если у вас есть #main-content)
-  const main = document.getElementById('main-content');
-  main?.addEventListener('pointerdown', () => {
-    // задержка, чтобы не мешать клику по ДОТ
-    setTimeout(() => input?.blur(), 0);
-  });
+  input.addEventListener("focus", onFocus);
+  input.addEventListener("blur", onBlur);
+  input.addEventListener("input", syncSendReady);
 
-  // Initial layout sync
-  requestAnimationFrame(() => { autoresize(); syncReadyState(); });
-})();
+  // Тап по Доту, когда он докнут
+  if (dot) {
+    dot.addEventListener("click", (e) => {
+      if (!document.body.classList.contains("dot-dock")) return;
+      e.preventDefault();
+      if (document.body.classList.contains("dot-send-ready")) {
+        doSend().catch(console.error);
+      } else {
+        input.focus(); // пусто → просто фокус
+      }
+    });
+  }
+
+  // тап по сообщениям снимает фокус, прячет док
+  document.getElementById("chat-messages")?.addEventListener("click", () => {
+    if (document.activeElement === input) input.blur();
+  });
+}
