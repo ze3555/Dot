@@ -16,16 +16,17 @@ export function renderMenu(callbacks) {
     const act = btn.dataset.act;
 
     if (act === "theme") {
-      toggleTheme(); // instant toggle
-      // tiny visual feedback
-      btn.style.opacity = "0.85";
-      setTimeout(() => (btn.style.opacity = ""), 120);
+      toggleTheme();
+      // short pulse on the Dot host
+      const dot = document.getElementById("dot-core");
+      dot?.classList.add("dot-pulse");
+      setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
     }
 
     if (act === "function") callbacks.onFunction?.();
     if (act === "settings") callbacks.onSettings?.();
     if (act === "contacts") callbacks.onContacts?.();
-    if (act === "theme")    callbacks.onTheme?.(); // keep menu visible
+    if (act === "theme")    callbacks.onTheme?.();
   });
 
   return wrap;
