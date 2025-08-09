@@ -17,15 +17,12 @@ function sync(dot, state) {
   // reset classes and apply state class
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`, "dot-morph"); // morph tick
-  // remove morph after tick
+  dot.classList.add(`dot-${state}`, "dot-morph");
   setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
   const host = document.createElement("div");
-  // unified content swap anim
   host.className = "dot-content dot-swap-in";
 
-  // Глушим клики внутри только когда не idle
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
   switch (state) {
@@ -40,7 +37,6 @@ function sync(dot, state) {
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts")
       });
-      // stagger start on next frame
       queueMicrotask(() => menu.classList.add("is-live"));
       host.appendChild(menu);
       break;
@@ -61,8 +57,9 @@ function sync(dot, state) {
       host.appendChild(renderFunctions({ onBack: () => setState("menu") }));
       break;
 
-    case "theme":
-      // keep menu visible; pulse handled by Theme button
+    case "theme": {
+      // ВАЖНО: сохранить размеры меню при состоянии theme
+      dot.classList.add("dot-menu"); // доп.класс на хост, чтобы форма не схлопывалась
       const m = renderMenu({
         onFunction: () => setState("function"),
         onTheme:    () => setState("theme"),
@@ -72,6 +69,7 @@ function sync(dot, state) {
       queueMicrotask(() => m.classList.add("is-live"));
       host.appendChild(m);
       break;
+    }
   }
 
   mount(dot, host);
