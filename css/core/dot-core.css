@@ -11,12 +11,9 @@
   /* Вертикальное меню у края */
   --menu-vert-count:4;
   --menu-vert-btn-h:40px;
-
-  /* безоп. отступы, на случай iOS */
-  --safe-l: env(safe-area-inset-left, 0px);
-  --safe-r: env(safe-area-inset-right, 0px);
-  --safe-t: env(safe-area-inset-top, 0px);
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  --menu-vert-gap:6px;
+  --menu-vert-pad:8px;
+  --menu-vert-w: clamp(96px, calc(var(--dot-size) * 1.7), 240px);
 }
 
 /* host */
@@ -56,19 +53,9 @@
     0 0 32px color-mix(in oklab,var(--dot-fg),transparent 60%);
 }
 
-/* micro anims — БЕЗ изменения transform */
-#dot-core.dot-morph{ animation:dotMorphShadow 220ms cubic-bezier(.2,.8,.2,1) }
-/* раньше тут был dotMorph с translate(-50%,-50%), он и давал «прыжок» */
-@keyframes dotMorphShadow{
-  from{
-    box-shadow:var(--dot-shadow), 0 0 8px color-mix(in oklab,var(--dot-fg),transparent 70%);
-    opacity:.98
-  }
-  to{
-    box-shadow:var(--dot-shadow), var(--dot-glow);
-    opacity:1
-  }
-}
+/* micro anims */
+#dot-core.dot-morph{ animation:dotMorph 220ms cubic-bezier(.2,.8,.2,1) }
+@keyframes dotMorph{ from{ transform:translate(-50%,-50%) scale(.98) } to{ transform:translate(-50%,-50%) scale(1) } }
 
 #dot-core.dot-pulse{ animation:dotPulse 240ms ease-out }
 @keyframes dotPulse{
@@ -95,7 +82,7 @@
 /* вертикальный (док у края) */
 #dot-core.dot-menu.dot-vert,
 #dot-core.dot-theme.dot-vert{
-  width:64px;
+  width:var(--menu-vert-w);
   height: calc(
     var(--menu-vert-count) * var(--menu-vert-btn-h) +
     var(--menu-vert-btn-h)/3 +
@@ -103,7 +90,7 @@
     var(--menu-vert-gap)*(var(--menu-vert-count) - 1)
   );
   border-radius:18px;
-  padding:8px 6px;
+  padding:var(--menu-vert-pad);
   transform-origin: center center;
 }
 
@@ -157,49 +144,19 @@
 /* Когда точку двигаем или докнули — выключаем все переходы,
    чтобы не было «подпрыгиваний» при клампе/пересчётах */
 #dot-core.dot-free,
-#dot-core.dot-docked {
+#dot-core.dot-docked,
+#dot-core,
+#dot-core.dot-menu,
+#dot-core.dot-theme,
+#dot-core.dot-contacts,
+#dot-core.dot-settings,
+#dot-core.dot-vert {
   transition: none !important;      /* вырубаем все CSS-переходы */
-  animation: none !important;
+  animation: none !important;       /* вырубаем keyframe-анимации (morph/pulse) */
 }
 
 /* На всякий — внутренности тоже без анимаций/переходов */
 #dot-core * {
   transition: none !important;
-  animation: none !important;
-}
-
-/* Контент контейнер */
-.dot-content{
-  width:100%; height:100%;
-  display:grid; place-items:center;
-}
-
-/* -------- Вертикальное меню (у края) -------- */
-.is-vert .menu-grid{
-  display:grid;
-  grid-template-rows: repeat(var(--menu-vert-count), var(--menu-vert-btn-h));
-  grid-auto-flow: row;
-  gap: 8px;
-  align-content:start;
-  justify-items:stretch;
-}
-.is-vert .menu-btn{
-  height: var(--menu-vert-btn-h);
-}
-
-/* Focus ring для всей капсулы контактов (при focus-within) */
-#dot-core.dot-contacts:focus-within {
-  outline: 0;
-  box-shadow:
-    0 6px 22px rgba(0,0,0,.28),
-    0 0 0 4px color-mix(in oklab, var(--dot-fg), transparent 70%);
-}
-
-/* No-anim fallback для капсулы контактов */
-.dot-contacts-wrap {
-  opacity: 1 !important;
-  transform: none !important;
-}
-.dot-contacts-wrap.is-live {
   animation: none !important;
 }
