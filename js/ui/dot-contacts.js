@@ -1,57 +1,75 @@
+// js/services/contacts.js
+// Локальное мок‑хранилище контактов с persistence в localStorage.
+// Формат записи: { username: string, addedAt: number }
+
+const LS_KEY = "dot.contacts.v1";
 const RE_USERNAME = /^[a-z0-9_]{3,20}$/;
 
-export function renderContacts({ onBack } = {}) {
-  const root = document.createElement("div");
-  root.className = "dot-contacts-wrap";
+let CONTACTS = [];
 
-  const input = document.createElement("input");
-  input.className = "dot-contacts-input";
-  input.type = "text";
-  input.autocomplete = "off";
-  input.autocapitalize = "none";
-  input.spellcheck = false;
-  input.placeholder = "username";
-  input.setAttribute("aria-label", "Username");
-
-  const btnAdd = document.createElement("button");
-  btnAdd.type = "button";
-  btnAdd.className = "dot-contacts-add";
-  btnAdd.dataset.act = "add";
-  btnAdd.setAttribute("aria-label", "Add contact");
-  btnAdd.textContent = "➕";
-
-  root.append(input, btnAdd);
-
-  // валидация
-  function syncValidity() {
-    const v = input.value.trim().toLowerCase();
-    const ok = RE_USERNAME.test(v);
-    btnAdd.disabled = !ok;
-    root.dataset.valid = ok ? "1" : "0";
-  }
-  input.addEventListener("input", syncValidity);
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (!btnAdd.disabled) triggerAdd();
-    } else if (e.key === "Escape") {
-      input.blur();
-      if (typeof onBack === "function") onBack();
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        CONTACTS = arr
+          .filter(x => x && typeof x.username === "string")
+          .map(x => ({ username: String(x.username), addedAt: Number(x.addedAt) || Date.now() }));
+      }
     }
-  });
-  syncValidity();
+  } catch {}
+}
+function save() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(CONTACTS)); } catch {}
+}
 
-  btnAdd.addEventListener("click", triggerAdd);
+// простая шина событий для UI
+function emitChanged() {
+  window.dispatchEvent(new CustomEvent("dot:contacts-changed", { detail: { total: CONTACTS.length } }));
+}
 
-  function triggerAdd() {
-    const username = input.value.trim().toLowerCase();
-    if (!RE_USERNAME.test(username)) return;
-    console.log("[Contacts] add by username:", username);
-    btnAdd.disabled = true;
-    input.value = "";
-    syncValidity();
-    input.focus();
+export function initContactsStore() {
+  load();
+  // первичная инициализация — можно закинуть примеры, если пусто:
+  if (CONTACTS.length === 0) {
+    CONTACTS = [
+      { username: "alpha", addedAt: Date.now() - 86400000 * 2 },
+      { username: "bravo_dev", addedAt: Date.now() - 86400000 },
+    ];
+    save();
   }
+  emitChanged();
+}
 
-  return root;
+export function all() {
+  return [...CONTACTS].sort((a,b) => a.username.localeCompare(b.username));
+}
+
+export function search(prefix) {
+  const q = String(prefix || "").trim().toLowerCase();
+  if (!q) return all();
+  return all().filter(c => c.username.startsWith(q));
+}
+
+export function canAdd(username) {
+  const u = String(username || "").trim().toLowerCase();
+  return RE_USERNAME.test(u) && !CONTACTS.some(c => c.username === u);
+}
+
+export function add(username) {
+  const u = String(username || "").trim().toLowerCase();
+  if (!RE_USERNAME.test(u)) return false;
+  if (CONTACTS.some(c => c.username === u)) return false;
+  CONTACTS.push({ username: u, addedAt: Date.now() });
+  save(); emitChanged();
+  return true;
+}
+
+export function remove(username) {
+  const u = String(username || "").trim().toLowerCase();
+  const prevLen = CONTACTS.length;
+  CONTACTS = CONTACTS.filter(c => c.username !== u);
+  if (CONTACTS.length !== prevLen) { save(); emitChanged(); return true; }
+  return false;
 }
