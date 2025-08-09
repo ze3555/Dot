@@ -1,46 +1,31 @@
-// js/ui/dot-menu.js
-// Вертикальное меню без эмодзи. Четыре кнопки, клики отдаются через колбэки.
+// js/ui/dotMenu.js
+// Здесь только „Theme“ окно, потому что сами кнопки меню создаёт dot.js
+import { el } from "../core/dom.js";
+import { unmountMenu } from "./dot.js";
 
-export function renderMenu(callbacks = {}) {
-  const { onFunction, onTheme, onSettings, onContacts } = callbacks;
+let themePanel = null;
 
-  const wrap = document.createElement("div");
-  wrap.className = "dot-menu";
-  wrap.innerHTML = `
-    <button type="button" class="dot-menu__btn" data-act="function">Function</button>
-    <button type="button" class="dot-menu__btn" data-act="theme">Theme</button>
-    <button type="button" class="dot-menu__btn" data-act="settings">Settings</button>
-    <button type="button" class="dot-menu__btn" data-act="contacts">Contacts</button>
-  `;
-
-  // Делегирование кликов
-  wrap.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-act]");
+export function openTheme() {
+  unmountMenu();
+  if (themePanel) return;
+  themePanel = el("div", { class: "dot-panel dot-theme" }, [
+    el("h3", { class: "dot-panel-title" }, "Theme"),
+    el("div", { class: "dot-theme-row" }, [
+      el("button", { class: "dot-theme-btn", "data-theme":"light" }, "Light"),
+      el("button", { class: "dot-theme-btn", "data-theme":"dark" }, "Dark"),
+      el("button", { class: "dot-theme-btn", "data-theme":"system" }, "System"),
+    ])
+  ]);
+  document.body.append(themePanel);
+  themePanel.addEventListener("pointerdown", (e)=>e.stopPropagation());
+  themePanel.addEventListener("click", (e) => {
+    const btn = e.target.closest(".dot-theme-btn");
     if (!btn) return;
-    switch (btn.dataset.act) {
-      case "function": onFunction && onFunction(); break;
-      case "theme":    onTheme && onTheme();       break;
-      case "settings": onSettings && onSettings(); break;
-      case "contacts": onContacts && onContacts(); break;
-    }
+    const t = btn.getAttribute("data-theme");
+    document.documentElement.dataset.theme = t;
   });
+}
 
-  // Клавиатура
-  wrap.addEventListener("keydown", (e) => {
-    const items = Array.from(wrap.querySelectorAll(".dot-menu__btn"));
-    const idx = items.indexOf(document.activeElement);
-    if (e.key === "ArrowDown") { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
-    else if (e.key === "Home") { e.preventDefault(); items[0]?.focus(); }
-    else if (e.key === "End") { e.preventDefault(); items[items.length - 1]?.focus(); }
-    else if (e.key === "Enter" || e.key === " ") {
-      const el = document.activeElement;
-      if (el && el.matches(".dot-menu__btn")) el.click();
-    }
-  });
-
-  // Автофокус
-  queueMicrotask(() => wrap.querySelector(".dot-menu__btn")?.focus());
-
-  return wrap;
+export function closeTheme() {
+  if (themePanel) { themePanel.remove(); themePanel = null; }
 }
