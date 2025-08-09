@@ -1,0 +1,17 @@
+:root {
+  --dot-size: 64px;
+}
+
+.dot-core {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
