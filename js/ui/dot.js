@@ -24,168 +24,113 @@ const safeBottom = () => safeInt(getComputedStyle(document.documentElement).getP
 function readDockFlags(dot){
   return {
     docked: dot.classList.contains("dot-docked"),
-    left:   dot.classList.contains("dot-docked-left"),
-    right:  dot.classList.contains("dot-docked-right"),
+    leftDock: dot.classList.contains("dot-docked-left"),
+    rightDock: dot.classList.contains("dot-docked-right"),
   };
 }
-function reapplyDockFlags(dot, f){
-  if (!f.docked) return;
-  dot.classList.add("dot-docked");
-  dot.classList.toggle("dot-docked-left",  !!f.left && !f.right);
-  dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
+function applyDockFlags(dot, flags){
+  dot.classList.toggle("dot-docked", !!flags.docked);
+  dot.classList.toggle("dot-docked-left", !!flags.leftDock);
+  dot.classList.toggle("dot-docked-right", !!flags.rightDock);
 }
 
-/** Зафиксировать X к стороне дока (до монтирования контента) */
-function pinLeftByDock(dot){
-  if (!dot.classList.contains("dot-docked")) return;
-  const vw = window.innerWidth;
-  if (dot.classList.contains("dot-docked-right")) {
-    dot.style.left = `${Math.max(MARGIN + safeLeft(), vw - DOT_SIZE - MARGIN - safeRight())}px`;
-  } else if (dot.classList.contains("dot-docked-left")) {
-    dot.style.left = `${Math.max(MARGIN + safeLeft(), MARGIN + safeLeft())}px`;
-  }
-  dot.style.transform = "translate(0,0)";
-}
+/** Кламп по rect (чтобы не выходить за экран и safe areas) */
+function clampByRect(dot, margin = MARGIN) {
+  const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
-/** Жёсткий кламп по реальному прямоугольнику — никуда не выползает */
-function clampByRect(dot, margin = MARGIN){
-  // учитываем клавиатуру через visualViewport, если есть
-  const vv = window.visualViewport;
-  const vw = vv ? vv.width  : window.innerWidth;
-  const vh = vv ? vv.height : window.innerHeight;
+  const rect = dot.getBoundingClientRect();
 
-  const sl = safeLeft();
-  const sr = safeRight();
-  const st = safeTop();
-  const sb = safeBottom();
+  const leftMin = margin + safeLeft();
+  const leftMax = vw - margin - safeRight() - rect.width;
 
-  // учитывать sticky topbar/bottom-panel, чтобы DOT не оказывался под ними
-  let stickyTop = 0, stickyBottom = 0;
-  const topbar = document.getElementById("topbar");
-  if (topbar) {
-    const rTop = topbar.getBoundingClientRect();
-    stickyTop = Math.max(0, Math.round(rTop.height - st));
-  }
-  const bp = document.getElementById("bottom-panel");
-  if (bp) {
-    const rBot = bp.getBoundingClientRect();
-    stickyBottom = Math.max(0, Math.round(rBot.height - sb));
-  }
+  const topMin = margin + safeTop();
+  const topMax = vh - margin - safeBottom() - rect.height;
 
-  const r = dot.getBoundingClientRect();
+  let left = rect.left;
+  let top  = rect.top;
 
-  // горизонталь
-  const minLeft = margin + sl;
-  const maxLeft = vw - sr - r.width - margin;
-  let left = Math.min(Math.max(r.left, minLeft), Math.max(minLeft, maxLeft));
+  if (left < leftMin) left = leftMin;
+  if (left > leftMax) left = leftMax;
+  if (top  < topMin)  top  = topMin;
+  if (top  > topMax)  top  = topMax;
 
-  // вертикаль (+ sticky)
-  const minTop = margin + st + stickyTop;
-  const maxTop = vh - r.height - margin - sb - stickyBottom;
-  const clampedMaxTop = Math.max(minTop, maxTop);
-  let top = Math.min(Math.max(r.top, minTop), clampedMaxTop);
-
+  // переносим абсолютными координатами
   dot.style.left = `${Math.round(left)}px`;
   dot.style.top  = `${Math.round(top)}px`;
   dot.style.transform = "translate(0,0)";
 }
 
-/** ===== core render/sync ===== */
+/** Синхронизация классов по состоянию */
 function sync(dot, state){
-  closePopover();
-
-  // сохранить док-флаги до сброса классов
-  const dock = readDockFlags(dot);
-
-  // сброс + базовый стейт
-  dot.className = "";
-  dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`, "dot-morph");
-  setTimeout(() => dot.classList.remove("dot-morph"), 240);
-
-  // вернуть док-флаги
-  reapplyDockFlags(dot, dock);
-
-  const isRect     = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
-  const isMenuLike = (state === "menu" || state === "theme");
-
-  // theme визуально = menu
-  if (state === "theme") dot.classList.add("dot-menu");
-
-  // если у края — делаем меню/тему вертикальными и убираем dock-scale
-  if (isRect && dock.docked) {
-    dot.classList.add("dot-expanding");
-    if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
-    // зафиксировать X к стороне до монтирования
-    pinLeftByDock(dot);
-  } else {
-    dot.classList.remove("dot-expanding", "dot-vert");
+  dot.classList.remove("dot-menu", "dot-theme", "dot-contacts", "dot-settings", "dot-vert");
+  switch(state){
+    case "menu":
+      dot.classList.add("dot-menu");
+      break;
+    case "theme":
+      dot.classList.add("dot-theme");
+      break;
+    case "contacts":
+      dot.classList.add("dot-contacts");
+      break;
+    case "settings":
+      dot.classList.add("dot-settings");
+      break;
+    default:
+      // idle / function
+      break;
   }
-
-  // содержимое
-  const host = document.createElement("div");
-  host.className = "dot-content dot-swap-in";
-  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
-
-  switch (state){
-    case "idle": {
-      host.innerHTML = "";
-      break;
-    }
-    case "menu": {
-      const menu = renderMenu({
-        onTheme:    () => setState("theme"),
-        onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
-      });
-      if (dock.docked) menu.classList.add("is-vert");
-      host.appendChild(menu);
-      break;
-    }
-    case "theme": {
-      const menu = renderMenu({
-        onTheme:    () => setState("menu"),
-        onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
-      });
-      if (dock.docked) menu.classList.add("is-vert");
-      host.appendChild(menu);
-      break;
-    }
-    case "contacts": {
-      host.appendChild(renderContacts());
-      break;
-    }
-    case "settings": {
-      host.appendChild(renderSettings());
-      break;
-    }
-  }
-
-  // заменить содержимое
-  dot.innerHTML = "";
-  dot.appendChild(host);
-
-  // док-фикс после монтирования
-  if (isRect && dock.docked) {
-    pinLeftByDock(dot);
-  }
-
-  // финальный кламп
-  clampByRect(dot, MARGIN);
-  requestAnimationFrame(() => clampByRect(dot, MARGIN));
 }
 
-/** ===== public ===== */
+/** Содержимое внутри дота (меню/контакты/настройки) */
+function renderInner(state, onBack){
+  if (state === "menu") {
+    return renderMenu({
+      onFunction: () => setState("function"),
+      onTheme:    () => setState("theme"),
+      onSettings: () => setState("settings"),
+      onContacts: () => setState("contacts"),
+      onBack
+    });
+  }
+  if (state === "contacts") {
+    return renderContacts({ onBack });
+  }
+  if (state === "settings") {
+    return renderSettings({ onBack });
+  }
+  // theme → тут визуально форма, само применение темы в другом модуле (по клику из меню)
+  const p = document.createElement("div");
+  p.style.padding = "8px";
+  p.textContent = "Theme…";
+  return p;
+}
+
 export function initDot() {
   const dot = document.getElementById("dot-core");
-  if (!dot) throw new Error("#dot-core not found");
+  if (!dot) return;
 
-  /** Снимок позиции при выходе из idle → восстановление при возврате */
-  /** @type {{left:number, top:number, leftDock:boolean, rightDock:boolean} | null} */
+  // Внутренний контейнер
+  let host = dot.querySelector(".dot-host");
+  if (!host) {
+    host = document.createElement("div");
+    host.className = "dot-host";
+    dot.appendChild(host);
+  }
+
+  // Возврат в idle по клику вне (глобально)
+  document.addEventListener("click", (e) => {
+    if (!dot.contains(e.target)) {
+      closePopover();
+      setState("idle");
+    }
+  }, true);
+
+  // Память позиции при выходе из idle
   let lastIdlePos = null;
 
-  // --- подавление клампа вокруг фокуса/клавиатуры (ГЛОБАЛЬНО) ---
+  // Управление клампом при фокусе инпутов (моб. клавиатура)
   let suppressUntil = 0;
   let suppress = false;
   const SUPPRESS_AFTER_BLUR_MS = 550;
@@ -199,7 +144,7 @@ export function initDot() {
   dot.style.top = "50%";
 
   // синхронизация со стейтом
-  subscribe((state, prev) => {
+  subscribe(({ prev, next }) => {
     // перед уходом из idle — запомнить позицию (для возврата)
     if (prev === "idle") {
       const r = dot.getBoundingClientRect();
@@ -210,10 +155,10 @@ export function initDot() {
       };
     }
 
-    sync(dot, state);
+    sync(dot, next);
 
     // Возврат в idle — восстановить позицию
-    if (state === "idle" && lastIdlePos) {
+    if (next === "idle" && lastIdlePos) {
       dot.style.left = `${lastIdlePos.left}px`;
       dot.style.top  = `${lastIdlePos.top}px`;
       dot.style.transform = "translate(0,0)";
@@ -231,6 +176,14 @@ export function initDot() {
         safeClamp();
         requestAnimationFrame(safeClamp);
       });
+    }
+
+    // Контент внутри дота
+    host.textContent = "";
+    if (next !== "idle") {
+      const onBack = () => setState("menu");
+      const node = renderInner(next, onBack);
+      mount(host, node);
     }
   });
 
