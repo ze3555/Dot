@@ -49,8 +49,10 @@ function pinLeftByDock(dot){
 
 /** Жёсткий кламп по реальному прямоугольнику — никуда не выползает */
 function clampByRect(dot, margin = MARGIN){
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  // учитываем клавиатуру через visualViewport, если есть
+  const vv = window.visualViewport;
+  const vw = vv ? vv.width  : window.innerWidth;
+  const vh = vv ? vv.height : window.innerHeight;
 
   const sl = safeLeft();
   const sr = safeRight();
@@ -172,6 +174,14 @@ export function initDot() {
   /** @type {{left:number, top:number, leftDock:boolean, rightDock:boolean} | null} */
   let lastIdlePos = null;
 
+  // --- подавление клампа вокруг фокуса/клавиатуры ---
+  let suppressUntil = 0;
+  let suppress = false;
+  const SUPPRESS_AFTER_BLUR_MS = 550;
+  const now = () => performance.now();
+  const canClamp = () => !suppress && now() > suppressUntil;
+  const safeClamp = () => { if (canClamp()) clampByRect(dot, MARGIN); };
+
   // первый рендер
   sync(dot, getState());
 
@@ -202,17 +212,42 @@ export function initDot() {
       dot.classList.toggle("dot-docked", !!(lastIdlePos.leftDock || lastIdlePos.rightDock));
 
       // финальный кламп (если вьюпорт поменялся)
-      requestAnimationFrame(() => clampByRect(dot, MARGIN));
+      requestAnimationFrame(safeClamp);
       lastIdlePos = null;
     } else {
       // в остальных состояниях — обычный кламп после раскладки контента
       requestAnimationFrame(() => {
-        clampByRect(dot, MARGIN);
-        requestAnimationFrame(() => clampByRect(dot, MARGIN));
+        safeClamp();
+        requestAnimationFrame(safeClamp);
       });
     }
   });
 
   // клампить на ресайз (без реснапа — только удерживаем в экране)
-  window.addEventListener("resize", () => clampByRect(dot, MARGIN));
+  window.addEventListener("resize", safeClamp);
+  // визуальный вьюпорт (мобилки/клавиатура)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", safeClamp);
+    window.visualViewport.addEventListener("scroll", safeClamp);
+  }
+
+  // На фокус любого поля внутри DOT — глушим кламп
+  dot.addEventListener("focusin", (e) => {
+    const t = e.target;
+    if (!t) return;
+    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) {
+      suppress = true;
+    }
+  });
+
+  // После блюра — даём клавиатуре схлопнуться, затем кламп
+  dot.addEventListener("focusout", (e) => {
+    const t = e.target;
+    if (!t) return;
+    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) {
+      suppress = false;
+      suppressUntil = now() + SUPPRESS_AFTER_BLUR_MS;
+      setTimeout(() => { if (canClamp()) clampByRect(dot, MARGIN); }, SUPPRESS_AFTER_BLUR_MS + 16);
+    }
+  });
 }
