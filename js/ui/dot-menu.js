@@ -1,4 +1,8 @@
 import { toggleTheme } from "../services/theme.js";
+import { attachLongPress } from "../core/gestures.js";
+import { showPopover, closePopover } from "./dot-popover.js";
+import { renderThemeGallery } from "./theme-gallery.js";
+import { renderQuickTools } from "./quick-tools.js";
 
 export function renderMenu(callbacks) {
   const wrap = document.createElement("div");
@@ -10,6 +14,7 @@ export function renderMenu(callbacks) {
     <button type="button" data-act="contacts" aria-label="Contacts">Contacts</button>
   `;
 
+  // clicks
   wrap.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -17,7 +22,7 @@ export function renderMenu(callbacks) {
 
     if (act === "theme") {
       toggleTheme();
-      // short pulse on the Dot host
+      // pulse on host
       const dot = document.getElementById("dot-core");
       dot?.classList.add("dot-pulse");
       setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
@@ -27,6 +32,40 @@ export function renderMenu(callbacks) {
     if (act === "settings") callbacks.onSettings?.();
     if (act === "contacts") callbacks.onContacts?.();
     if (act === "theme")    callbacks.onTheme?.();
+  });
+
+  // long-press on Theme -> theme gallery
+  const btnTheme = wrap.querySelector('[data-act="theme"]');
+  attachLongPress(btnTheme, {
+    onLongPress: () => {
+      const content = renderThemeGallery({
+        onPicked: () => {
+          // маленький фидбек и закрытие
+          const dot = document.getElementById("dot-core");
+          dot?.classList.add("dot-pulse");
+          setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+          closePopover();
+        }
+      });
+      showPopover(content, { side: "top", offset: 12 });
+    }
+  });
+
+  // long-press on Function -> quick tools pop
+  const btnFunc = wrap.querySelector('[data-act="function"]');
+  attachLongPress(btnFunc, {
+    onLongPress: () => {
+      const content = renderQuickTools({
+        onPick: (key) => {
+          console.log("[QuickTool]", key);
+          closePopover();
+          // можно сразу открывать Function и переходить на Tools,
+          // но без бэкенда пока просто лог
+          callbacks.onFunction?.();
+        }
+      });
+      showPopover(content, { side: "top", offset: 12 });
+    }
   });
 
   return wrap;
