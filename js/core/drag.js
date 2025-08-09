@@ -1,243 +1,59 @@
 // js/core/drag.js
-import { getState, setState } from "./state.js";
+// Опциональный драг (включается в Settings → Fine‑Tune)
+import { getMovable, getAnchor, setAnchor } from "./state.js";
 
-/**
- * Drag DOT в idle + кламп в пределах экрана.
- * Фикс «езда со скроллом»: не слушаем visualViewport.scroll
- * и клампим только если действительно вышли за границы (EPS).
- */
-export function initDotDrag() {
-  const dot = document.getElementById("dot-core");
+export function initDotDrag(dot) {
   if (!dot) return;
+  let dragging = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
 
-  // ---- geometry/safe areas ----
-  const MARGIN = 8;
-  const DOT_SIZE = 64; // синхронизировано с CSS --dot-size
-  const EPS = 4;       // порог, чтобы не трогать позицию при микро-движениях вьюпорта
-
-  const safeInt = (v) => {
-    const n = parseInt(String(v || "0").trim(), 10);
-    return Number.isFinite(n) ? n : 0;
-  };
-  const safeLeft   = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-left)"));
-  const safeRight  = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-right)"));
-  const safeTop    = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)"));
-  const safeBottom = () => safeInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)"));
-
-  const vvRect = () => {
-    const vv = window.visualViewport;
-    return vv
-      ? { w: vv.width, h: vv.height }
-      : { w: window.innerWidth, h: window.innerHeight };
-  };
-
-  // ---- viewport memory to keep position stable on scroll URL-bar changes ----
-  let __lastVW = vvRect().w;
-  let __lastVH = vvRect().h;
-
-  const numPx = (v, fallback) => {
-    const n = parseFloat(String(v));
-    return Number.isFinite(n) ? n : fallback;
-  };
-
-  /**
-   * Корректируем позицию при изменении размеров вьюпорта:
-   *  - X: док слева/справа — оставляем у края; иначе — масштабируем пропорционально ширине
-   *  - Y: сохраняем зазор до БЛИЖАЙШЕГО края (top/bottom anchor), чтобы не тянуть к верху
-   */
-  function adjustForViewportDelta(prevVW, prevVH, vw, vh) {
-    try {
-      const r = dot.getBoundingClientRect();
-      const sl = safeLeft(), sr = safeRight(), st = safeTop(), sb = safeBottom();
-
-      let left = numPx(dot.style.left, r.left);
-      let top  = numPx(dot.style.top,  r.top);
-
-      // ---- X (горизонталь)
-      if (dot.classList.contains("dot-docked")) {
-        const dockRight = dot.classList.contains("dot-docked-right");
-        left = dockRight
-          ? Math.max(MARGIN + sl, vw - DOT_SIZE - MARGIN - sr)
-          : Math.max(MARGIN + sl, MARGIN + sl);
-      } else if (prevVW && vw && Math.abs(prevVW - vw) > 0.5) {
-        left = left * (vw / prevVW);
-      }
-
-      // ---- Y (вертикаль) — anchor к ближайшему краю
-      if (prevVH && vh && Math.abs(prevVH - vh) > 0.5) {
-        const topGapPrev    = r.top - (MARGIN + st);
-        const bottomGapPrev = (prevVH - (r.top + r.height)) - (MARGIN + sb);
-
-        const anchorTop = topGapPrev <= bottomGapPrev; // ближе к верху — держим верхний зазор, иначе нижний
-        if (anchorTop) {
-          const gap = Math.max(MARGIN + st, topGapPrev);
-          top = gap; // сохраняем прежний зазор сверху
-        } else {
-          const gap = Math.max(MARGIN + sb, bottomGapPrev);
-          top = vh - r.height - gap; // сохраняем прежний зазор снизу
-        }
-      }
-
-      dot.style.left = `${Math.round(left)}px`;
-      dot.style.top  = `${Math.round(top)}px`;
-      dot.style.transform = "translate(0,0)";
-    } catch (_) { /* noop */ }
-  }
-
-  function clampToViewport() {
-    const { w: vw, h: vh } = vvRect();
-    const sl = safeLeft(), sr = safeRight(), st = safeTop(), sb = safeBottom();
-
+  const clamp = (x, y) => {
+    const m = 8; // минимальные отступы
     const r = dot.getBoundingClientRect();
+    const W = document.documentElement.clientWidth;
+    const H = document.documentElement.clientHeight;
+    const nx = Math.min(W - r.width  - m, Math.max(m, x));
+    const ny = Math.min(H - r.height - m, Math.max(m, y));
+    return [nx, ny];
+  };
 
-    const minLeft = MARGIN + sl;
-    const maxLeft = Math.max(minLeft, vw - sr - r.width  - MARGIN);
-    const minTop  = MARGIN + st;
-    const maxTop  = Math.max(minTop,  vh - sb - r.height - MARGIN);
-
-    const needLeft = (r.left < (minLeft - EPS)) || (r.left > (maxLeft + EPS));
-    const needTop  = (r.top  < (minTop  - EPS)) || (r.top  > (maxTop  + EPS));
-    if (!needLeft && !needTop) return; // внутри окна — не трогаем
-
-    const curLeft = numPx(dot.style.left, r.left);
-    const curTop  = numPx(dot.style.top,  r.top);
-
-    const nextLeft = needLeft ? Math.min(Math.max(curLeft, minLeft), maxLeft) : curLeft;
-    const nextTop  = needTop  ? Math.min(Math.max(curTop,  minTop ), maxTop) : curTop;
-
-    dot.style.left = `${Math.round(nextLeft)}px`;
-    dot.style.top  = `${Math.round(nextTop)}px`;
-    dot.style.transform = "translate(0,0)";
-  }
-
-  // ---- drag state ----
-  let dragging = false;
-  let startX = 0, startY = 0;
-  let originLeft = 0, originTop = 0;
-  let moved = false;
-
-  function onPointerDown(e) {
-    if (getState() !== "idle") return;
-    if (e.button !== 0 && e.pointerType !== "touch") return;
-
-    const r = dot.getBoundingClientRect();
-    originLeft = numPx(dot.style.left, r.left);
-    originTop  = numPx(dot.style.top,  r.top);
-    startX = e.clientX;
-    startY = e.clientY;
+  const onDown = (e) => {
+    if (!getMovable()) return;
     dragging = true;
-    moved = false;
-
-    dot.setPointerCapture?.(e.pointerId);
-  }
-
-  function onPointerMove(e) {
+    const r = dot.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    baseX = r.left; baseY = r.top;
+    dot.setPointerCapture(e.pointerId);
+    dot.classList.add("dot-dragging");
+  };
+  const onMove = (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-
-    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
-
-    dot.style.left = `${originLeft + dx}px`;
-    dot.style.top  = `${originTop  + dy}px`;
-    dot.classList.add("dot-free");
-  }
-
-  function snapDock() {
-    if (getState() !== "idle") return;
-
-    const { w: vw } = vvRect();
-    const r = dot.getBoundingClientRect();
-    const centerX = r.left + r.width / 2;
-
-    if (document.body.classList.contains("dot-dock-off")) {
-      clampToViewport();
-      dot.classList.remove("dot-docked", "dot-docked-left", "dot-docked-right");
-      return;
-    }
-
-    const dockRight = centerX > vw / 2;
-    dot.classList.add("dot-docked");
-    dot.classList.toggle("dot-docked-left",  !dockRight);
-    dot.classList.toggle("dot-docked-right", dockRight);
-
-    const sl = safeLeft(), sr = safeRight();
-    const left = dockRight
-      ? Math.max(MARGIN + sl, vw - DOT_SIZE - MARGIN - sr)
-      : Math.max(MARGIN + sl, MARGIN + sl);
-
-    dot.style.left = `${Math.round(left)}px`;
-    dot.style.transform = "translate(0,0)";
-    clampToViewport();
-  }
-
-  function onPointerUp(e) {
+    let [nx, ny] = clamp(baseX + dx, baseY + dy);
+    dot.style.left = nx + "px";
+    dot.style.top  = ny + "px";
+    dot.style.right = "auto";
+    dot.style.bottom = "auto";
+  };
+  const onUp = (e) => {
     if (!dragging) return;
     dragging = false;
-
-    dot.classList.remove("dot-free");
-
-    if (moved) {
-      clampToViewport();
-      snapDock();
-    } else {
-      if (getState() === "idle" && dot.classList.contains("dot-docked")) {
-        setState("menu");
-        e.stopPropagation();
-      }
-    }
-
-    dot.releasePointerCapture?.(e.pointerId);
-  }
-
-  dot.addEventListener("pointerdown", onPointerDown, { passive: false });
-  window.addEventListener("pointermove", onPointerMove, { passive: true });
-  window.addEventListener("pointerup", onPointerUp, { passive: true });
-  window.addEventListener("pointercancel", onPointerUp, { passive: true });
-
-  // ---- suppress clamp around keyboard focus/blur (GLOBAL) ----
-  let suppress = false;
-  let suppressUntil = 0;
-  const SUPPRESS_AFTER_BLUR_MS = 550;
-  const now = () => performance.now();
-  const canClamp = () => !suppress && now() > suppressUntil;
-  const safeClamp = () => {
-    if (!canClamp()) return;
-    const prevVW = __lastVW, prevVH = __lastVH;
-    const { w: vw, h: vh } = vvRect();
-    if (vw !== prevVW || vh !== prevVH) {
-      adjustForViewportDelta(prevVW, prevVH, vw, vh);
-      __lastVW = vw; __lastVH = vh;
-    }
-    clampToViewport();
+    dot.releasePointerCapture(e.pointerId);
+    dot.classList.remove("dot-dragging");
+    const r = dot.getBoundingClientRect();
+    setAnchor(r.left, r.top);
   };
 
-  document.addEventListener("focusin", (e) => {
-    const t = e.target;
-    if (!t) return;
-    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || t.getAttribute?.("role") === "textbox") {
-      suppress = true;
-    }
-  }, true);
+  dot.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
 
-  document.addEventListener("focusout", (e) => {
-    const t = e.target;
-    if (!t) return;
-    if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || t.getAttribute?.("role") === "textbox") {
-      suppress = false;
-      suppressUntil = now() + SUPPRESS_AFTER_BLUR_MS;
-      setTimeout(() => { if (canClamp()) clampToViewport(); }, SUPPRESS_AFTER_BLUR_MS + 16);
-    }
-  }, true);
-
-  // ---- viewport changes (URL bar, orientation, keyboard) ----
-  window.addEventListener("resize", safeClamp);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", safeClamp);
-    // ВАЖНО: scroll не слушаем — иначе дот «ездит» вместе со скроллом
-    // window.visualViewport.addEventListener("scroll", safeClamp);
+  // применить сохранённый якорь (если есть)
+  const a = getAnchor();
+  if (Number.isFinite(a.x) && Number.isFinite(a.y)) {
+    dot.style.left = a.x + "px";
+    dot.style.top  = a.y + "px";
+    dot.style.right = "auto";
+    dot.style.bottom = "auto";
   }
-
-  // стартовый кламп
-  requestAnimationFrame(() => clampToViewport());
 }
