@@ -1,76 +1,122 @@
-/* Contacts capsule inside #dot-core when .dot-contacts is active */
+/* css/ui/dot-contacts.css
+   Контакты: капсула поиска + кнопка "добавить".
+   Цели:
+   - Инпут ЧЁТКО видим (не чёрный), контрастный в обеих темах.
+   - Плейсхолдер читаемый.
+   - Фокус‑ринг аккуратный, без дёрганий.
+   - iOS: font-size ≥16px, чтобы не было zoom on focus.
+*/
 
+/* Контейнер капсулы внутри #dot-core в состоянии .dot-contacts */
 .dot-contacts-wrap {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 8px;
+
+  /* Высота берём от контейнера DOT (капсула разворачивается по высоте DOT) */
   height: 100%;
-  opacity: 0; transform: translateY(4px);
-}
-.dot-contacts-wrap.is-live {
-  animation: contactIn .24s cubic-bezier(.2,.8,.2,1) both;
-}
-@keyframes contactIn {
-  from { opacity: 0; transform: translateY(4px) }
-  to   { opacity: 1; transform: translateY(0) }
+
+  /* Небольшой входной аппер */
+  opacity: 1;
+  transform: none;
 }
 
-/* Icon buttons */
-.dot-contacts-btn {
+/* Кнопки слева/справа (лупа и плюс) */
+.dot-contacts-btn,
+.dot-contacts-add {
+  -webkit-tap-highlight-color: transparent;
   appearance: none;
   border: 0;
-  background: transparent;
-  color: var(--dot-fg);
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  opacity: .9;
+  background: none;
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
-}
-.dot-contacts-btn:hover {
-  opacity: 1;
-  transform: translateY(-1px);
-  background: color-mix(in oklab, var(--dot-bg), white 8%);
-}
-.dot-contacts-btn:active { transform: translateY(0) scale(.98) }
 
-/* Input */
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+
+  display: inline-grid;
+  place-items: center;
+
+  color: var(--panel-fg, #111);
+  transition: background-color .18s cubic-bezier(.2,.8,.2,1),
+              color .18s cubic-bezier(.2,.8,.2,1),
+              box-shadow .18s cubic-bezier(.2,.8,.2,1);
+}
+
+.dot-contacts-btn:hover,
+.dot-contacts-add:hover {
+  background: color-mix(in oklab, var(--panel-fg, #111), transparent 92%);
+}
+
+.dot-contacts-add:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+/* Сам инпут (капсула) */
 .dot-contacts-input {
   width: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--dot-fg);
+  height: 40px;
+
+  /* iOS zoom fix */
   font-size: 16px;
-  line-height: 1.2;
-  padding: 6px 2px;
+  line-height: 20px;
+
+  padding: 10px 14px;
+  border-radius: 9999px;
+
+  /* Контрастные фон/текст из темы с фолбэками */
+  background: var(--panel-bg, #fff);
+  color: var(--panel-fg, #111);
+
+  /* Едва заметный бордер для отделения от фона */
+  border: 1px solid color-mix(in oklab, var(--panel-fg, #111), transparent 85%);
+
+  outline: none;
+  box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 0 0 0 transparent;
+  transition: box-shadow .18s cubic-bezier(.2,.8,.2,1),
+              border-color .18s cubic-bezier(.2,.8,.2,1),
+              background-color .18s cubic-bezier(.2,.8,.2,1),
+              color .18s cubic-bezier(.2,.8,.2,1);
+
+  /* Текстовая каретка контрастная */
+  caret-color: color-mix(in oklab, var(--panel-fg, #111), #4b8dff 40%);
 }
+
+/* Плейсхолдер читаемый */
 .dot-contacts-input::placeholder {
-  color: color-mix(in oklab, var(--dot-fg), transparent 60%);
+  color: color-mix(in oklab, var(--panel-fg, #111), transparent 55%);
+  opacity: 1; /* Safari */
 }
 
-/* Add button enabled/disabled */
-.dot-contacts-btn[data-act="add"][disabled] {
-  opacity: .45;
-  pointer-events: none;
+/* Фокус на самом инпуте — тонкий и аккуратный */
+.dot-contacts-input:focus {
+  border-color: color-mix(in oklab, var(--panel-fg, #111), transparent 70%);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--panel-fg, #111), transparent 80%);
 }
 
-/* Focus ring for the whole capsule */
+/* Фокус‑кольцо для всей капсулы (если нужно подсветить блок целиком) */
 #dot-core.dot-contacts:focus-within {
   outline: 0;
   box-shadow:
-    0 6px 22px rgba(0,0,0,.28),
-    0 0 0 4px color-mix(in oklab, var(--dot-fg), transparent 70%);
+    0 6px 22px rgba(0,0,0,.20),
+    0 0 0 4px color-mix(in oklab, var(--panel-fg, #111), transparent 80%);
+  border-radius: 16px; /* сгладить общий блок DOT на время фокуса */
 }
-/* No-anim fallback для капсулы контактов */
-.dot-contacts-wrap {
-  opacity: 1 !important;
-  transform: none !important;
+
+/* Тёмная тема: гарантируем контраст, если переменные не заданы */
+body.theme-dark .dot-contacts-input {
+  background: var(--panel-bg, #161616);
+  color: var(--panel-fg, #f5f5f5);
+  border-color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 80%);
 }
-.dot-contacts-wrap.is-live {
-  animation: none !important;
+
+body.theme-dark .dot-contacts-input::placeholder {
+  color: color-mix(in oklab, var(--panel-fg, #f5f5f5), transparent 55%);
 }
+
+/* Анимации входа/выхода — убраны, чтобы не было «езда» по вертикали
+   (синхронизировано с недавними правками drag/clamp) */
+.dot-contacts-wrap.is-live { animation: none; }
