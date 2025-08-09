@@ -1,1 +1,9 @@
-
+@import url('./core/dot-core.css');
+@import url('./layout/main.css');
+@import url('./layout/topbar.css');
+@import url('./theme/light-dark.css');
+@import url('./ui/bottom-panel.css');
+@import url('./ui/dot-contacts.css');
+@import url('./ui/dot-menu.css');
+@import url('./ui/dot-popover.css');
+@import url('./ui/dot-settings.css');
