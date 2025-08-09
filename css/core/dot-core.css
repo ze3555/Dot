@@ -108,3 +108,10 @@
     0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%); /* мягче glow */
 }
 #dot-core.dot-docked.dot-expanding{ transform:translate(0,0) scale(1); opacity:1 }
+/* ...остальной файл без изменений... */
+
+/* host (центр по умолчанию) */
+#dot-core {
+  /* ...твои свойства... */
+  box-sizing: border-box; /* <<< чтобы ширина учитывала padding/border и не вылезала на iOS */
+}
