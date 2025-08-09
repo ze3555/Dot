@@ -1,5 +1,7 @@
 /* Lightweight popover anchored to the Dot */
 
+/* Lightweight popover anchored to the Dot */
+
 .dot-popover {
   position: fixed;
   min-width: 220px;
@@ -10,10 +12,9 @@
   border-radius: 12px;
   box-shadow: 0 12px 36px rgba(0,0,0,.35);
   padding: 10px;
-  z-index: 1001;
-  opacity: 0;
-  transform: translateY(6px);
-  animation: dotPopIn .18s cubic-bezier(.2,.8,.2,1) forwards;
+  z-index: 1003;
+
+  /* остальные стили без изменений ... */
 }
 @keyframes dotPopIn { to { opacity: 1; transform: none } }
 
