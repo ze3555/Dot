@@ -29,12 +29,15 @@ body {
 
 /* Center DOT within main-content */
 #main-content { position: relative; }
+/* css/index.css — ПОДМЕНИТЬ ТОЛЬКО ЭТОТ БЛОК */
 #dot-core {
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10;
+  z-index: 2001;            /* было 10 — теперь выше topbar/bottom-panel */
+  pointer-events: auto;     /* на всякий */
+  touch-action: none;       /* чтобы drag не перехватывал скролл */
 }
 
 /* Messages area placeholder */
