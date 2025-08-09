@@ -68,4 +68,3 @@ export function initMessagesView() {
 
 // автоинициализация для модульного подключения
 document.addEventListener("DOMContentLoaded", initMessagesView);
-// Placeholder: future virtualized list, scroll management, etc.
