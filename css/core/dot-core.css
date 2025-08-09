@@ -1,284 +1,65 @@
-/* css/core/dot-core.css */
-/* DOT — круг, цвет и фон синхронно = currentColor.
-   JS выставляет currentColor (и background) в зависимости от фона под Дотом. */
-
-.dot-core {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: inline-grid;
-  place-items: center;
-  position: relative; /* в drag/expand переводим во fixed */
-  user-select: none;
-  cursor: pointer;
-
-  /* ВАЖНО: по умолчанию фон = currentColor, чтобы без JS не был «дыркой» */
-  background: currentColor;
-  border: none;
-
-  transition:
-    transform .12s ease,
-    box-shadow .12s ease,
-    background-color .12s ease,
-    color .12s ease,
-    border-color .12s ease;
-}
-
-.dot-core.pressed { transform: scale(0.98); }
-.dot-core.is-dragging { cursor: grabbing; box-shadow: 0 8px 20px rgba(0,0,0,.20); }
-
-.top-bar .dot-core { margin-left: 8px; }
-/* === Docked Dot near chat input (Send mode) ===
-   Включается при наличии класса body.dot-dock (добавит JS на focus/blur) */
-body.dot-dock .dot-core {
-  position: fixed;                /* отрываем от топ-бара */
-  z-index: 1101;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;            /* кнопка-капсула */
-  box-shadow: 0 6px 16px rgba(0,0,0,.18);
-
-  /* Визуально как кнопка отправки из темы */
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
-
-  /* Позиционирование: у правого края формы.
-     На десктопе — выравниваемся по max-width формы,
-     на мобиле — переопределим ниже на фиксированный отступ. */
-  right: calc(max(10px, (100vw - var(--chat-form-max-w)) / 2) + 12px);
-  bottom: calc(env(safe-area-inset-bottom) + var(--composer-pad-y, 8px) + (var(--chat-input-h) / 2) - 20px);
-
+/* DOT shape + states (circle → rect → capsule → square) */
+#dot-core {
   display: grid;
   place-items: center;
-
+  width: var(--dot-size);
+  height: var(--dot-size);
+  background: var(--dot-bg);
+  color: var(--dot-fg);
+  border-radius: var(--dot-radius);
+  box-shadow: var(--dot-shadow);
   transition:
-    right .20s cubic-bezier(.2,.8,.2,1),
-    bottom .20s cubic-bezier(.2,.8,.2,1),
-    transform .20s cubic-bezier(.2,.8,.2,1),
-    background-color .12s ease,
-    color .12s ease,
-    box-shadow .12s ease;
+    width var(--transition-med),
+    height var(--transition-med),
+    border-radius var(--transition-med),
+    transform var(--transition-med),
+    background var(--transition-fast),
+    color var(--transition-fast);
+  overflow: hidden;
 }
 
-/* На узких экранах привязываемся к краю вьюпорта */
-@media (max-width: 860px) {
-  body.dot-dock .dot-core { right: 14px; }
+/* idle: circle */
+#dot-core.dot-idle {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 999px;
 }
 
-/* Скрываем внутренности Дота и рисуем paper-plane иконку из currentColor */
-body.dot-dock .dot-core > * { display: none; }
-body.dot-dock .dot-core::after {
-  content: "";
-  width: 18px; height: 18px;
-  display: block;
-  background: var(--btn-fg);
-  -webkit-mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
-          mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
+/* menu: rounded rectangle (panel for 4 buttons) */
+#dot-core.dot-menu {
+  width: min(92vw, 560px);
+  height: 72px;
+  border-radius: 18px;
+  padding: 8px;
 }
 
-/* Тач-фидбек */
-body.dot-dock .dot-core:active { transform: scale(.98); }
-
-/* Reduce motion уважение */
-@media (prefers-reduced-motion: reduce) {
-  body.dot-dock .dot-core { transition: none; }
+/* contacts: capsule (search bar) */
+#dot-core.dot-contacts {
+  width: min(94vw, 640px);
+  height: 56px;
+  border-radius: 999px;
+  padding: 6px 10px;
 }
-/* === Docked Dot near chat input (Send mode) ===
-   Активируется, когда <body> имеет класс .dot-dock (добавит JS на focus/blur).
-   Специально НЕ трогаем ваши drag/expand стили, только режим "кнопки". */
-body.dot-dock .dot-core {
-  position: fixed;                 /* отрываем от топ-бара */
-  z-index: 1101;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0,0,0,.18);
 
-  /* Визуально как кнопка отправки из темы (если JS не задаёт inline — применится) */
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
+/* settings / function: square ~50vh */
+#dot-core.dot-settings,
+#dot-core.dot-function {
+  width: min(92vw, 560px);
+  height: min(50vh, 520px);
+  border-radius: 16px;
+  padding: 12px;
+}
 
-  /* Выравнивание справа от формы:
-     — на десктопе: по max-width формы;
-     — на мобиле ниже переопределим на фиксированный отступ. */
-  right: calc(max(12px, (100vw - var(--chat-form-max-w, 720px)) / 2) + 8px);
-  bottom: calc(env(safe-area-inset-bottom) + 8px + (var(--composer-h) / 2) - 20px);
-
+/* inner content host */
+.dot-content {
+  width: 100%;
+  height: 100%;
   display: grid;
-  place-items: center;
-
-  transition:
-    right .20s cubic-bezier(.2,.8,.2,1),
-    bottom .20s cubic-bezier(.2,.8,.2,1),
-    transform .12s ease,
-    background-color .12s ease,
-    color .12s ease,
-    box-shadow .12s ease;
+  align-items: center;
 }
 
-/* На узких экранах — просто прижимаем к правому краю */
-@media (max-width: 860px) {
-  body.dot-dock .dot-core { right: 14px; }
+/* simple fade for internal swaps */
+.dot-fade-in {
+  animation: dotFade .18s ease both;
 }
-
-/* Скрываем содержимое Дота и показываем paper-plane иконку */
-body.dot-dock .dot-core > * { display: none; }
-body.dot-dock .dot-core::after {
-  content: "";
-  width: 18px; height: 18px;
-  display: block;
-  background: var(--btn-fg);
-  -webkit-mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
-          mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M3 11.5L21 3 12.5 21l-2.4-7.1L3 11.5zM14 10l-3.2 2 .9 2.6L14 10z' fill='black'/></svg>") no-repeat center / contain;
-}
-
-/* Тактильная отдача */
-body.dot-dock .dot-core:active { transform: scale(.98); }
-
-/* Reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  body.dot-dock .dot-core { transition: none; }
-}
-/* === DOT: soft glow / visibility ring === */
-/* Базовый мягкий свет + тонкий контур для читаемости на любых фонах */
-.dot-core {
-  /* три слоя: окружающая тень, светящийся ореол, тонкий контур */
-  box-shadow:
-    0 8px 22px rgba(0,0,0,.28),
-    0 0 14px color-mix(in oklab, currentColor 32%, transparent),
-    0 0 0 1px rgba(255,255,255,.06);
-}
-
-/* Ховер/фокус — немного сильнее, чтобы показывать интерактивность */
-.dot-core:hover,
-.dot-core:focus-visible {
-  box-shadow:
-    0 10px 26px rgba(0,0,0,.32),
-    0 0 18px color-mix(in oklab, currentColor 45%, transparent),
-    0 0 0 1px rgba(255,255,255,.10);
-}
-
-/* Док у поля ввода (Send) — подчёркиваем как кнопку */
-body.dot-dock .dot-core {
-  box-shadow:
-    0 10px 24px rgba(0,0,0,.28),
-    0 0 18px color-mix(in oklab, currentColor 42%, transparent),
-    0 0 0 1px rgba(255,255,255,.08);
-}
-
-/* Раскрытый Дот (меню) — ещё чуть ярче, чтобы «держал» внимание */
-.dot-core.dot-expanded,
-.dot-expanded .dot-core {
-  box-shadow:
-    0 14px 30px rgba(0,0,0,.36),
-    0 0 22px color-mix(in oklab, currentColor 55%, transparent),
-    0 0 0 1px rgba(255,255,255,.10);
-}
-
-/* Во время перетаскивания — без скачков, но свет оставляем */
-body.dragging-dotcore .dot-core {
-  transition: none;
-}
-/* === Дот как кнопка Send при фокусе === */
-body.dot-dock .dot-core{
-  position: fixed;
-  z-index: 11020;
-  width: 42px; height: 42px;
-  border-radius: 14px;
-  right: calc(max(14px, (100vw - var(--composer-max-w, 740px)) / 2));
-  bottom: calc(env(safe-area-inset-bottom) + 12px + ((var(--composer-h) - 42px)/2));
-  display: grid; place-items: center;
-
-  /* кнопочный вид + glow (из прошлой правки) */
-  background: var(--btn-bg, #111);
-  color: var(--btn-fg, #fff);
-  border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
-}
-
-/* Иконка «paper plane» */
-body.dot-dock .dot-core > *{ display:none; }
-body.dot-dock .dot-core::after{
-  content:"";
-  width: 18px; height: 18px; display:block; background: currentColor;
-  -webkit-mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
-          mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
-}
-
-/* Состояние: нет текста → «неактивна» (приглушаем) */
-body.dot-dock:not(.dot-send-ready) .dot-core{
-  opacity: .4;
-  pointer-events: auto; /* тап делает focus на поле */
-}
-
-/* Док на узких экранах: прижимаем к правому краю */
-@media (max-width: 860px){
-  body.dot-dock .dot-core{ right: 14px; }
-}
-/* === DOT: soft glow / visibility ring === */
-.dot-core{
-  box-shadow:
-    0 8px 22px rgba(0,0,0,.28),
-    0 0 14px color-mix(in oklab, currentColor 32%, transparent),
-    0 0 0 1px rgba(255,255,255,.06);
-}
-.dot-core:hover,
-.dot-core:focus-visible{
-  box-shadow:
-    0 10px 26px rgba(0,0,0,.32),
-    0 0 18px color-mix(in oklab, currentColor 45%, transparent),
-    0 0 0 1px rgba(255,255,255,.10);
-}
-
-/* === Дот докается к инпуту и становится кнопкой Send === */
-body.dot-dock .dot-core{
-  position: fixed;
-  z-index: 11020;
-  width: 42px; height: 42px;
-  border-radius: 14px;
-  right: calc(max(14px, (100vw - var(--composer-max-w, 740px)) / 2));
-  bottom: calc(env(safe-area-inset-bottom) + 12px + ((var(--composer-h, 52px) - 42px)/2));
-  display: grid; place-items: center;
-
-  background: var(--btn-bg, #111);
-  color: var(--btn-fg, #fff);
-  border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
-
-  box-shadow:
-    0 10px 24px rgba(0,0,0,.28),
-    0 0 18px color-mix(in oklab, currentColor 42%, transparent),
-    0 0 0 1px rgba(255,255,255,.08);
-}
-/* иконка paper-plane */
-body.dot-dock .dot-core > *{ display:none; }
-body.dot-dock .dot-core::after{
-  content:"";
-  width: 18px; height: 18px; display:block; background: currentColor;
-  -webkit-mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
-          mask: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M2.5 11.5 21 3 12.5 21l-2.5-7.3L2.5 11.5zm8.6 3.1L14.2 10 9.9 12.6l1.2 2z' fill='black'/></svg>") no-repeat center / contain;
-}
-
-/* пустое поле → кнопка приглушена */
-body.dot-dock:not(.dot-send-ready) .dot-core{ opacity: .4; }
-
-/* мобила: прижать к правому краю */
-@media (max-width: 860px){
-  body.dot-dock .dot-core{ right: 14px; }
-}
+@keyframes dotFade { from {opacity:0; transform: translateY(4px)} to {opacity:1; transform:none} }
