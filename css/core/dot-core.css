@@ -1,5 +1,22 @@
 /* DOT shape + states (circle → rect → capsule → square) */
+:root {
+  --dot-size: 64px;
+  --dot-radius: 999px;
+  --dot-bg: var(--surface-2, #151515);
+  --dot-fg: var(--text, #fff);
+  --dot-shadow: 0 8px 24px rgba(0,0,0,.25);
+  --transition-fast: 150ms ease;
+  --transition-med: 240ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* host */
 #dot-core {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%); /* центр между панелями; можно потом скорректить формулой */
+  z-index: 10;
+
   display: grid;
   place-items: center;
   width: var(--dot-size);
@@ -16,6 +33,7 @@
     background var(--transition-fast),
     color var(--transition-fast);
   overflow: hidden;
+  cursor: pointer; /* idle clickable */
 }
 
 /* idle: circle */
@@ -31,6 +49,7 @@
   height: 72px;
   border-radius: 18px;
   padding: 8px;
+  cursor: default;
 }
 
 /* contacts: capsule (search bar) */
