@@ -1,0 +1,33 @@
+:root { --dot-size: 64px; }
+
+.dot-core {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: color-mix(in oklab, Canvas 40%, transparent);
+  border: 1px solid color-mix(in oklab, #000 15%, Canvas 85%);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+/* menu & buttons */
+.dot-menu {
+  position: fixed;
+  display: grid;
+  gap: 8px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 8px;
+  border-radius: 14px;
+  background: color-mix(in oklab, Canvas 98%, #000 2%);
+}
+
+.dot-btn {
+  min-width: 140px;
+  height: 40px;
+  border-radius: 10px;
+}
