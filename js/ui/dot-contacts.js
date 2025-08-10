@@ -35,9 +35,8 @@ export function renderContacts({ onBack } = {}) {
 
   root.addEventListener("click", (e) => e.stopPropagation());
 
-  // live entrance + autofocus
+  // autofocus без «входной» анимации
   queueMicrotask(() => {
-    root.classList.add("is-live");
     input.focus();
   });
 
