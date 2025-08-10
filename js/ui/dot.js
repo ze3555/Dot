@@ -1,97 +1,70 @@
-import { getState } from "./state.js";
+import { mount } from "../core/dom.js";
+import { getState, setState, subscribe } from "../core/state.js";
+import { renderMenu } from "./dot-menu.js";
+import { renderContacts } from "./dot-contacts.js";
+import { renderSettings } from "./dot-settings.js";
+import { closePopover } from "./dot-popover.js";
 
-/**
- * Enable dragging the Dot in IDLE.
- * Док полностью убран: при отпускании — возврат в центр.
- */
-export function initDotDrag() {
+export function initDot() {
   const dot = document.getElementById("dot-core");
-  if (!dot) return;
+  if (!dot) throw new Error("#dot-core not found");
+  sync(dot, getState());
+  subscribe(({ next }) => sync(dot, next));
+}
 
-  let dragging = false;
-  let startX = 0, startY = 0;
-  let originLeft = 0, originTop = 0;
-  let moved = false;
+function sync(dot, state) {
+  closePopover();
 
-  let suppressClickOnce = false;
+  // Базовые классы состояния (без док-флагов)
+  dot.className = "";
+  dot.id = "dot-core";
+  dot.classList.add(`dot-${state}`, "dot-morph");
+  setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
-  const getDotRect = () => dot.getBoundingClientRect();
+  // theme визуально = menu
+  if (state === "theme") dot.classList.add("dot-menu");
 
-  const enterFree = () => {
-    dot.classList.add("dot-free");
-    const r = getDotRect();
-    dot.style.left = `${r.left}px`;
-    dot.style.top = `${r.top}px`;
-    dot.style.transform = "translate(0,0)";
-  };
+  // Контейнер контента
+  const host = document.createElement("div");
+  host.className = "dot-content dot-swap-in";
+  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
-  const returnToCenter = () => {
-    dot.classList.remove("dot-free");
-    dot.style.left = "";
-    dot.style.top = "";
-    dot.style.transform = "translate(-50%, -50%)";
-  };
-
-  dot.addEventListener("pointerdown", (e) => {
-    if (getState() !== "idle") return;
-    if (document.body.classList.contains("dot-drag-off")) return;
-
-    dragging = true;
-    moved = false;
-    suppressClickOnce = false;
-
-    dot.setPointerCapture(e.pointerId);
-
-    const r = getDotRect();
-    startX = e.clientX;
-    startY = e.clientY;
-    originLeft = r.left;
-    originTop  = r.top;
-
-    enterFree();
-    e.stopPropagation();
-  });
-
-  dot.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-
-    dot.style.left = `${originLeft + dx}px`;
-    dot.style.top  = `${originTop + dy}px`;
-  });
-
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    dot.releasePointerCapture(e.pointerId);
-
-    if (moved) {
-      suppressClickOnce = true;
-      // Док убран — всегда возвращаемся в центр.
-      returnToCenter();
+  switch (state) {
+    case "idle": {
+      host.innerHTML = "";
+      break;
     }
-  };
-
-  dot.addEventListener("pointerup", endDrag);
-  dot.addEventListener("pointercancel", endDrag);
-
-  dot.addEventListener("click", (e) => {
-    if (suppressClickOnce) {
-      e.stopPropagation();
-      suppressClickOnce = false;
+    case "menu": {
+      const menu = renderMenu({
+        onTheme:    () => setState("theme"),
+        onSettings: () => setState("settings"),
+        onContacts: () => setState("contacts"),
+      });
+      host.appendChild(menu);
+      queueMicrotask(() => menu.classList.add("is-live"));
+      break;
     }
-  });
-
-  window.addEventListener("resize", () => {
-    if (dot.classList.contains("dot-free")) {
-      const r = getDotRect();
-      const vw = window.innerWidth, vh = window.innerHeight;
-      const x = Math.max(8, Math.min(r.left, vw - r.width - 8));
-      const y = Math.max(8, Math.min(r.top,  vh - r.height - 8));
-      dot.style.left = `${x}px`;
-      dot.style.top  = `${y}px`;
+    case "contacts": {
+      const c = renderContacts({ onBack: () => setState("menu") });
+      host.appendChild(c);
+      queueMicrotask(() => c.classList.add("is-live"));
+      break;
     }
-  });
+    case "settings": {
+      host.appendChild(renderSettings({ onBack: () => setState("menu") }));
+      break;
+    }
+    case "theme": {
+      const m = renderMenu({
+        onTheme:    () => setState("theme"),
+        onSettings: () => setState("settings"),
+        onContacts: () => setState("contacts"),
+      });
+      host.appendChild(m);
+      queueMicrotask(() => m.classList.add("is-live"));
+      break;
+    }
+  }
+
+  mount(dot, host);
 }
