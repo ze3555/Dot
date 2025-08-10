@@ -1,85 +1,56 @@
-// js/ui/fine-tune-popover.js
-const KEY = "dot.prefs";
-const DEFAULTS = { drag: true };
+import { getState, setState } from "./state.js";
 
-function loadPrefs() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
-  } catch { return { ...DEFAULTS }; }
+/** Вешает long-press на элемент */
+export function attachLongPress(el, { threshold = 360, onLongPress }) {
+  let pressed = false, moved = false, id = null;
+
+  const clear = () => {
+    pressed = false; moved = false;
+    if (id) { clearTimeout(id); id = null; }
+    document.body.classList.remove("no-select");
+  };
+
+  el.addEventListener("pointerdown", (e) => {
+    document.body.classList.add("no-select"); // временно запрещаем выделение
+    pressed = true; moved = false;
+    id = setTimeout(() => { if (pressed && !moved) onLongPress(e); }, threshold);
+    e.preventDefault();
+  });
+
+  el.addEventListener("pointermove", (e) => {
+    if (!pressed) return;
+    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 4) moved = true;
+  });
+
+  ["pointerup","pointercancel","pointerleave"].forEach(evt =>
+    el.addEventListener(evt, clear)
+  );
+
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
 }
-function savePrefs(p) {
-  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch {}
-}
-function applyPrefs(p) {
-  document.body.classList.toggle("dot-drag-off", !p.drag);
-}
 
-export function renderFineTunePopover() {
-  let prefs = loadPrefs();
-  applyPrefs(prefs);
+export function initGestures() {
+  const dot = document.getElementById("dot-core");
+  if (!dot) return;
 
-  const wrap = document.createElement("div");
-  wrap.className = "dot-popover__grid";
+  let startedInside = false;
+  document.addEventListener("pointerdown", (e) => {
+    startedInside = dot.contains(e.target);
+  }, { capture: true });
 
-  wrap.append(makeSwitch("Drag", "Enable Dot dragging.", "drag"));
+  document.addEventListener("click", () => {
+    if (!startedInside) setState("idle");
+    startedInside = false;
+  }, { capture: true });
 
-  return wrap;
+  dot.addEventListener("click", (e) => {
+    if (getState() === "idle") {
+      e.stopPropagation();
+      setState("menu");
+    }
+  });
 
-  function makeSwitch(title, subtitle, key) {
-    const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "1fr auto";
-    row.style.alignItems = "center";
-    row.style.gap = "8px";
-
-    const label = document.createElement("div");
-    label.innerHTML = `<strong>${title}</strong><br><small style="opacity:.75">${subtitle}</small>`;
-
-    const toggle = document.createElement("div");
-    toggle.style.width = "44px";
-    toggle.style.height = "26px";
-    toggle.style.borderRadius = "13px";
-    toggle.style.background = "color-mix(in oklab, var(--dot-fg,#fff), transparent 85%)";
-    toggle.style.position = "relative";
-    toggle.style.cursor = "pointer";
-    toggle.setAttribute("role", "switch");
-    toggle.tabIndex = 0;
-
-    const knob = document.createElement("div");
-    knob.style.position = "absolute";
-    knob.style.top = "3px";
-    knob.style.left = "3px";
-    knob.style.width = "20px";
-    knob.style.height = "20px";
-    knob.style.borderRadius = "999px";
-    knob.style.background = "var(--dot-fg,#fff)";
-    knob.style.transition = "transform 160ms ease";
-    toggle.append(knob);
-
-    const sync = () => {
-      const on = !!prefs[key];
-      toggle.setAttribute("aria-checked", String(on));
-      toggle.style.background = on
-        ? "color-mix(in oklab, var(--dot-fg,#fff), transparent 55%)"
-        : "color-mix(in oklab, var(--dot-fg,#fff), transparent 85%)";
-      knob.style.transform = on ? "translateX(18px)" : "translateX(0)";
-    };
-
-    const flip = () => {
-      prefs = { ...prefs, [key]: !prefs[key] };
-      savePrefs(prefs);
-      applyPrefs(prefs);
-      sync();
-    };
-
-    toggle.addEventListener("click", flip);
-    toggle.addEventListener("keydown", (e) => {
-      if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
-    });
-
-    sync();
-    row.append(label, toggle);
-    return row;
-  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setState("idle");
+  }, { passive: true });
 }
