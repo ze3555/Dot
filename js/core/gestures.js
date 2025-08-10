@@ -1,16 +1,18 @@
 // js/core/gestures.js
-// Жесты DOT: tap по DOT -> menu, tap вне -> idle, Esc -> idle.
-// Игнорирует клики внутри .fine-tune-popover. Поддерживает подавление клика после драга.
+// Tap DOT -> open menu (from idle)
+// Tap outside -> idle
+// Esc -> idle
+// Inside .fine-tune-popover clicks are ignored by outside-closer.
 
 import { getState, setState } from "./state.js";
 
 export function initGestures() {
   const dot = document.getElementById("dot-core");
-  if (!dot) { console.warn("[DOT] #dot-core not found in initGestures"); return; }
+  if (!dot) return;
 
   // Открыть меню по клику на DOT (только из idle)
   dot.addEventListener("click", (e) => {
-    // Если драг поставил флаг подавления — гасим ровно один клик
+    // Подавление одиночного клика после драга
     if (dot.dataset.suppressClick === "1") {
       dot.dataset.suppressClick = "";
       e.stopPropagation();
@@ -20,7 +22,10 @@ export function initGestures() {
     if (getState() === "idle") setState("menu");
   });
 
-  // Клик/тап вне DOT — закрыть (но не если внутри fine-tune поповера)
+  // Не считать нажатия внутри DOT «внешними»
+  dot.addEventListener("pointerdown", (e) => e.stopPropagation(), { capture: true });
+
+  // Outside click -> idle (но игнорим клики внутри fine-tune)
   document.addEventListener("pointerdown", (e) => {
     const t = e.target;
     if (t.closest("#dot-core")) return;
@@ -35,9 +40,6 @@ export function initGestures() {
       setState("idle");
     }
   });
-
-  // Не считаем нажатия внутри DOT «внешними»
-  dot.addEventListener("pointerdown", (e) => e.stopPropagation());
 }
 
 export default initGestures;
