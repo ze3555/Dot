@@ -16,7 +16,9 @@ export function initDot() {
 const DOT_SIZE = 64; // должен совпадать с --dot-size
 const MARGIN = 16;   // отступ от краёв по X при доке
 
-/* Помощники */
+/* Helpers */
+const animOn = () => !document.body.classList.contains("dot-anim-off");
+
 function readDockFlags(dot) {
   return {
     docked: dot.classList.contains("dot-docked"),
@@ -61,10 +63,7 @@ function sync(dot, state) {
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
-
-  // уважение глобального флага отключения анимаций
-  const animationsOn = !document.body.classList.contains("dot-anim-off");
-  if (animationsOn) {
+  if (animOn()) {
     dot.classList.add("dot-morph");
     setTimeout(() => dot.classList.remove("dot-morph"), 240);
   }
@@ -80,7 +79,7 @@ function sync(dot, state) {
   // 4) У края: меню/тема -> вертикальный режим + убираем dock-scale
   const isMenuLike = (state === "menu" || state === "theme");
   if (isRect && dock.docked) {
-    if (animationsOn) dot.classList.add("dot-expanding");
+    if (animOn()) dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
     // фиксируем X сразу
     fixLeftWhenDocked(dot);
@@ -134,7 +133,7 @@ function sync(dot, state) {
 
   mount(dot, host);
 
-  // 6) После монтирования знаем реальную высоту — клампим top ещё раз (и подправляем left на всякий случай)
+  // 6) После монтирования знаем реальную высоту — клампим top и фиксируем left
   if (isRect && dock.docked) {
     clampTopByRect(dot, 8);
     fixLeftWhenDocked(dot);
