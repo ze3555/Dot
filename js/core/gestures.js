@@ -48,7 +48,13 @@ export function initGestures() {
 
   // Tap on Dot in idle -> menu
   dot.addEventListener("click", (e) => {
+    // ВАЖНО: если DOT докнут — не открываем меню здесь.
+    // Дальше это сделает обработчик из drag.js: сначала вернёт в центр, затем setState("menu").
     if (getState() === "idle") {
+      if (dot.classList.contains("dot-docked")) {
+        // дать приоритет drag.js, чтобы не было «раскрытия у края»
+        return;
+      }
       e.stopPropagation();
       setState("menu");
     }
