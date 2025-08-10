@@ -1,130 +1,97 @@
-import { mount } from "../core/dom.js";
-import { getState, setState, subscribe } from "../core/state.js";
-import { renderMenu } from "./dot-menu.js";
-import { renderContacts } from "./dot-contacts.js";
-import { renderSettings } from "./dot-settings.js";
-import { closePopover } from "./dot-popover.js";
+import { getState } from "./state.js";
 
-export function initDot() {
+/**
+ * Enable dragging the Dot in IDLE.
+ * Док полностью убран: при отпускании — возврат в центр.
+ */
+export function initDotDrag() {
   const dot = document.getElementById("dot-core");
-  if (!dot) throw new Error("#dot-core not found");
-  sync(dot, getState());
-  subscribe(({ next }) => sync(dot, next));
-}
+  if (!dot) return;
 
-/* Константы */
-const DOT_SIZE = 64;
-const MARGIN = 16;
+  let dragging = false;
+  let startX = 0, startY = 0;
+  let originLeft = 0, originTop = 0;
+  let moved = false;
 
-/* Помощники */
-function readDockFlags(dot) {
-  return {
-    docked: dot.classList.contains("dot-docked"),
-    left: dot.classList.contains("dot-docked-left"),
-    right: dot.classList.contains("dot-docked-right"),
+  let suppressClickOnce = false;
+
+  const getDotRect = () => dot.getBoundingClientRect();
+
+  const enterFree = () => {
+    dot.classList.add("dot-free");
+    const r = getDotRect();
+    dot.style.left = `${r.left}px`;
+    dot.style.top = `${r.top}px`;
+    dot.style.transform = "translate(0,0)";
   };
-}
-function reapplyDockFlags(dot, f) {
-  if (!f.docked) return;
-  dot.classList.add("dot-docked");
-  dot.classList.toggle("dot-docked-left",  !!f.left && !f.right);
-  dot.classList.toggle("dot-docked-right", !!f.right && !f.left);
-}
-function fixLeftWhenDocked(dot) {
-  if (!dot.classList.contains("dot-docked")) return;
-  const vw = window.innerWidth;
-  if (dot.classList.contains("dot-docked-right")) {
-    dot.style.left = `${Math.max(8, vw - DOT_SIZE - MARGIN)}px`;
-    dot.style.transform = "translate(0,0)";
-  } else if (dot.classList.contains("dot-docked-left")) {
-    dot.style.left = `${Math.max(8, MARGIN)}px`;
-    dot.style.transform = "translate(0,0)";
-  }
-}
-function clampTopByRect(dot, margin = 8) {
-  if (!dot.classList.contains("dot-docked")) return;
-  const vh = window.innerHeight;
-  const r = dot.getBoundingClientRect();
-  let top = r.top;
-  const maxTop = vh - r.height - margin;
-  top = Math.max(margin, Math.min(top, maxTop));
-  dot.style.top = `${top}px`;
-}
 
-function sync(dot, state) {
-  closePopover();
+  const returnToCenter = () => {
+    dot.classList.remove("dot-free");
+    dot.style.left = "";
+    dot.style.top = "";
+    dot.style.transform = "translate(-50%, -50%)";
+  };
 
-  // 1) Сохраняем флаги докинга ДО сброса классов
-  const dock = readDockFlags(dot);
+  dot.addEventListener("pointerdown", (e) => {
+    if (getState() !== "idle") return;
+    if (document.body.classList.contains("dot-drag-off")) return;
 
-  // 2) Базовые классы состояния — БЕЗ анимаций
-  dot.className = "";
-  dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`);
+    dragging = true;
+    moved = false;
+    suppressClickOnce = false;
 
-  // 3) Возвращаем флаги докинга
-  reapplyDockFlags(dot, dock);
+    dot.setPointerCapture(e.pointerId);
 
-  const isRect = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
+    const r = getDotRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    originLeft = r.left;
+    originTop  = r.top;
 
-  // theme визуально = menu
-  if (state === "theme") dot.classList.add("dot-menu");
+    enterFree();
+    e.stopPropagation();
+  });
 
-  // 4) У края: только вертикальный режим, без "expanding"
-  const isMenuLike = (state === "menu" || state === "theme");
-  if (isRect && dock.docked) {
-    if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
-    fixLeftWhenDocked(dot);
-  } else {
-    dot.classList.remove("dot-vert");
-  }
+  dot.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
 
-  // 5) Контент — без dot-swap-in и без is-live
-  const host = document.createElement("div");
-  host.className = "dot-content";
-  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
+    dot.style.left = `${originLeft + dx}px`;
+    dot.style.top  = `${originTop + dy}px`;
+  });
 
-  switch (state) {
-    case "idle": {
-      host.innerHTML = "";
-      break;
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    dot.releasePointerCapture(e.pointerId);
+
+    if (moved) {
+      suppressClickOnce = true;
+      // Док убран — всегда возвращаемся в центр.
+      returnToCenter();
     }
-    case "menu": {
-      const menu = renderMenu({
-        onTheme:    () => setState("theme"),
-        onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
-      });
-      if (dock.docked) menu.classList.add("is-vert");
-      host.appendChild(menu);
-      break;
-    }
-    case "contacts": {
-      const c = renderContacts({ onBack: () => setState("menu") });
-      host.appendChild(c);
-      break;
-    }
-    case "settings": {
-      host.appendChild(renderSettings({ onBack: () => setState("menu") }));
-      break;
-    }
-    case "theme": {
-      const m = renderMenu({
-        onTheme:    () => setState("theme"),
-        onSettings: () => setState("settings"),
-        onContacts: () => setState("contacts"),
-      });
-      if (dock.docked) m.classList.add("is-vert");
-      host.appendChild(m);
-      break;
-    }
-  }
+  };
 
-  mount(dot, host);
+  dot.addEventListener("pointerup", endDrag);
+  dot.addEventListener("pointercancel", endDrag);
 
-  // 6) Корректируем позицию при доке
-  if (isRect && dock.docked) {
-    clampTopByRect(dot, 8);
-    fixLeftWhenDocked(dot);
-  }
+  dot.addEventListener("click", (e) => {
+    if (suppressClickOnce) {
+      e.stopPropagation();
+      suppressClickOnce = false;
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (dot.classList.contains("dot-free")) {
+      const r = getDotRect();
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const x = Math.max(8, Math.min(r.left, vw - r.width - 8));
+      const y = Math.max(8, Math.min(r.top,  vh - r.height - 8));
+      dot.style.left = `${x}px`;
+      dot.style.top  = `${y}px`;
+    }
+  });
 }
