@@ -1,90 +1,86 @@
 // js/ui/fine-tune-popover.js
-// Fine‑Tune: keep ONLY Drag toggle. Dock/Snap/Animations removed.
-// Inside clicks do NOT close the popover; outside tap closes (handled globally).
+const KEY = "dot.prefs";
+const DEFAULTS = { drag: true };
 
-import { closePopover } from "./dot-popover.js";
-
-const LS_KEY = "dot.prefs";
-
-function readPrefs() {
-  try { const v = localStorage.getItem(LS_KEY); return v ? JSON.parse(v) : {}; }
-  catch { return {}; }
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+  } catch { return { ...DEFAULTS }; }
 }
-function writePrefs(obj) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(obj || {})); } catch {}
-  window.dispatchEvent(new CustomEvent("dot:prefs-changed", { detail: obj || {} }));
+function savePrefs(p) {
+  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch {}
 }
-function applyDrag(enabled) {
-  document.body.classList.toggle("dot-drag-off", !enabled);
+function applyPrefs(p) {
+  document.body.classList.toggle("dot-drag-off", !p.drag);
 }
 
-export function renderFineTunePopover({ onClose } = {}) {
-  const prefs = readPrefs();
-  const dragEnabled = prefs.drag !== false; // default ON
-  applyDrag(dragEnabled);
+export function renderFineTunePopover() {
+  let prefs = loadPrefs();
+  applyPrefs(prefs);
 
-  const el = document.createElement("div");
-  el.className = "fine-tune-popover";
-  el.innerHTML = `
-    <div class="ftp-head"><strong>Fine‑Tune</strong></div>
-    <div class="ftp-body">
-      <div class="ftp-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div class="ftp-label">
-          <div style="font-weight:600">Drag</div>
-          <div style="opacity:.7;font-size:.9em">Move DOT by dragging</div>
-        </div>
-        <label class="ftp-switch" style="position:relative;display:inline-flex;align-items:center;cursor:pointer;">
-          <input id="ftp-drag" type="checkbox" style="position:absolute;opacity:0;width:0;height:0;" />
-          <span class="ftp-slider" aria-hidden="true"
-            style="width:44px;height:24px;border-radius:12px;display:inline-block;box-sizing:border-box;border:1px solid currentColor;opacity:.9"></span>
-        </label>
-      </div>
-    </div>
-  `;
+  const wrap = document.createElement("div");
+  wrap.className = "dot-popover__grid";
 
-  const input  = el.querySelector("#ftp-drag");
-  const slider = el.querySelector(".ftp-slider");
+  // оставили только Drag
+  wrap.append(makeSwitch("Drag", "Enable Dot dragging.", "drag"));
 
-  function paintSwitch(on) {
-    slider.style.padding = "2px";
-    slider.style.position = "relative";
-    slider.innerHTML = "";
-    const knob = document.createElement("span");
+  return wrap;
+
+  function makeSwitch(title, subtitle, key) {
+    const row = document.createElement("div");
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr auto";
+    row.style.alignItems = "center";
+    row.style.gap = "8px";
+
+    const label = document.createElement("div");
+    label.innerHTML = `<strong>${title}</strong><br><small style="opacity:.75">${subtitle}</small>`;
+
+    const toggle = document.createElement("div");
+    toggle.style.width = "44px";
+    toggle.style.height = "26px";
+    toggle.style.borderRadius = "13px";
+    toggle.style.background = "color-mix(in oklab, var(--dot-fg,#fff), transparent 85%)";
+    toggle.style.position = "relative";
+    toggle.style.cursor = "pointer";
+    toggle.setAttribute("role", "switch");
+    toggle.tabIndex = 0;
+
+    const knob = document.createElement("div");
     knob.style.position = "absolute";
-    knob.style.top = "2px";
+    knob.style.top = "3px";
+    knob.style.left = "3px";
     knob.style.width = "20px";
     knob.style.height = "20px";
-    knob.style.borderRadius = "50%";
-    knob.style.border = "1px solid currentColor";
-    knob.style.boxSizing = "border-box";
-    knob.style.left = on ? "22px" : "2px";
-    slider.appendChild(knob);
+    knob.style.borderRadius = "999px";
+    knob.style.background = "var(--dot-fg,#fff)";
+    knob.style.transition = "transform 160ms ease";
+    toggle.append(knob);
+
+    const sync = () => {
+      const on = !!prefs[key];
+      toggle.setAttribute("aria-checked", String(on));
+      toggle.style.background = on
+        ? "color-mix(in oklab, var(--dot-fg,#fff), transparent 55%)"
+        : "color-mix(in oklab, var(--dot-fg,#fff), transparent 85%)";
+      knob.style.transform = on ? "translateX(18px)" : "translateX(0)";
+    };
+
+    const flip = () => {
+      prefs = { ...prefs, [key]: !prefs[key] };
+      savePrefs(prefs);
+      applyPrefs(prefs);
+      sync();
+    };
+
+    toggle.addEventListener("click", flip);
+    toggle.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+    });
+
+    sync();
+    row.append(label, toggle);
+    return row;
   }
-  function setDrag(on) {
-    const next = { ...readPrefs(), drag: !!on };
-    writePrefs(next);
-    applyDrag(!!on);
-    input.checked = !!on;
-    input.setAttribute("aria-checked", String(!!on));
-    paintSwitch(!!on);
-  }
-
-  // init
-  setDrag(dragEnabled);
-
-  // interactions (checkbox and slider)
-  input.addEventListener("change", () => setDrag(!!input.checked));
-  slider.addEventListener("click", (e) => { e.preventDefault(); setDrag(!input.checked); });
-
-  // block inside clicks so outside-closer won't fire
-  const stop = (e) => e.stopPropagation();
-  el.addEventListener("pointerdown", stop, { capture: true });
-  el.addEventListener("click",        stop, { capture: true });
-
-  // optional external closer (kept for parity with original API)
-  el.addEventListener("close-request", () => (onClose ? onClose() : closePopover()));
-
-  return el;
 }
-
-export default renderFineTunePopover;
