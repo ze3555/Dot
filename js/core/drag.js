@@ -3,7 +3,8 @@ import { getState } from "./state.js";
 
 /**
  * Чистый драг DOT без дока/снапа и без анимаций.
- * Уважает выключение через body.dot-drag-off (управляется в Fine‑Tune).
+ * Уважает выключение через body.dot-drag-off (управляется Fine‑Tune).
+ * Надёжно конвертирует стартовое положение из %/transform в px.
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
@@ -42,8 +43,12 @@ export function initDotDrag() {
     startX = e.clientX;
     startY = e.clientY;
 
-    // При первом драге переходим в абсолютные координаты без translate(-50%, -50%)
+    // === ВАЖНО: сразу переводим в абсолютные px-координаты ===
+    // (если до этого было top/left 50% и transform: translate(-50%,-50%))
+    dot.style.left = `${originLeft}px`;
+    dot.style.top  = `${originTop}px`;
     dot.style.transform = "translate(0,0)";
+
     try { dot.setPointerCapture(e.pointerId); } catch {}
   });
 
