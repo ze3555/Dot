@@ -57,11 +57,10 @@ function sync(dot, state) {
   // 1) Сохраняем флаги докинга ДО сброса классов
   const dock = readDockFlags(dot);
 
-  // 2) Сбрасываем и ставим базовые классы состояния
+  // 2) Сбрасываем и ставим базовые классы состояния (без анимационных классов)
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`, "dot-morph");
-  setTimeout(() => dot.classList.remove("dot-morph"), 240);
+  dot.classList.add(`dot-${state}`);
 
   // 3) Возвращаем флаги докинга
   reapplyDockFlags(dot, dock);
@@ -71,20 +70,18 @@ function sync(dot, state) {
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // 4) У края: меню/тема -> вертикальный режим + убираем dock-scale
+  // 4) У края: меню/тема -> вертикальный режим (никаких .dot-expanding)
   const isMenuLike = (state === "menu" || state === "theme");
   if (isRect && dock.docked) {
-    dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
-    // фиксируем X сразу
     fixLeftWhenDocked(dot);
   } else {
-    dot.classList.remove("dot-expanding", "dot-vert");
+    dot.classList.remove("dot-vert");
   }
 
-  // 5) Монтируем содержимое
+  // 5) Монтируем содержимое (без .is-live)
   const host = document.createElement("div");
-  host.className = "dot-content dot-swap-in";
+  host.className = "dot-content";
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
   switch (state) {
@@ -99,13 +96,11 @@ function sync(dot, state) {
         onContacts: () => setState("contacts"),
       });
       if (dock.docked) menu.classList.add("is-vert");
-      queueMicrotask(() => menu.classList.add("is-live"));
       host.appendChild(menu);
       break;
     }
     case "contacts": {
       const c = renderContacts({ onBack: () => setState("menu") });
-      queueMicrotask(() => c.classList.add("is-live"));
       host.appendChild(c);
       break;
     }
@@ -120,7 +115,6 @@ function sync(dot, state) {
         onContacts: () => setState("contacts"),
       });
       if (dock.docked) m.classList.add("is-vert");
-      queueMicrotask(() => m.classList.add("is-live"));
       host.appendChild(m);
       break;
     }
@@ -128,7 +122,7 @@ function sync(dot, state) {
 
   mount(dot, host);
 
-  // 6) После монтирования знаем реальную высоту — клампим top ещё раз (и подправляем left на всякий случай)
+  // 6) После монтирования — корректируем позиции при доке
   if (isRect && dock.docked) {
     clampTopByRect(dot, 8);
     fixLeftWhenDocked(dot);
