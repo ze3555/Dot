@@ -15,16 +15,36 @@ export function initDotDrag() {
 
   let suppressClickOnce = false;
 
-  const getDotRect = () => dot.getBoundingClientRect();
+  function getDotRect() {
+    const r = dot.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
 
-  const enterFree = () => {
-    dot.classList.add("dot-free");
+  function readDockFlags() {
+    return {
+      docked: dot.classList.contains("dot-docked"),
+      left: dot.classList.contains("dot-docked-left"),
+      right: dot.classList.contains("dot-docked-right"),
+    };
+  }
+
+  const toLeft = () => {
+    dot.classList.add("dot-docked","dot-docked-left");
+    dot.classList.remove("dot-docked-right");
     const r = getDotRect();
-    dot.style.left = `${r.left}px`;
-    dot.style.top = `${r.top}px`;
+    dot.style.left = `0px`;
+    dot.style.top  = `${r.top}px`;
     dot.style.transform = "translate(0,0)";
   };
-
+  const toRight = () => {
+    dot.classList.add("dot-docked","dot-docked-right");
+    dot.classList.remove("dot-docked-left");
+    const r = getDotRect();
+    const vw = window.innerWidth;
+    dot.style.left = `${vw - r.width}px`;
+    dot.style.top  = `${r.top}px`;
+    dot.style.transform = "translate(0,0)";
+  };
   const returnToCenter = () => {
     dot.classList.remove("dot-free","dot-docked","dot-docked-left","dot-docked-right");
     dot.style.left = "";
@@ -35,38 +55,27 @@ export function initDotDrag() {
   const ORIGIN_MARGIN = 16;
 
   function snapToSide() {
-    const safeTop = 8 + getSafeInsetTop();
-    const safeBottom = 8 + getSafeInsetBottom();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
     const r = getDotRect();
-    const cx = r.left + r.width / 2;
-    const sideRight = cx > vw / 2;
+    const vw = window.innerWidth, vh = window.innerHeight;
 
-    let y = Math.max(safeTop, Math.min(r.top, vh - r.height - safeBottom));
+    // Кламп по вертикали
+    const safeTop = Math.max(8, Math.min(r.top, vh - r.height - 8));
+    dot.style.top = `${safeTop}px`;
 
-    dot.classList.add("dot-docked");
-    dot.classList.toggle("dot-docked-right", sideRight);
-    dot.classList.toggle("dot-docked-left", !sideRight);
-
-    const x = sideRight ? (vw - r.width - ORIGIN_MARGIN) : ORIGIN_MARGIN;
-    dot.style.left = `${x}px`;
-    dot.style.top  = `${y}px`;
-    dot.style.transform = "translate(0,0)";
-  }
-
-  function getSafeInsetTop() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)") || "0", 10);
-    return isNaN(v) ? 0 : v;
-  }
-  function getSafeInsetBottom() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)") || "0", 10);
-    return isNaN(v) ? 0 : v;
+    // Выбираем ближайшую сторону
+    if (r.left + r.width / 2 < vw / 2) {
+      toLeft();
+    } else {
+      toRight();
+    }
   }
 
   dot.addEventListener("pointerdown", (e) => {
     if (getState() !== "idle") return;
-    if (document.body.classList.contains("dot-drag-off")) return;
+
+    // Разрешим «тап по докнутой точке» даже когда drag выключен — это не drag.
+    const dragDisabled = document.body.classList.contains("dot-drag-off");
+    if (dragDisabled) return; // именно drag не начинаем; click обработается как обычно
 
     dragging = true;
     moved = false;
@@ -75,13 +84,13 @@ export function initDotDrag() {
     dot.setPointerCapture(e.pointerId);
 
     const r = getDotRect();
-    startX = e.clientX;
-    startY = e.clientY;
     originLeft = r.left;
     originTop  = r.top;
+    startX = e.clientX;
+    startY = e.clientY;
 
-    enterFree();
-    e.stopPropagation();
+    // При старте свободного перемещения ставим флаг
+    dot.classList.add("dot-free");
   });
 
   dot.addEventListener("pointermove", (e) => {
@@ -107,16 +116,21 @@ export function initDotDrag() {
         snapToSide();
       }
     }
+
+    // Если реального движения не было — оставляем всё как есть.
+    dot.classList.remove("dot-free");
   };
 
   dot.addEventListener("pointerup", endDrag);
   dot.addEventListener("pointercancel", endDrag);
 
+  // На click после перетаскивания — гасим единожды, чтобы не открывать меню
   dot.addEventListener("click", (e) => {
     if (suppressClickOnce) {
       e.stopPropagation();
       suppressClickOnce = false;
     } else {
+      // Удобство: тап по докнутой точке в idle развязывает и сразу открывает меню
       if (getState() === "idle" && dot.classList.contains("dot-docked")) {
         returnToCenter();
         queueMicrotask(() => setState("menu"));
