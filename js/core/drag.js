@@ -2,7 +2,7 @@ import { getState } from "./state.js";
 
 /**
  * Enable dragging the Dot in IDLE.
- * Док полностью убран: при отпускании — возврат в центр.
+ * Без дока и без фиксации в центре: после отпускания остаёмся на месте.
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
@@ -23,13 +23,6 @@ export function initDotDrag() {
     dot.style.left = `${r.left}px`;
     dot.style.top = `${r.top}px`;
     dot.style.transform = "translate(0,0)";
-  };
-
-  const returnToCenter = () => {
-    dot.classList.remove("dot-free");
-    dot.style.left = "";
-    dot.style.top = "";
-    dot.style.transform = "translate(-50%, -50%)";
   };
 
   dot.addEventListener("pointerdown", (e) => {
@@ -68,9 +61,8 @@ export function initDotDrag() {
     dot.releasePointerCapture(e.pointerId);
 
     if (moved) {
+      // Остаёмся там, где отпустили (никакого returnToCenter).
       suppressClickOnce = true;
-      // Док убран — всегда возвращаемся в центр.
-      returnToCenter();
     }
   };
 
@@ -84,6 +76,7 @@ export function initDotDrag() {
     }
   });
 
+  // Держим Dot в видимой области при ресайзе, если он в свободном положении
   window.addEventListener("resize", () => {
     if (dot.classList.contains("dot-free")) {
       const r = getDotRect();
