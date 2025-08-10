@@ -15,7 +15,6 @@ export function renderMenu(callbacks) {
     <button type="button" data-act="contacts" aria-label="Contacts">Contacts</button>
   `;
 
-  // tap handlers
   wrap.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -28,10 +27,7 @@ export function renderMenu(callbacks) {
 
     if (act === "function") {
       const content = renderQuickTools({
-        onPick: (key) => {
-          console.log("[QuickTool]", key);
-          closePopover();
-        }
+        onPick: (key) => { console.log("[QuickTool]", key); closePopover(); }
       });
       showPopover(content, { side: "top", offset: 12 });
     }
@@ -40,20 +36,18 @@ export function renderMenu(callbacks) {
     if (act === "contacts") callbacks.onContacts?.();
   });
 
-  // long-press on Theme → gallery
+  // long‑press on Theme → gallery (без пульса)
   const btnTheme = wrap.querySelector('[data-act="theme"]');
   attachLongPress(btnTheme, {
     onLongPress: () => {
       const content = renderThemeGallery({
-        onPicked: () => {
-          closePopover();
-        }
+        onPicked: () => { closePopover(); }
       });
       showPopover(content, { side: "top", offset: 12 });
     }
   });
 
-  // long-press on Function → FineTune popover (снизу)
+  // long‑press on Function → FineTune
   const btnFunc = wrap.querySelector('[data-act="function"]');
   attachLongPress(btnFunc, {
     onLongPress: () => {
