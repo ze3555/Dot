@@ -1,3 +1,4 @@
+
 // js/core/drag.js
 import { getState } from "./state.js";
 
@@ -46,7 +47,7 @@ export function initDotDrag() {
     // Перейти в абсолютные px и убрать центровку
     dot.style.left = `${originLeft}px`;
     dot.style.top  = `${originTop}px`;
-    dot.style.transform = "translate(0,0)`;
+    dot.style.transform = "translate(0,0)";
 
     try { dot.setPointerCapture(e.pointerId); } catch {}
   });
