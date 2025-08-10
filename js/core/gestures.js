@@ -1,48 +1,42 @@
 // js/core/gestures.js
-// Жесты DOT: клики, back/esc, outside-click.
-// ВАЖНО: outside‑click игнорирует клики внутри .fine-tune-popover.
+// Жесты DOT: tap по DOT -> menu, tap вне -> idle, Esc -> idle.
+// Игнорирует клики внутри .fine-tune-popover. Поддерживает подавление клика после драга.
 
 import { getState, setState } from "./state.js";
 
 export function initGestures() {
   const dot = document.getElementById("dot-core");
-  if (!dot) throw new Error("#dot-core not found");
+  if (!dot) { console.warn("[DOT] #dot-core not found in initGestures"); return; }
 
-  // Tap по DOT
+  // Открыть меню по клику на DOT (только из idle)
   dot.addEventListener("click", (e) => {
-    // клики по контенту не должны «пробрасываться» наружу
+    // Если драг поставил флаг подавления — гасим ровно один клик
+    if (dot.dataset.suppressClick === "1") {
+      dot.dataset.suppressClick = "";
+      e.stopPropagation();
+      return;
+    }
     e.stopPropagation();
-
-    const s = getState();
-    if (s === "idle") {
-      setState("menu");
-    }
-    // если не idle — содержимое само рулит переходами (кнопки меню и т.п.)
+    if (getState() === "idle") setState("menu");
   });
 
-  // Outside click → back to idle (кроме кликов по поповерам)
+  // Клик/тап вне DOT — закрыть (но не если внутри fine-tune поповера)
   document.addEventListener("pointerdown", (e) => {
-    // Если клик пришёл изнутри DOT — не закрываем
-    if (e.target.closest("#dot-core")) return;
-
-    // Если клик попал в любой поповер с fine‑tune — тоже не закрываем
-    if (e.target.closest(".fine-tune-popover")) return;
-
-    // Любой внешний тап — закрываем всё до idle
+    const t = e.target;
+    if (t.closest("#dot-core")) return;
+    if (t.closest(".fine-tune-popover")) return;
     if (getState() !== "idle") setState("idle");
-  }, { capture: true }); // capture — чтобы сработать раньше bubbling‑обработчиков
+  }, { capture: true });
 
-  // Esc / Back
+  // Esc -> idle
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      if (getState() !== "idle") {
-        e.preventDefault();
-        setState("idle");
-      }
+    if (e.key === "Escape" && getState() !== "idle") {
+      e.preventDefault();
+      setState("idle");
     }
   });
 
-  // Защита: чтобы клики по контенту не считались «внешними»
+  // Не считаем нажатия внутри DOT «внешними»
   dot.addEventListener("pointerdown", (e) => e.stopPropagation());
 }
 
