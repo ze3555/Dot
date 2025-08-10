@@ -6,7 +6,7 @@
   --dot-shadow:0 8px 24px rgba(0,0,0,.25);
   --dot-glow:0 0 12px color-mix(in oklab,var(--dot-fg),transparent 60%);
   --transition-fast:150ms ease;
-  --transition-med:240ms cubic-bezier(.2,.8,.2,1);
+  --transition-med:260ms cubic-bezier(.2,.8,.2,1);
 
   /* Вертикальное меню (4 кнопки) */
   --menu-vert-count:4;
@@ -18,9 +18,6 @@
     var(--menu-vert-btn-h)*var(--menu-vert-count) +
     var(--menu-vert-gap)*(var(--menu-vert-count) - 1)
   );
-
-  /* Доп. оформление */
-  --dot-stroke: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
 }
 
 /* DOT host */
@@ -29,15 +26,12 @@
   z-index:10; display:grid; place-items:center;
   width:var(--dot-size); height:var(--dot-size);
   background:var(--dot-bg); color:var(--dot-fg); border-radius:var(--dot-radius);
-  border: var(--dot-stroke);
   box-shadow:var(--dot-shadow), var(--dot-glow);
-  backdrop-filter: saturate(120%) blur(0px);
   transition:
     width var(--transition-med), height var(--transition-med),
     border-radius var(--transition-med), transform var(--transition-med),
     background var(--transition-fast), color var(--transition-fast),
-    box-shadow var(--transition-fast), left var(--transition-med),
-    top var(--transition-med), opacity var(--transition-fast);
+    box-shadow var(--transition-fast), left var(--transition-med), top var(--transition-med), opacity var(--transition-fast);
   overflow:hidden; cursor:pointer; will-change:width,height,border-radius,transform,left,top,box-shadow;
   touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
 }
@@ -51,20 +45,13 @@
 }
 
 /* Animations */
-#dot-core.dot-morph{ animation:dotMorph 240ms cubic-bezier(.2,.8,.2,1) }
-@keyframes dotMorph{
-  from{ transform:translate(-50%,-50%) scale(.98) }
-  to  { transform:translate(-50%,-50%) scale(1) }
-}
+#dot-core.dot-morph{ animation:dotMorph 220ms cubic-bezier(.2,.8,.2,1) }
+@keyframes dotMorph{ from{ transform:translate(-50%,-50%) scale(.98) } to{ transform:translate(-50%,-50%) scale(1) } }
 #dot-core.dot-pulse{ animation:dotPulse 240ms ease-out }
 @keyframes dotPulse{
-  0%{   box-shadow:var(--dot-shadow),var(--dot-glow) }
-  60%{  box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 30%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 50%) }
+  0%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
+  60%{ box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 30%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 50%) }
   100%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
-}
-/* Если оба класса повешены — анимации суммируются */
-#dot-core.dot-morph.dot-pulse{
-  animation: dotMorph 240ms cubic-bezier(.2,.8,.2,1), dotPulse 240ms ease-out;
 }
 
 /* States */
@@ -76,61 +63,48 @@
   width:min(92vw,560px); height:72px; border-radius:18px; padding:8px; cursor:default;
 }
 
-/* Вертикальное меню/тема (у края) */
+/* Вертикальное меню/тема (у края): узкое, как ширина Дота, и влезает по высоте экрана */
 #dot-core.dot-menu.dot-vert,
 #dot-core.dot-theme.dot-vert{
-  width: calc(var(--dot-size) * 1.6);
-  max-width: calc(100vw - 16px);
-  height: min(var(--menu-vert-h), calc(100vh - 16px - env(safe-area-inset-bottom)));
+  width: calc(var(--dot-size) * 1.6); /* шире для текста */
+  max-width: calc(100vw - 16px);      /* ограничение по правой границе */
+  height: min(var(--menu-vert-h), calc(100vh - 16px));
   border-radius: 16px;
   padding: var(--menu-vert-pad);
   cursor: default;
-  box-shadow:
-    0 12px 36px rgba(0,0,0,.35),
-    0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%);
 }
 
-/* Contacts / Settings */
+/* Contacts / Settings (без изменений) */
 #dot-core.dot-contacts{ width:min(94vw,640px); height:56px; border-radius:999px; padding:6px 10px }
 #dot-core.dot-settings{ width:min(92vw,560px); height:min(50vh,520px); border-radius:16px; padding:12px }
 
-/* Content host: переход вместо keyframes */
+/* Content host */
 .dot-content{ width:100%; height:100%; display:grid; align-items:center }
-.dot-swap-in{
-  opacity:0; transform:translateY(6px);
-  transition: opacity 160ms cubic-bezier(.2,.8,.2,1), transform 160ms cubic-bezier(.2,.8,.2,1);
-}
-.dot-swap-in.is-live{ opacity:1; transform:none }
+.dot-swap-in{ animation:dotSwapIn .22s cubic-bezier(.2,.8,.2,1) both }
+@keyframes dotSwapIn{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
 
 /* Drag/Dock */
-#dot-core.dot-free{ transform:translate(0,0); transition:none !important; }
+#dot-core.dot-free{ transform:translate(0,0) }
 #dot-core.dot-docked{ transform:translate(0,0) scale(.94); opacity:.92 }
 #dot-core.dot-docked:hover{ opacity:1 }
+:root{
+  /* ...остальное как есть... */
+  --dot-stroke: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
+}
+
+/* host */
+#dot-core{
+  /* ... */
+  border: var(--dot-stroke);                /* тонкий обвод, чтобы glow не «срезало» экраном */
+  backdrop-filter: saturate(120%) blur(0px); /* лёгкий punch (без сильного blur) */
+}
+
+/* вертикальное меню у края — чуть «воздуха» снизу под iOS бар */
+#dot-core.dot-menu.dot-vert,
+#dot-core.dot-theme.dot-vert{
+  height: min(var(--menu-vert-h), calc(100vh - 16px - env(safe-area-inset-bottom)));
+  box-shadow:
+    0 12px 36px rgba(0,0,0,.35),
+    0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%); /* мягче glow */
+}
 #dot-core.dot-docked.dot-expanding{ transform:translate(0,0) scale(1); opacity:1 }
-
-/* Reduce motion: вырубаем кастомные анимации */
-@media (prefers-reduced-motion: reduce){
-  #dot-core{ transition:none }
-  #dot-core.dot-morph,
-  #dot-core.dot-pulse,
-  .dot-swap-in{ transition:none; opacity:1; transform:none }
-}
-/* Глобовое отключение анимаций/переходов при статичном режиме */
-body.dot-anim-off * {
-  animation: none !important;
-  transition: none !important;
-}
-
-body.dot-anim-off #dot-core {
-  animation: none !important;
-  transition: none !important;
-}
-
-body.dot-anim-off #dot-core.dot-morph,
-body.dot-anim-off #dot-core.dot-pulse,
-body.dot-anim-off #dot-core.dot-expanding,
-body.dot-anim-off #dot-core .dot-swap-in,
-body.dot-anim-off #dot-core .is-live {
-  animation: none !important;
-  transition: none !important;
-}
