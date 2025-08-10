@@ -1,0 +1,41 @@
+/* Import order: core → layout → theme → ui */
+/* Import order: core → layout → theme → ui */
+@import url("./core/dot-core.css");
+@import url("./layout/topbar.css");
+@import url("./layout/main.css");
+@import url("./theme/light-dark.css");
+@import url("./ui/bottom-panel.css");
+@import url("./ui/dot-menu.css");
+@import url("./ui/dot-contacts.css");
+@import url("./ui/dot-popover.css"); /* popovers */
+/* Base */
+:root {
+  --dot-size: 64px;
+  --dot-radius: 999px;
+  --dot-bg: var(--surface-2, #151515);
+  --dot-fg: var(--text, #fff);
+  --dot-shadow: 0 8px 24px rgba(0,0,0,.25);
+  --transition-fast: 150ms ease;
+  --transition-med: 240ms cubic-bezier(.2,.8,.2,1);
+}
+* { box-sizing: border-box }
+html, body { height: 100% }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg, #0d0d0d);
+  color: var(--dot-fg);
+}
+
+/* Center DOT within main-content */
+#main-content { position: relative; }
+#dot-core {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+/* Messages area placeholder */
+#messages { min-height: 40vh; }
