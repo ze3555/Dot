@@ -5,6 +5,7 @@
   --dot-fg:var(--text,#fff);
   --dot-shadow:0 8px 24px rgba(0,0,0,.25);
   --dot-glow:0 0 12px color-mix(in oklab,var(--dot-fg),transparent 60%);
+  /* единые тайминги проекта */
   --transition-fast:150ms ease;
   --transition-med:260ms cubic-bezier(.2,.8,.2,1);
 
@@ -18,15 +19,20 @@
     var(--menu-vert-btn-h)*var(--menu-vert-count) +
     var(--menu-vert-gap)*(var(--menu-vert-count) - 1)
   );
+
+  /* Доп. оформление */
+  --dot-stroke: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
 }
 
-/* DOT host */
+/* DOT host — единое место правды */
 #dot-core{
   position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
   z-index:10; display:grid; place-items:center;
   width:var(--dot-size); height:var(--dot-size);
   background:var(--dot-bg); color:var(--dot-fg); border-radius:var(--dot-radius);
+  border: var(--dot-stroke);
   box-shadow:var(--dot-shadow), var(--dot-glow);
+  backdrop-filter: saturate(120%) blur(0px);
   transition:
     width var(--transition-med), height var(--transition-med),
     border-radius var(--transition-med), transform var(--transition-med),
@@ -53,6 +59,10 @@
   60%{ box-shadow:var(--dot-shadow), 0 0 20px color-mix(in oklab,var(--dot-fg),transparent 30%), 0 0 40px color-mix(in oklab,var(--dot-fg),transparent 50%) }
   100%{ box-shadow:var(--dot-shadow),var(--dot-glow) }
 }
+/* Композиция — если вдруг оба класса повешены */
+#dot-core.dot-morph.dot-pulse{
+  animation: dotMorph 220ms cubic-bezier(.2,.8,.2,1), dotPulse 240ms ease-out;
+}
 
 /* States */
 #dot-core.dot-idle{ width:var(--dot-size); height:var(--dot-size); border-radius:999px }
@@ -63,18 +73,21 @@
   width:min(92vw,560px); height:72px; border-radius:18px; padding:8px; cursor:default;
 }
 
-/* Вертикальное меню/тема (у края): узкое, как ширина Дота, и влезает по высоте экрана */
+/* Вертикальное меню/тема (у края) */
 #dot-core.dot-menu.dot-vert,
 #dot-core.dot-theme.dot-vert{
-  width: calc(var(--dot-size) * 1.6); /* шире для текста */
-  max-width: calc(100vw - 16px);      /* ограничение по правой границе */
-  height: min(var(--menu-vert-h), calc(100vh - 16px));
+  width: calc(var(--dot-size) * 1.6);
+  max-width: calc(100vw - 16px);
+  height: min(var(--menu-vert-h), calc(100vh - 16px - env(safe-area-inset-bottom)));
   border-radius: 16px;
   padding: var(--menu-vert-pad);
   cursor: default;
+  box-shadow:
+    0 12px 36px rgba(0,0,0,.35),
+    0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%);
 }
 
-/* Contacts / Settings (без изменений) */
+/* Contacts / Settings */
 #dot-core.dot-contacts{ width:min(94vw,640px); height:56px; border-radius:999px; padding:6px 10px }
 #dot-core.dot-settings{ width:min(92vw,560px); height:min(50vh,520px); border-radius:16px; padding:12px }
 
@@ -87,24 +100,12 @@
 #dot-core.dot-free{ transform:translate(0,0) }
 #dot-core.dot-docked{ transform:translate(0,0) scale(.94); opacity:.92 }
 #dot-core.dot-docked:hover{ opacity:1 }
-:root{
-  /* ...остальное как есть... */
-  --dot-stroke: 1px solid color-mix(in oklab, var(--dot-fg), transparent 86%);
-}
-
-/* host */
-#dot-core{
-  /* ... */
-  border: var(--dot-stroke);                /* тонкий обвод, чтобы glow не «срезало» экраном */
-  backdrop-filter: saturate(120%) blur(0px); /* лёгкий punch (без сильного blur) */
-}
-
-/* вертикальное меню у края — чуть «воздуха» снизу под iOS бар */
-#dot-core.dot-menu.dot-vert,
-#dot-core.dot-theme.dot-vert{
-  height: min(var(--menu-vert-h), calc(100vh - 16px - env(safe-area-inset-bottom)));
-  box-shadow:
-    0 12px 36px rgba(0,0,0,.35),
-    0 0 20px color-mix(in oklab, var(--dot-fg), transparent 65%); /* мягче glow */
-}
 #dot-core.dot-docked.dot-expanding{ transform:translate(0,0) scale(1); opacity:1 }
+
+/* Reduce motion — выключаем все кастомные анимации */
+@media (prefers-reduced-motion: reduce){
+  #dot-core{ transition:none }
+  #dot-core.dot-morph,
+  #dot-core.dot-pulse,
+  .dot-swap-in{ animation:none }
+}
