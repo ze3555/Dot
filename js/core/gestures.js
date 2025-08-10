@@ -1,61 +1,49 @@
+// js/core/gestures.js
+// Жесты DOT: клики, back/esc, outside-click.
+// ВАЖНО: outside‑click игнорирует клики внутри .fine-tune-popover.
+
 import { getState, setState } from "./state.js";
-
-/** Вешает long-press на элемент */
-export function attachLongPress(el, { threshold = 360, onLongPress }) {
-  let pressed = false, moved = false, id = null;
-
-  const clear = () => {
-    pressed = false; moved = false;
-    if (id) { clearTimeout(id); id = null; }
-    document.body.classList.remove("no-select");
-  };
-
-  el.addEventListener("pointerdown", (e) => {
-    document.body.classList.add("no-select"); // временно запрещаем выделение
-    pressed = true; moved = false;
-    id = setTimeout(() => { if (pressed && !moved) onLongPress(e); }, threshold);
-    // На некоторых мобилах помогает подавить выделение/лупу:
-    e.preventDefault();
-  });
-
-  el.addEventListener("pointermove", (e) => {
-    if (!pressed) return;
-    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 4) moved = true;
-  });
-
-  ["pointerup","pointercancel","pointerleave"].forEach(evt =>
-    el.addEventListener(evt, clear)
-  );
-
-  // Локально гасим контекст-меню (долгое касание) для этого элемента
-  el.addEventListener("contextmenu", (e) => e.preventDefault());
-}
 
 export function initGestures() {
   const dot = document.getElementById("dot-core");
-  if (!dot) return;
+  if (!dot) throw new Error("#dot-core not found");
 
-  // Надёжный outside-click via pointerdown origin
-  let startedInside = false;
-  document.addEventListener("pointerdown", (e) => {
-    startedInside = dot.contains(e.target);
-  }, { capture: true });
-
-  document.addEventListener("click", () => {
-    if (!startedInside) setState("idle");
-    startedInside = false;
-  }, { capture: true });
-
-  // Tap on Dot in idle -> menu
+  // Tap по DOT
   dot.addEventListener("click", (e) => {
-    if (getState() === "idle") {
-      e.stopPropagation();
+    // клики по контенту не должны «пробрасываться» наружу
+    e.stopPropagation();
+
+    const s = getState();
+    if (s === "idle") {
       setState("menu");
+    }
+    // если не idle — содержимое само рулит переходами (кнопки меню и т.п.)
+  });
+
+  // Outside click → back to idle (кроме кликов по поповерам)
+  document.addEventListener("pointerdown", (e) => {
+    // Если клик пришёл изнутри DOT — не закрываем
+    if (e.target.closest("#dot-core")) return;
+
+    // Если клик попал в любой поповер с fine‑tune — тоже не закрываем
+    if (e.target.closest(".fine-tune-popover")) return;
+
+    // Любой внешний тап — закрываем всё до idle
+    if (getState() !== "idle") setState("idle");
+  }, { capture: true }); // capture — чтобы сработать раньше bubbling‑обработчиков
+
+  // Esc / Back
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (getState() !== "idle") {
+        e.preventDefault();
+        setState("idle");
+      }
     }
   });
 
-  // ESC -> idle
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") setState("idle");
-  }, { passive: true });
+  // Защита: чтобы клики по контенту не считались «внешними»
+  dot.addEventListener("pointerdown", (e) => e.stopPropagation());
 }
+
+export default initGestures;
