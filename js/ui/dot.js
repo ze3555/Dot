@@ -1,5 +1,5 @@
-import { mount } from "./dom.js";
-import { getState, setState, subscribe } from "./state.js";
+import { mount } from "../core/dom.js";
+import { getState, setState, subscribe } from "../core/state.js";
 import { renderMenu } from "./dot-menu.js";
 import { renderContacts } from "./dot-contacts.js";
 import { renderSettings } from "./dot-settings.js";
@@ -12,11 +12,11 @@ export function initDot() {
   subscribe(({ next }) => sync(dot, next));
 }
 
-/* Константы (синхронизируй с CSS переменными при необходимости) */
-const DOT_SIZE = 64; // ~= var(--dot-size)
-const MARGIN = 16;
+/* Константы */
+const DOT_SIZE = 64; // должен совпадать с --dot-size
+const MARGIN = 16;   // отступ от краёв по X при доке
 
-/* Helpers: док‑флаги */
+/* Помощники */
 function readDockFlags(dot) {
   return {
     docked: dot.classList.contains("dot-docked"),
@@ -54,23 +54,22 @@ function clampTopByRect(dot, margin = 8) {
 function sync(dot, state) {
   closePopover();
 
-  // 1) Сохраняем флаги докинга до сброса классов
+  // 1) Сохраняем флаги докинга ДО сброса классов
   const dock = readDockFlags(dot);
 
-  // 2) Сбрасываем классы и ставим базовые для текущего состояния
+  // 2) Сбрасываем и ставим базовые классы состояния
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
 
-  // Глобальное отключение анимаций уважаем через body.dot-anim-off
+  // уважение глобального оффа анимаций
   const animationsOn = !document.body.classList.contains("dot-anim-off");
   if (animationsOn) {
     dot.classList.add("dot-morph");
-    // короткий morph, затем убираем класс
     setTimeout(() => dot.classList.remove("dot-morph"), 240);
   }
 
-  // 3) Возвращаем док‑флаги
+  // 3) Возвращаем флаги докинга
   reapplyDockFlags(dot, dock);
 
   const isRect = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
@@ -79,7 +78,7 @@ function sync(dot, state) {
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // 4) Если мы у края и открываем прямоугольные состояния — фиксируем позицию/режим
+  // 4) У края: меню/тема -> вертикальный столбец + фикс по X
   if (isRect && dock.docked) {
     if (animationsOn) dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
@@ -88,7 +87,7 @@ function sync(dot, state) {
     dot.classList.remove("dot-expanding", "dot-vert");
   }
 
-  // 5) Монтируем контент
+  // 5) Контент
   const host = document.createElement("div");
   host.className = "dot-content dot-swap-in";
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
@@ -134,7 +133,7 @@ function sync(dot, state) {
 
   mount(dot, host);
 
-  // 6) Уже знаем финальные размеры — клампим top и подправляем left
+  // 6) После монтирования — финальный кламп позиции у края
   if (isRect && dock.docked) {
     clampTopByRect(dot, 8);
     fixLeftWhenDocked(dot);
