@@ -1,34 +1,60 @@
+// js/index.js
+// Точка входа: инициализация DOT, жестов и драга + применение prefs.
+
+import initDot from "./ui/dot.js";
 import { initGestures } from "./core/gestures.js";
-import { initDot } from "./ui/dot.js";
-import { initTheme } from "./services/theme.js";
-import { initDotDrag } from "./core/drag.js";
+import initDotDrag from "./core/drag.js";
+import { getState, setState } from "./core/state.js";
 
-function applyInitialPrefs() {
-  // Жёстко применяем «тихий» режим, если в localStorage ещё не было настроек
+const LS_KEY = "dot.prefs";
+
+function readPrefs() {
   try {
-    const raw = localStorage.getItem("dot.prefs");
-    const saved = raw ? JSON.parse(raw) : null;
-
-    // Значения по умолчанию (минимум движения)
-    const drag = saved?.drag ?? false;
-    const dock = saved?.dock ?? true;
-    const animations = saved?.animations ?? false;
-
-    document.body.classList.toggle("dot-drag-off", !drag);
-    document.body.classList.toggle("dot-dock-off", !dock);
-    document.body.classList.toggle("dot-anim-off", !animations);
+    const raw = localStorage.getItem(LS_KEY);
+    const obj = raw ? JSON.parse(raw) : {};
+    return (obj && typeof obj === "object") ? obj : {};
   } catch {
-    // В случае ошибки — всё выключено кроме дока
-    document.body.classList.add("dot-drag-off", "dot-anim-off");
-    document.body.classList.remove("dot-dock-off");
+    return {};
   }
+}
+function writePrefs(next) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(next || {})); } catch {}
+}
+
+/** Применяем prefs к DOM; дефолт: drag = true */
+function applyInitialPrefs() {
+  const prefs = readPrefs();
+
+  // Миграция: сносим старые ключи, связанные с доком/анимациями
+  if ("dock" in prefs || "snap" in prefs || "animations" in prefs) {
+    delete prefs.dock;
+    delete prefs.snap;
+    delete prefs.animations;
+    writePrefs(prefs);
+  }
+
+  const dragEnabled = prefs.drag !== false; // по умолчанию ВКЛ
+  document.body.classList.toggle("dot-drag-off", !dragEnabled);
 }
 
 function boot() {
-  initTheme();
-  applyInitialPrefs();        // ← включаем «статичный» режим до инициализации DOT
-  initGestures();
+  applyInitialPrefs();
   initDot();
-  initDotDrag(); // ← drag + snap (drag будет отключён классом .dot-drag-off)
+  initGestures();
+  initDotDrag();
+
+  // Экспорт для дебага
+  window.DOT = {
+    getState,
+    setState,
+    prefs: {
+      get: readPrefs,
+      set(p) { writePrefs(p); applyInitialPrefs(); },
+      enableDrag() { const p = { ...readPrefs(), drag: true }; writePrefs(p); applyInitialPrefs(); },
+      disableDrag() { const p = { ...readPrefs(), drag: false }; writePrefs(p); applyInitialPrefs(); },
+      clear() { localStorage.removeItem(LS_KEY); applyInitialPrefs(); },
+    },
+  };
 }
+
 document.addEventListener("DOMContentLoaded", boot);
