@@ -36,7 +36,7 @@ export function renderMenu(callbacks) {
     if (act === "contacts") callbacks.onContacts?.();
   });
 
-  // long‑press on Theme → gallery (без пульса)
+  // long-press on Theme → gallery (без пульса)
   const btnTheme = wrap.querySelector('[data-act="theme"]');
   attachLongPress(btnTheme, {
     onLongPress: () => {
@@ -47,7 +47,7 @@ export function renderMenu(callbacks) {
     }
   });
 
-  // long‑press on Function → FineTune
+  // long-press on Function → FineTune popover (снизу)
   const btnFunc = wrap.querySelector('[data-act="function"]');
   attachLongPress(btnFunc, {
     onLongPress: () => {
