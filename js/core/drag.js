@@ -1,6 +1,10 @@
 // js/core/drag.js
 import { getState } from "./state.js";
 
+/**
+ * Чистый драг DOT без дока/снапа и без анимаций.
+ * Уважает выключение через body.dot-drag-off (управляется в Fine‑Tune).
+ */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
   if (!dot) return;
@@ -27,19 +31,20 @@ export function initDotDrag() {
 
   dot.addEventListener("pointerdown", (e) => {
     if (getState() !== "idle") return;
+    if (document.body.classList.contains("dot-drag-off")) return;
 
     dragging = true;
     moved = false;
 
-    // переходим на абсолютные координаты
     const r = rect();
     originLeft = r.left;
     originTop  = r.top;
     startX = e.clientX;
     startY = e.clientY;
 
+    // При первом драге переходим в абсолютные координаты без translate(-50%, -50%)
     dot.style.transform = "translate(0,0)";
-    dot.setPointerCapture(e.pointerId);
+    try { dot.setPointerCapture(e.pointerId); } catch {}
   });
 
   dot.addEventListener("pointermove", (e) => {
