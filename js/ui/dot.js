@@ -60,34 +60,29 @@ function sync(dot, state) {
   // 2) Сбрасываем и ставим базовые классы состояния
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`);
-
-  // уважение глобального оффа анимаций
-  const animationsOn = !document.body.classList.contains("dot-anim-off");
-  if (animationsOn) {
-    dot.classList.add("dot-morph");
-    setTimeout(() => dot.classList.remove("dot-morph"), 240);
-  }
+  dot.classList.add(`dot-${state}`, "dot-morph");
+  setTimeout(() => dot.classList.remove("dot-morph"), 240);
 
   // 3) Возвращаем флаги докинга
   reapplyDockFlags(dot, dock);
 
   const isRect = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
-  const isMenuLike = (state === "menu" || state === "theme");
 
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // 4) У края: меню/тема -> вертикальный столбец + фикс по X
+  // 4) У края: меню/тема -> вертикальный режим + убираем dock-scale
+  const isMenuLike = (state === "menu" || state === "theme");
   if (isRect && dock.docked) {
-    if (animationsOn) dot.classList.add("dot-expanding");
+    dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
+    // фиксируем X сразу
     fixLeftWhenDocked(dot);
   } else {
     dot.classList.remove("dot-expanding", "dot-vert");
   }
 
-  // 5) Контент
+  // 5) Монтируем содержимое
   const host = document.createElement("div");
   host.className = "dot-content dot-swap-in";
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
@@ -133,7 +128,7 @@ function sync(dot, state) {
 
   mount(dot, host);
 
-  // 6) После монтирования — финальный кламп позиции у края
+  // 6) После монтирования знаем реальную высоту — клампим top ещё раз (и подправляем left на всякий случай)
   if (isRect && dock.docked) {
     clampTopByRect(dot, 8);
     fixLeftWhenDocked(dot);
