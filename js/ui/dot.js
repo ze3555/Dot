@@ -9,30 +9,30 @@ import { closePopover } from "./dot-popover.js";
 export function initDot() {
   const dot = document.getElementById("dot-core");
   if (!dot) throw new Error("#dot-core not found");
+  // гарантируем поверх всех
+  dot.style.zIndex = "1000";
   sync(dot, getState());
   subscribe(({ next }) => sync(dot, next));
 }
 export default initDot;
 
-// держите в синхроне с CSS
 const DOT_SIZE = 64;
 
 function clearRectSizing(dot) {
-  // убираем инлайны размеров, положение НЕ трогаем
   dot.style.width = "";
   dot.style.height = "";
+  dot.style.maxHeight = "";
 }
 
-function applyRectSizing(dot, isTall = false) {
-  // прямоугольные состояния — просто ширина по контенту/вьюпорту
-  dot.style.width  = isTall ? `${DOT_SIZE}px` : "min(520px, 86vw)";
+function applyRectSizing(dot) {
+  dot.style.width = "min(520px, 86vw)";
   dot.style.height = "auto";
+  dot.style.maxHeight = "min(78vh, 640px)"; // чтобы было место для контента
 }
 
 function sync(dot, state) {
   closePopover();
 
-  // Сбрасываем классы состояния (без дока, без анимаций)
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
@@ -43,17 +43,20 @@ function sync(dot, state) {
     state === "contacts" ||
     state === "settings";
 
-  // Размерность формы (без «морфов» и док‑вертикали)
   if (isRect) {
-    applyRectSizing(dot, false);
+    applyRectSizing(dot);
   } else {
-    clearRectSizing(dot); // idle => круг из CSS; позицию оставляем, где пользователь оставил
+    clearRectSizing(dot); // idle => круг из CSS
   }
 
-  // Контент
+  // Контейнер контента. Гасим «внешний клик» по умолчанию.
   const host = document.createElement("div");
   host.className = "dot-content";
-  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
+  if (state !== "idle") {
+    const stop = (e) => e.stopPropagation();
+    host.addEventListener("click", stop);
+    host.addEventListener("pointerdown", stop);
+  }
 
   switch (state) {
     case "idle": {
@@ -66,24 +69,31 @@ function sync(dot, state) {
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts"),
       });
+      // делаем видимым после монтирования (если в стилях есть .is-live)
+      queueMicrotask(() => menu.classList.add("is-live"));
       host.appendChild(menu);
       break;
     }
     case "contacts": {
-      host.appendChild(renderContacts({ onBack: () => setState("menu") }));
+      const c = renderContacts({ onBack: () => setState("menu") });
+      queueMicrotask(() => c.classList.add("is-live"));
+      host.appendChild(c);
       break;
     }
     case "settings": {
-      host.appendChild(renderSettings({ onBack: () => setState("menu") }));
+      const s = renderSettings({ onBack: () => setState("menu") });
+      queueMicrotask(() => s.classList.add("is-live"));
+      host.appendChild(s);
       break;
     }
     case "theme": {
-      // Используем то же меню как каталог тем
-      host.appendChild(renderMenu({
+      const m = renderMenu({
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts"),
-      }));
+      });
+      queueMicrotask(() => m.classList.add("is-live"));
+      host.appendChild(m);
       break;
     }
   }
