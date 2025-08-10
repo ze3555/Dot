@@ -1,0 +1,28 @@
+/* Main content between topbar and bottom panel */
+:root {
+  --bp-h: 84px; /* visual height of bottom panel shell (without safe area) */
+}
+
+html, body {
+  height: 100%;
+}
+
+#main-content {
+  min-height: 100%;
+  position: relative;
+  /* leave space for sticky bars */
+  padding-top: var(--topbar-h);
+  padding-bottom: calc(var(--bp-h) + env(safe-area-inset-bottom));
+}
+
+#messages {
+  /* placeholder styles; real chat UI later */
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+
+/* Ensure #dot-core (если уже есть) не перекрывает топ/боттом панель при fixed позиционировании */
+#dot-core {
+  pointer-events: auto;
+}
