@@ -5,6 +5,8 @@ import { renderThemeGallery } from "./theme-gallery.js";
 import { renderQuickTools } from "./quick-tools.js";
 import { renderFineTunePopover } from "./fine-tune-popover.js";
 
+const animOn = () => !document.body.classList.contains("dot-anim-off");
+
 export function renderMenu(callbacks) {
   const wrap = document.createElement("div");
   wrap.className = "dot-menu";
@@ -24,8 +26,10 @@ export function renderMenu(callbacks) {
     if (act === "theme") {
       toggleTheme();
       const dot = document.getElementById("dot-core");
-      dot?.classList.add("dot-pulse");
-      setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+      if (animOn()) {
+        dot?.classList.add("dot-pulse");
+        setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+      }
       callbacks.onTheme?.();
     }
 
@@ -50,8 +54,10 @@ export function renderMenu(callbacks) {
       const content = renderThemeGallery({
         onPicked: () => {
           const dot = document.getElementById("dot-core");
-          dot?.classList.add("dot-pulse");
-          setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+          if (animOn()) {
+            dot?.classList.add("dot-pulse");
+            setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
+          }
           closePopover();
         }
       });
