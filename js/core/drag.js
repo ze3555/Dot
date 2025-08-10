@@ -1,17 +1,22 @@
-
 // js/core/drag.js
 import { getState } from "./state.js";
 
 /**
- * Чистый драг без дока/снапа и без анимаций.
- * Уважает выключение через body.dot-drag-off.
- * Подавляет один «ложный» click после реального перетаскивания.
+ * Plain drag for #dot-core (idle only).
+ * Respects body.dot-drag-off. No dock, no snap, no animations.
+ * Suppresses one click after a real drag.
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
   if (!dot) return;
 
-  // iOS Safari: разблокировать pointermove
+  // Ensure dot can be positioned via left/top
+  const cs = getComputedStyle(dot);
+  if (cs.position === "static" || cs.position === "") {
+    dot.style.position = "absolute";
+  }
+
+  // iOS/Safari: allow pointermove; prevent browser gestures during drag
   dot.style.touchAction = "none";
 
   let dragging = false;
@@ -44,12 +49,14 @@ export function initDotDrag() {
     startX = e.clientX;
     startY = e.clientY;
 
-    // Перейти в абсолютные px и убрать центровку
+    // Convert from centered translate to absolute px
     dot.style.left = `${originLeft}px`;
     dot.style.top  = `${originTop}px`;
     dot.style.transform = "translate(0,0)";
 
     try { dot.setPointerCapture(e.pointerId); } catch {}
+    // prevent scroll/selection during drag start
+    e.preventDefault();
   });
 
   dot.addEventListener("pointermove", (e) => {
@@ -60,6 +67,8 @@ export function initDotDrag() {
 
     dot.style.left = `${originLeft + dx}px`;
     dot.style.top  = `${originTop + dy}px`;
+
+    e.preventDefault();
   });
 
   function endDrag(e) {
@@ -68,8 +77,7 @@ export function initDotDrag() {
     try { dot.releasePointerCapture(e.pointerId); } catch {}
     if (moved) {
       clampToViewport();
-      // подавим один клик после дропа
-      dot.dataset.suppressClick = "1";
+      dot.dataset.suppressClick = "1"; // suppress one click after drag
     }
   }
 
