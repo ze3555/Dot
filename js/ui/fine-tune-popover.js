@@ -1,12 +1,11 @@
 // js/ui/fine-tune-popover.js
-// Fine‑Tune: ONLY Drag toggle. No Dock/Snap/Animations. No close button.
-// Inside clicks do NOT close the popover.
+// Fine‑Tune: keep ONLY Drag toggle. Dock/Snap/Animations removed.
+// Inside clicks do NOT close the popover; outside tap closes (handled globally).
 
 import { closePopover } from "./dot-popover.js";
 
 const LS_KEY = "dot.prefs";
 
-/* storage */
 function readPrefs() {
   try { const v = localStorage.getItem(LS_KEY); return v ? JSON.parse(v) : {}; }
   catch { return {}; }
@@ -15,16 +14,13 @@ function writePrefs(obj) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(obj || {})); } catch {}
   window.dispatchEvent(new CustomEvent("dot:prefs-changed", { detail: obj || {} }));
 }
-
-/* apply */
 function applyDrag(enabled) {
   document.body.classList.toggle("dot-drag-off", !enabled);
 }
 
-/* UI */
 export function renderFineTunePopover({ onClose } = {}) {
   const prefs = readPrefs();
-  const dragEnabled = prefs.drag !== false; // default: ON
+  const dragEnabled = prefs.drag !== false; // default ON
   applyDrag(dragEnabled);
 
   const el = document.createElement("div");
@@ -37,11 +33,10 @@ export function renderFineTunePopover({ onClose } = {}) {
           <div style="font-weight:600">Drag</div>
           <div style="opacity:.7;font-size:.9em">Move DOT by dragging</div>
         </div>
-
         <label class="ftp-switch" style="position:relative;display:inline-flex;align-items:center;cursor:pointer;">
           <input id="ftp-drag" type="checkbox" style="position:absolute;opacity:0;width:0;height:0;" />
           <span class="ftp-slider" aria-hidden="true"
-                style="width:44px;height:24px;border-radius:12px;display:inline-block;box-sizing:border-box;border:1px solid currentColor;opacity:.9"></span>
+            style="width:44px;height:24px;border-radius:12px;display:inline-block;box-sizing:border-box;border:1px solid currentColor;opacity:.9"></span>
         </label>
       </div>
     </div>
@@ -72,22 +67,22 @@ export function renderFineTunePopover({ onClose } = {}) {
     input.checked = !!on;
     input.setAttribute("aria-checked", String(!!on));
     paintSwitch(!!on);
-    // do NOT close on toggle; popover closes only by outside tap
   }
 
   // init
   setDrag(dragEnabled);
 
-  // interactions (both input and slider clickable)
+  // interactions (checkbox and slider)
   input.addEventListener("change", () => setDrag(!!input.checked));
   slider.addEventListener("click", (e) => { e.preventDefault(); setDrag(!input.checked); });
 
-  // Block inside clicks on CAPTURE so the global outside-click closer can't see them
-  const stopCap = (e) => { e.stopPropagation(); };
-  el.addEventListener("pointerdown", stopCap, { capture: true });
-  el.addEventListener("click",        stopCap, { capture: true });
-  el.addEventListener("touchstart",   stopCap, { capture: true });
-  el.addEventListener("mousedown",    stopCap, { capture: true });
+  // block inside clicks so outside-closer won't fire
+  const stop = (e) => e.stopPropagation();
+  el.addEventListener("pointerdown", stop, { capture: true });
+  el.addEventListener("click",        stop, { capture: true });
+
+  // optional external closer (kept for parity with original API)
+  el.addEventListener("close-request", () => (onClose ? onClose() : closePopover()));
 
   return el;
 }
