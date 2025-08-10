@@ -2,16 +2,14 @@
 import { getState } from "./state.js";
 
 /**
- * Чистый драг DOT без дока/снапа и без анимаций.
- * Уважает выключение через body.dot-drag-off (управляется Fine‑Tune).
- * Надёжно конвертирует стартовое положение из %/transform в px.
+ * Чистый драг без дока и анимаций.
+ * Уважает выключение через body.dot-drag-off (рубит Fine‑Tune).
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
   if (!dot) return;
 
-  // iOS Safari: разрешаем pointermove
-  dot.style.touchAction = "none";
+  dot.style.touchAction = "none"; // iOS Safari
 
   let dragging = false;
   let startX = 0, startY = 0;
@@ -43,8 +41,7 @@ export function initDotDrag() {
     startX = e.clientX;
     startY = e.clientY;
 
-    // === ВАЖНО: сразу переводим в абсолютные px-координаты ===
-    // (если до этого было top/left 50% и transform: translate(-50%,-50%))
+    // Переводим в абсолютные px-координаты и убираем центровку
     dot.style.left = `${originLeft}px`;
     dot.style.top  = `${originTop}px`;
     dot.style.transform = "translate(0,0)";
@@ -73,6 +70,14 @@ export function initDotDrag() {
   dot.addEventListener("pointercancel", endDrag);
 
   window.addEventListener("resize", clampToViewport);
+
+  // Реагируем на изменение prefs «на лету»
+  window.addEventListener("dot:prefs-changed", () => {
+    // если выключили драг, на всякий случай завершим возможный перетаск
+    if (document.body.classList.contains("dot-drag-off") && dragging) {
+      dragging = false;
+    }
+  });
 }
 
 export default initDotDrag;
