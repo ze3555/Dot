@@ -23,9 +23,6 @@ export function renderMenu(callbacks) {
 
     if (act === "theme") {
       toggleTheme();
-      const dot = document.getElementById("dot-core");
-      dot?.classList.add("dot-pulse");
-      setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
       callbacks.onTheme?.();
     }
 
@@ -43,15 +40,12 @@ export function renderMenu(callbacks) {
     if (act === "contacts") callbacks.onContacts?.();
   });
 
-  // long-press on Theme → gallery (как было)
+  // long-press on Theme → gallery
   const btnTheme = wrap.querySelector('[data-act="theme"]');
   attachLongPress(btnTheme, {
     onLongPress: () => {
       const content = renderThemeGallery({
         onPicked: () => {
-          const dot = document.getElementById("dot-core");
-          dot?.classList.add("dot-pulse");
-          setTimeout(() => dot?.classList.remove("dot-pulse"), 240);
           closePopover();
         }
       });
