@@ -1,8 +1,8 @@
-import { getState, setState } from "./state.js";
+import { getState } from "./state.js";
 
 /**
- * Enable dragging the Dot in IDLE. On release, snap to nearest side (dock),
- * unless body has .dot-dock-off => then return to center.
+ * Enable dragging the Dot in IDLE.
+ * Док полностью убран: при отпускании — возврат в центр.
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
@@ -26,43 +26,11 @@ export function initDotDrag() {
   };
 
   const returnToCenter = () => {
-    dot.classList.remove("dot-free","dot-docked","dot-docked-left","dot-docked-right");
+    dot.classList.remove("dot-free");
     dot.style.left = "";
     dot.style.top = "";
     dot.style.transform = "translate(-50%, -50%)";
   };
-
-  const ORIGIN_MARGIN = 16;
-
-  function snapToSide() {
-    const safeTop = 8 + getSafeInsetTop();
-    const safeBottom = 8 + getSafeInsetBottom();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const r = getDotRect();
-    const cx = r.left + r.width / 2;
-    const sideRight = cx > vw / 2;
-
-    let y = Math.max(safeTop, Math.min(r.top, vh - r.height - safeBottom));
-
-    dot.classList.add("dot-docked");
-    dot.classList.toggle("dot-docked-right", sideRight);
-    dot.classList.toggle("dot-docked-left", !sideRight);
-
-    const x = sideRight ? (vw - r.width - ORIGIN_MARGIN) : ORIGIN_MARGIN;
-    dot.style.left = `${x}px`;
-    dot.style.top  = `${y}px`;
-    dot.style.transform = "translate(0,0)";
-  }
-
-  function getSafeInsetTop() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)") || "0", 10);
-    return isNaN(v) ? 0 : v;
-  }
-  function getSafeInsetBottom() {
-    const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)") || "0", 10);
-    return isNaN(v) ? 0 : v;
-  }
 
   dot.addEventListener("pointerdown", (e) => {
     if (getState() !== "idle") return;
@@ -101,11 +69,8 @@ export function initDotDrag() {
 
     if (moved) {
       suppressClickOnce = true;
-      if (document.body.classList.contains("dot-dock-off")) {
-        returnToCenter();
-      } else {
-        snapToSide();
-      }
+      // Док убран — всегда возвращаемся в центр.
+      returnToCenter();
     }
   };
 
@@ -116,19 +81,11 @@ export function initDotDrag() {
     if (suppressClickOnce) {
       e.stopPropagation();
       suppressClickOnce = false;
-    } else {
-      if (getState() === "idle" && dot.classList.contains("dot-docked")) {
-        returnToCenter();
-        queueMicrotask(() => setState("menu"));
-        e.stopPropagation();
-      }
     }
   });
 
   window.addEventListener("resize", () => {
-    if (dot.classList.contains("dot-docked")) {
-      snapToSide();
-    } else if (dot.classList.contains("dot-free")) {
+    if (dot.classList.contains("dot-free")) {
       const r = getDotRect();
       const vw = window.innerWidth, vh = window.innerHeight;
       const x = Math.max(8, Math.min(r.left, vw - r.width - 8));
