@@ -1,0 +1,68 @@
+/* Contacts capsule inside #dot-core when .dot-contacts is active */
+
+.dot-contacts-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  opacity: 0; transform: translateY(4px);
+}
+.dot-contacts-wrap.is-live {
+  animation: contactIn .24s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes contactIn {
+  from { opacity: 0; transform: translateY(4px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+
+/* Icon buttons */
+.dot-contacts-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--dot-fg);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  opacity: .9;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+.dot-contacts-btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--dot-bg), white 8%);
+}
+.dot-contacts-btn:active { transform: translateY(0) scale(.98) }
+
+/* Input */
+.dot-contacts-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--dot-fg);
+  font-size: 16px;
+  line-height: 1.2;
+  padding: 6px 2px;
+}
+.dot-contacts-input::placeholder {
+  color: color-mix(in oklab, var(--dot-fg), transparent 60%);
+}
+
+/* Add button enabled/disabled */
+.dot-contacts-btn[data-act="add"][disabled] {
+  opacity: .45;
+  pointer-events: none;
+}
+
+/* Focus ring for the whole capsule */
+#dot-core.dot-contacts:focus-within {
+  outline: 0;
+  box-shadow:
+    0 6px 22px rgba(0,0,0,.28),
+    0 0 0 4px color-mix(in oklab, var(--dot-fg), transparent 70%);
+}
