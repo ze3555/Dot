@@ -1,5 +1,7 @@
 // js/ui/fine-tune-popover.js
 // Fine‑Tune: ONLY Drag toggle. No Dock/Snap/Animations. No close button.
+// Inside clicks do NOT close the popover.
+
 import { closePopover } from "./dot-popover.js";
 
 const LS_KEY = "dot.prefs";
@@ -70,20 +72,22 @@ export function renderFineTunePopover({ onClose } = {}) {
     input.checked = !!on;
     input.setAttribute("aria-checked", String(!!on));
     paintSwitch(!!on);
-    (onClose ? onClose() : closePopover()); // close on toggle
+    // do NOT close on toggle; popover closes only by outside tap
   }
 
   // init
   setDrag(dragEnabled);
 
-  // interactions
+  // interactions (both input and slider clickable)
   input.addEventListener("change", () => setDrag(!!input.checked));
   slider.addEventListener("click", (e) => { e.preventDefault(); setDrag(!input.checked); });
 
-  // block inside clicks from closing
-  const stop = (e) => e.stopPropagation();
-  el.addEventListener("pointerdown", stop);
-  el.addEventListener("click", stop);
+  // Block inside clicks on CAPTURE so the global outside-click closer can't see them
+  const stopCap = (e) => { e.stopPropagation(); };
+  el.addEventListener("pointerdown", stopCap, { capture: true });
+  el.addEventListener("click",        stopCap, { capture: true });
+  el.addEventListener("touchstart",   stopCap, { capture: true });
+  el.addEventListener("mousedown",    stopCap, { capture: true });
 
   return el;
 }
