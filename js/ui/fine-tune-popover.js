@@ -1,7 +1,6 @@
 // js/ui/fine-tune-popover.js
 const KEY = "dot.prefs";
-// Новые дефолты: без анимаций, без драга, док включён
-const DEFAULTS = { drag: false, dock: true, animations: false };
+const DEFAULTS = { drag: true, dock: true, animations: true };
 
 function loadPrefs() {
   try {
