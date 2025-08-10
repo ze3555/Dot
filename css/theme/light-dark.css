@@ -1,13 +1,13 @@
-/* Тематические переменные + инвертированный топ-бар. DOT — прозрачный, цвет задаёт JS. */
+/* css/theme/light-dark.css
+   Тематические переменные + инвертированный топ-бар.
+   DOT не красим (фон прозрачный) — им рулит JS.
+*/
 
 /* Глобальные размеры */
-:root {
-  --topbar-h: 48px;
-  --composer-h: 56px;
-}
+:root { --topbar-h: 48px; --composer-h: 56px; }
 
-/* Плавные переходы интерфейсных элементов (не мешают core-анимациям) */
-body, #topbar, .bottom-panel, .drawer-trigger, #chat-input,
+/* Плавные переходы */
+body, .top-bar, .bottom-panel, .drawer-trigger, #chat-input,
 .drawer-add-btn, .logout-btn, .chat-send-btn {
   transition: background-color .18s cubic-bezier(.2,.8,.2,1),
               color .18s cubic-bezier(.2,.8,.2,1),
@@ -15,76 +15,56 @@ body, #topbar, .bottom-panel, .drawer-trigger, #chat-input,
               border-color .18s cubic-bezier(.2,.8,.2,1);
 }
 
+/* Глобальное отключение анимаций (Fine‑Tune) */
+body.dot-anim-off *, 
+body.dot-anim-off *::before, 
+body.dot-anim-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* LIGHT */
 body.theme-light {
-  --bg: #f6f7f9;
-  --fg: #111;
-
-  /* инвертированный топ-бар: тёмный */
-  --topbar-bg: #171717;
-  --topbar-fg: #fff;
-
-  --panel-bg: #ffffff;
-  --panel-fg: #111;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.10);
-  --panel-border: 1px solid rgba(0,0,0,0.06);
-  --backdrop: rgba(0,0,0,0.15);
-
-  --input-bg: #f1f1f3;
-  --input-fg: #111;
-  --input-border: 1px solid rgba(0,0,0,0.12);
-  --input-ph: rgba(0,0,0,0.45);
-  --input-focus-ring: 0 0 0 3px rgba(17,17,17,0.12);
-
-  --btn-bg: #111;
-  --btn-fg: #fff;
-  --btn-bg-hover: #333;
-
-  background: var(--bg);
-  color: var(--fg);
+  --bg:#f6f7f9; --fg:#111;
+  --topbar-bg:#171717; --topbar-fg:#fff;
+  --panel-bg:#ffffff; --panel-fg:#111;
+  --panel-shadow:0 6px 28px rgba(0,0,0,.10);
+  --panel-border:1px solid rgba(0,0,0,.06);
+  --backdrop:rgba(0,0,0,.15);
+  --input-bg:#f1f1f3; --input-fg:#111;
+  --input-border:1px solid rgba(0,0,0,.12);
+  --input-ph:rgba(0,0,0,.45);
+  --input-focus-ring:0 0 0 3px rgba(17,17,17,.12);
+  --btn-bg:#111; --btn-fg:#fff; --btn-bg-hover:#333;
+  background:var(--bg); color:var(--fg);
 }
 
 /* DARK */
 body.theme-dark {
-  --bg: #121315;
-  --fg: #fff;
-
-  /* «молочный» топ-бар */
-  --topbar-bg: #f2f2f3;
-  --topbar-fg: #111;
-
-  --panel-bg: #161616;
-  --panel-fg: #fff;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.45);
-  --panel-border: 1px solid rgba(255,255,255,0.06);
-  --backdrop: rgba(0,0,0,0.45);
-
-  --input-bg: #1e1f21;
-  --input-fg: #fff;
-  --input-border: 1px solid rgba(255,255,255,0.16);
-  --input-ph: rgba(255,255,255,0.55);
-  --input-focus-ring: 0 0 0 3px rgba(255,255,255,0.14);
-
-  --btn-bg: #fff;
-  --btn-fg: #000;
-  --btn-bg-hover: #e9e9e9;
-
-  background: var(--bg);
-  color: var(--fg);
+  --bg:#121315; --fg:#fff;
+  --topbar-bg:#f2f2f3; --topbar-fg:#111;
+  --panel-bg:#161616; --panel-fg:#fff;
+  --panel-shadow:0 6px 28px rgba(0,0,0,.45);
+  --panel-border:1px solid rgba(255,255,255,.06);
+  --backdrop:rgba(0,0,0,.45);
+  --input-bg:#1e1f21; --input-fg:#fff;
+  --input-border:1px solid rgba(255,255,255,.16);
+  --input-ph:rgba(255,255,255,.55);
+  --input-focus-ring:0 0 0 3px rgba(255,255,255,.14);
+  --btn-bg:#fff; --btn-fg:#000; --btn-bg-hover:#e9e9e9;
+  background:var(--bg); color:var(--fg);
 }
 
-/* Топ-бар — синхронизирован с лэйаутом (#topbar) */
-#topbar {
+/* Топ-бар */
+.top-bar {
   background: var(--topbar-bg);
   color: var(--topbar-fg);
   box-shadow: 0 2px 6px rgba(0,0,0,0.10);
   height: var(--topbar-h);
 }
 
-/* DOT — фон прозрачный, цвет отдаём JS */
-#topbar .dot-core, .dot-core {
-  background: transparent;
-}
+/* DOT — фон прозрачный */
+.top-bar .dot-core, .dot-core { background: transparent; }
 
 /* Drawer */
 .contacts-drawer {
@@ -95,7 +75,7 @@ body.theme-dark {
 }
 .contacts-drawer-backdrop { background: var(--backdrop); }
 
-/* Кнопки */
+/* Триггер/кнопки */
 .drawer-trigger {
   background: color-mix(in oklab, var(--panel-bg), transparent 10%);
   color: var(--panel-fg);
@@ -103,38 +83,24 @@ body.theme-dark {
   border: 1px solid color-mix(in oklab, var(--panel-fg), transparent 92%);
 }
 .drawer-add-btn, .logout-btn, .chat-send-btn {
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
+  background: var(--btn-bg); color: var(--btn-fg); border: 1px solid var(--btn-bg);
 }
 .drawer-add-btn:hover, .logout-btn:hover, .chat-send-btn:hover {
-  background: var(--btn-bg-hover);
-  border-color: var(--btn-bg-hover);
+  background: var(--btn-bg-hover); border-color: var(--btn-bg-hover);
 }
 
 /* Bottom panel */
 .bottom-panel {
-  background: var(--panel-bg);
-  color: var(--panel-fg);
-  box-shadow: 0 -1px 8px rgba(0,0,0,0.12);
-  border-top: var(--panel-border);
+  background: var(--panel-bg); color: var(--panel-fg);
+  box-shadow: 0 -1px 8px rgba(0,0,0,0.12); border-top: var(--panel-border);
   min-height: var(--composer-h);
 }
 
 /* Инпуты */
 #chat-input, .chat-input, .contacts-input {
-  background: var(--input-bg);
-  color: var(--input-fg);
-  border: var(--input-border);
+  background: var(--input-bg); color: var(--input-fg); border: var(--input-border);
 }
-#chat-input::placeholder, .chat-input::placeholder,
-.contacts-input::placeholder { color: var(--input-ph); }
+#chat-input::placeholder, .chat-input::placeholder, .contacts-input::placeholder { color: var(--input-ph); }
 #chat-input:focus, .chat-input:focus, .contacts-input:focus {
-  outline: none; border-color: currentColor; box-shadow: var(--input-focus-ring);
-}
-
-/* Reduce motion для темы (только визуальные мелочи) */
-@media (prefers-reduced-motion: reduce){
-  body, #topbar, .bottom-panel, .drawer-trigger, #chat-input,
-  .drawer-add-btn, .logout-btn, .chat-send-btn { transition: none; }
+  outline:none; border-color:currentColor; box-shadow: var(--input-focus-ring);
 }
