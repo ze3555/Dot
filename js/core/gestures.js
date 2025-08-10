@@ -1,6 +1,6 @@
 import { getState, setState } from "./state.js";
 
-/** Долгое нажатие на элемент */
+/** Вешает long-press на элемент */
 export function attachLongPress(el, { threshold = 360, onLongPress }) {
   let pressed = false, moved = false, id = null;
 
@@ -14,7 +14,7 @@ export function attachLongPress(el, { threshold = 360, onLongPress }) {
     document.body.classList.add("no-select");
     pressed = true; moved = false;
     id = setTimeout(() => { if (pressed && !moved) onLongPress?.(e); }, threshold);
-    e.preventDefault();
+    e.preventDefault(); // гасим лупу/выделение на мобилах
   });
 
   el.addEventListener("pointermove", (e) => {
@@ -33,7 +33,7 @@ export function initGestures() {
   const dot = document.getElementById("dot-core");
   if (!dot) return;
 
-  // Outside click: переводим в idle
+  // Надёжный outside-click (через origin pointerdown)
   let startedInside = false;
   document.addEventListener("pointerdown", (e) => {
     startedInside = dot.contains(e.target);
@@ -44,14 +44,10 @@ export function initGestures() {
     startedInside = false;
   }, { capture: true });
 
-  // Tap по DOT в idle -> menu
+  // Клик по DOT в idle -> menu (НО не если он докнут — тогда это делает drag.js)
   dot.addEventListener("click", (e) => {
     if (getState() !== "idle") return;
-
-    // КЛЮЧЕВОЕ: если DOT докнут — НЕ открываем меню здесь.
-    // Это сделает drag.js (сначала вернёт в центр, затем setState('menu')).
-    if (dot.classList.contains("dot-docked")) return;
-
+    if (dot.classList.contains("dot-docked")) return; // приоритет drag.js
     e.stopPropagation();
     setState("menu");
   });
