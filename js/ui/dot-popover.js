@@ -1,7 +1,9 @@
+// js/ui/dot-popover.js
 let current = null;
 
 export function closePopover() {
   if (current?.el && current.el.parentNode) current.el.parentNode.removeChild(current.el);
+  if (current?.off) current.off();
   current = null;
 }
 
@@ -27,8 +29,8 @@ export function showPopover(content, opts = {}) {
   const r = dot.getBoundingClientRect();
   const p = host.getBoundingClientRect();
 
-  let x = r.left + r.width/2 - p.width/2;
-  let y = r.top + r.height/2 - p.height/2;
+  let x = r.left + r.width / 2 - p.width / 2;
+  let y = r.top + r.height / 2 - p.height / 2;
 
   if (side === "top")    y = r.top - p.height - offset;
   if (side === "bottom") y = r.bottom + offset;
@@ -42,19 +44,39 @@ export function showPopover(content, opts = {}) {
   host.style.left = `${x}px`;
   host.style.top  = `${y}px`;
 
-  // close on outside or ESC
-  const outside = (e) => { if (!host.contains(e.target)) cleanup(); };
-  const esc = (e) => { if (e.key === "Escape") cleanup(); };
+  // --- Outside click logic (robust) ---
+  // Закрываем ТОЛЬКО если жест начался и завершился СНАРУЖИ.
+  let startedInside = false;
+
+  const onPointerDown = (e) => {
+    startedInside = host.contains(e.target);
+  };
+
+  const onClick = () => {
+    if (!startedInside) cleanup();
+    startedInside = false;
+  };
+
+  const onKeydown = (e) => {
+    if (e.key === "Escape") cleanup();
+  };
 
   function cleanup() {
-    document.removeEventListener("click", outside, true);
-    document.removeEventListener("keydown", esc, true);
+    document.removeEventListener("pointerdown", onPointerDown, true);
+    document.removeEventListener("click", onClick, true);
+    document.removeEventListener("keydown", onKeydown, true);
     closePopover();
   }
 
-  document.addEventListener("click", outside, true);
-  document.addEventListener("keydown", esc, true);
+  document.addEventListener("pointerdown", onPointerDown, true);
+  document.addEventListener("click", onClick, true);
+  document.addEventListener("keydown", onKeydown, true);
 
-  current = { el: host, cleanup };
+  current = { el: host, off: () => {
+    document.removeEventListener("pointerdown", onPointerDown, true);
+    document.removeEventListener("click", onClick, true);
+    document.removeEventListener("keydown", onKeydown, true);
+  } };
+
   return host;
 }
