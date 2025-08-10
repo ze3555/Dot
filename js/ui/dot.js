@@ -60,8 +60,14 @@ function sync(dot, state) {
   // 2) Сбрасываем и ставим базовые классы состояния
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`, "dot-morph");
-  setTimeout(() => dot.classList.remove("dot-morph"), 240);
+  dot.classList.add(`dot-${state}`);
+
+  // уважение глобального флага отключения анимаций
+  const animationsOn = !document.body.classList.contains("dot-anim-off");
+  if (animationsOn) {
+    dot.classList.add("dot-morph");
+    setTimeout(() => dot.classList.remove("dot-morph"), 240);
+  }
 
   // 3) Возвращаем флаги докинга
   reapplyDockFlags(dot, dock);
@@ -74,7 +80,7 @@ function sync(dot, state) {
   // 4) У края: меню/тема -> вертикальный режим + убираем dock-scale
   const isMenuLike = (state === "menu" || state === "theme");
   if (isRect && dock.docked) {
-    dot.classList.add("dot-expanding");
+    if (animationsOn) dot.classList.add("dot-expanding");
     if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
     // фиксируем X сразу
     fixLeftWhenDocked(dot);
