@@ -1,7 +1,6 @@
-
 // js/ui/fine-tune-popover.js
 const KEY = "dot.prefs";
-const DEFAULTS = { drag: true };
+const DEFAULTS = { drag: true, dock: true, animations: true };
 
 function loadPrefs() {
   try {
@@ -14,6 +13,8 @@ function savePrefs(p) {
 }
 function applyPrefs(p) {
   document.body.classList.toggle("dot-drag-off", !p.drag);
+  document.body.classList.toggle("dot-dock-off", !p.dock);
+  document.body.classList.toggle("dot-anim-off", !p.animations);
 }
 
 export function renderFineTunePopover() {
@@ -23,8 +24,9 @@ export function renderFineTunePopover() {
   const wrap = document.createElement("div");
   wrap.className = "dot-popover__grid";
 
-  // оставили только Drag
   wrap.append(makeSwitch("Drag", "Enable Dot dragging.", "drag"));
+  wrap.append(makeSwitch("Dock", "Attach Dot to composer.", "dock"));
+  wrap.append(makeSwitch("Animations", "Morph & stagger.", "animations"));
 
   return wrap;
 
