@@ -115,3 +115,22 @@
   #dot-core.dot-pulse,
   .dot-swap-in{ transition:none; opacity:1; transform:none }
 }
+/* Глобовое отключение анимаций/переходов при статичном режиме */
+body.dot-anim-off * {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.dot-anim-off #dot-core {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.dot-anim-off #dot-core.dot-morph,
+body.dot-anim-off #dot-core.dot-pulse,
+body.dot-anim-off #dot-core.dot-expanding,
+body.dot-anim-off #dot-core .dot-swap-in,
+body.dot-anim-off #dot-core .is-live {
+  animation: none !important;
+  transition: none !important;
+}
