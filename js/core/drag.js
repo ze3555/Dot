@@ -2,19 +2,21 @@
 import { getState } from "./state.js";
 
 /**
- * Чистый драг без дока и анимаций.
- * Уважает выключение через body.dot-drag-off (рубит Fine‑Tune).
+ * Чистый драг без дока/снапа и без анимаций.
+ * Уважает выключение через body.dot-drag-off.
+ * Подавляет один «ложный» click после реального перетаскивания.
  */
 export function initDotDrag() {
   const dot = document.getElementById("dot-core");
   if (!dot) return;
 
-  dot.style.touchAction = "none"; // iOS Safari
+  // iOS Safari: разблокировать pointermove
+  dot.style.touchAction = "none";
 
   let dragging = false;
+  let moved = false;
   let startX = 0, startY = 0;
   let originLeft = 0, originTop = 0;
-  let moved = false;
 
   const rect = () => dot.getBoundingClientRect();
 
@@ -41,10 +43,10 @@ export function initDotDrag() {
     startX = e.clientX;
     startY = e.clientY;
 
-    // Переводим в абсолютные px-координаты и убираем центровку
+    // Перейти в абсолютные px и убрать центровку
     dot.style.left = `${originLeft}px`;
     dot.style.top  = `${originTop}px`;
-    dot.style.transform = "translate(0,0)";
+    dot.style.transform = "translate(0,0)`;
 
     try { dot.setPointerCapture(e.pointerId); } catch {}
   });
@@ -53,31 +55,27 @@ export function initDotDrag() {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+    if (!moved && (Math.abs(dx) + Math.abs(dy) > 3)) moved = true;
 
     dot.style.left = `${originLeft + dx}px`;
     dot.style.top  = `${originTop + dy}px`;
   });
 
-  const endDrag = (e) => {
+  function endDrag(e) {
     if (!dragging) return;
     dragging = false;
     try { dot.releasePointerCapture(e.pointerId); } catch {}
-    if (moved) clampToViewport();
-  };
+    if (moved) {
+      clampToViewport();
+      // подавим один клик после дропа
+      dot.dataset.suppressClick = "1";
+    }
+  }
 
   dot.addEventListener("pointerup", endDrag);
   dot.addEventListener("pointercancel", endDrag);
 
   window.addEventListener("resize", clampToViewport);
-
-  // Реагируем на изменение prefs «на лету»
-  window.addEventListener("dot:prefs-changed", () => {
-    // если выключили драг, на всякий случай завершим возможный перетаск
-    if (document.body.classList.contains("dot-drag-off") && dragging) {
-      dragging = false;
-    }
-  });
 }
 
 export default initDotDrag;
