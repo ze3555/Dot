@@ -16,7 +16,6 @@ export function initDot() {
 const DOT_SIZE = 64; // должен совпадать с --dot-size
 const MARGIN = 16;   // отступ от краёв по X при доке
 
-/* Помощники */
 function readDockFlags(dot) {
   return {
     docked: dot.classList.contains("dot-docked"),
@@ -33,22 +32,20 @@ function reapplyDockFlags(dot, f) {
 function fixLeftWhenDocked(dot) {
   if (!dot.classList.contains("dot-docked")) return;
   const vw = window.innerWidth;
-  if (dot.classList.contains("dot-docked-right")) {
-    dot.style.left = `${Math.max(8, vw - DOT_SIZE - MARGIN)}px`;
-    dot.style.transform = "translate(0,0)";
-  } else if (dot.classList.contains("dot-docked-left")) {
-    dot.style.left = `${Math.max(8, MARGIN)}px`;
-    dot.style.transform = "translate(0,0)";
+  const width = DOT_SIZE;
+  if (dot.classList.contains("dot-docked-left")) {
+    dot.style.left = `0px`;
+    dot.style.transform = "translate(0, -50%)";
+  } else if (dot.classList.contains("dot-docked-right")) {
+    dot.style.left = `${vw - width}px`;
+    dot.style.transform = "translate(0, -50%)";
   }
 }
-function clampTopByRect(dot, margin = 8) {
-  if (!dot.classList.contains("dot-docked")) return;
-  const vh = window.innerHeight;
+function clampTopByRect(dot, pad = 8) {
   const r = dot.getBoundingClientRect();
-  let top = r.top;
-  const maxTop = vh - r.height - margin;
-  top = Math.max(margin, Math.min(top, maxTop));
-  dot.style.top = `${top}px`;
+  const vh = window.innerHeight;
+  const safeTop = Math.max(pad, Math.min(r.top, vh - r.height - pad));
+  dot.style.top = `${safeTop}px`;
 }
 
 function sync(dot, state) {
@@ -68,16 +65,18 @@ function sync(dot, state) {
 
   const isRect = (state === "menu" || state === "theme" || state === "contacts" || state === "settings");
 
-  // theme визуально = menu
-  if (state === "theme") dot.classList.add("dot-menu");
-
-  // 4) У края: меню/тема -> вертикальный режим + убираем dock-scale
-  const isMenuLike = (state === "menu" || state === "theme");
-  if (isRect && dock.docked) {
+  // 4) Габариты формы (круг/капсула/квадрат)
+  if (isRect) {
     dot.classList.add("dot-expanding");
-    if (isMenuLike) dot.classList.add("dot-vert"); else dot.classList.remove("dot-vert");
-    // фиксируем X сразу
-    fixLeftWhenDocked(dot);
+    if (dock.docked) {
+      dot.classList.add("dot-vert");
+      dot.style.width  = `${DOT_SIZE}px`;
+      dot.style.height = "auto";
+    } else {
+      dot.classList.remove("dot-vert");
+      dot.style.width  = "min(520px, 86vw)";
+      dot.style.height = "auto";
+    }
   } else {
     dot.classList.remove("dot-expanding", "dot-vert");
   }
@@ -98,7 +97,8 @@ function sync(dot, state) {
         onSettings: () => setState("settings"),
         onContacts: () => setState("contacts"),
       });
-      if (dock.docked) menu.classList.add("is-vert");
+      const isDocked = dock.docked;
+      if (isDocked) menu.classList.add("is-vert");
       queueMicrotask(() => menu.classList.add("is-live"));
       host.appendChild(menu);
       break;
@@ -110,10 +110,13 @@ function sync(dot, state) {
       break;
     }
     case "settings": {
-      host.appendChild(renderSettings({ onBack: () => setState("menu") }));
+      const s = renderSettings({ onBack: () => setState("menu") });
+      queueMicrotask(() => s.classList.add("is-live"));
+      host.appendChild(s);
       break;
     }
     case "theme": {
+      // Оставляем открытым меню (как каталог выбора темы)
       const m = renderMenu({
         onTheme:    () => setState("theme"),
         onSettings: () => setState("settings"),
