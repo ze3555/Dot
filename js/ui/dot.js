@@ -1,4 +1,4 @@
-// js/ui/dot.js
+// js/ui/dot.js (patched to remove animations and morph classes)
 import { mount } from "../core/dom.js";
 import { getState, setState, subscribe } from "../core/state.js";
 import { renderMenu } from "./dot-menu.js";
@@ -16,7 +16,7 @@ export function initDot() {
 function sync(dot, state) {
   closePopover();
 
-  // Базовый, предсказуемый класс — без «морфов» и swap-анимаций
+  // Only state class, no morph/swap classes
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
@@ -24,7 +24,7 @@ function sync(dot, state) {
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // Контейнер контента — без анимационных классов
+  // Content host without animation helper classes
   const host = document.createElement("div");
   host.className = "dot-content";
   if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
@@ -60,6 +60,9 @@ function sync(dot, state) {
       });
       host.appendChild(m);
       break;
+    }
+    default: {
+      host.innerHTML = "";
     }
   }
 
