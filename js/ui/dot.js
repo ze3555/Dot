@@ -1,3 +1,4 @@
+// js/ui/dot.js
 import { mount } from "../core/dom.js";
 import { getState, setState, subscribe } from "../core/state.js";
 import { renderMenu } from "./dot-menu.js";
@@ -5,6 +6,10 @@ import { renderContacts } from "./dot-contacts.js";
 import { renderSettings } from "./dot-settings.js";
 import { closePopover } from "./dot-popover.js";
 
+/**
+ * Инициализация ядра DOT без анимаций.
+ * Классы вида .dot-morph, .dot-swap-in и т.п. больше не используются.
+ */
 export function initDot() {
   const dot = document.getElementById("dot-core");
   if (!dot) throw new Error("#dot-core not found");
@@ -13,21 +18,23 @@ export function initDot() {
 }
 
 function sync(dot, state) {
+  // Закрываем поповеры на смену состояния
   closePopover();
 
-  // Базовые классы состояния (без док-флагов)
+  // Чистим классы и выставляем только состояние (без «морфов»)
   dot.className = "";
   dot.id = "dot-core";
-  dot.classList.add(`dot-${state}`, "dot-morph");
-  setTimeout(() => dot.classList.remove("dot-morph"), 240);
+  dot.classList.add(`dot-${state}`);
 
   // theme визуально = menu
   if (state === "theme") dot.classList.add("dot-menu");
 
-  // Контейнер контента
+  // Контейнер контента — без анимационных классов
   const host = document.createElement("div");
-  host.className = "dot-content dot-swap-in";
-  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
+  host.className = "dot-content";
+  if (state !== "idle") {
+    host.addEventListener("click", (e) => e.stopPropagation());
+  }
 
   switch (state) {
     case "idle": {
@@ -41,13 +48,11 @@ function sync(dot, state) {
         onContacts: () => setState("contacts"),
       });
       host.appendChild(menu);
-      queueMicrotask(() => menu.classList.add("is-live"));
       break;
     }
     case "contacts": {
       const c = renderContacts({ onBack: () => setState("menu") });
       host.appendChild(c);
-      queueMicrotask(() => c.classList.add("is-live"));
       break;
     }
     case "settings": {
@@ -61,10 +66,16 @@ function sync(dot, state) {
         onContacts: () => setState("contacts"),
       });
       host.appendChild(m);
-      queueMicrotask(() => m.classList.add("is-live"));
       break;
     }
+    default: {
+      // на случай неизвестного состояния просто чистим
+      host.innerHTML = "";
+    }
   }
+
+  mount(dot, host);
+}
 
   mount(dot, host);
 }
