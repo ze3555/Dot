@@ -1,90 +1,92 @@
-import { getState } from "./state.js";
+// js/core/drag.js
+// Перетаскивание #dot-core в пределах окна без инерции и без анимаций.
 
-/**
- * Enable dragging the Dot in IDLE.
- * Без дока и без фиксации в центре: после отпускания остаёмся на месте.
- */
-export function initDotDrag() {
-  const dot = document.getElementById("dot-core");
-  if (!dot) return;
+let dragging = false;
+let startX = 0, startY = 0;
+let origX = 0, origY = 0;
 
-  let dragging = false;
-  let startX = 0, startY = 0;
-  let originLeft = 0, originTop = 0;
-  let moved = false;
+const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
-  let suppressClickOnce = false;
+function getBounds(el) {
+  const r = el.getBoundingClientRect();
+  const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 0;
 
-  const getDotRect = () => dot.getBoundingClientRect();
+  const pad = 0; // можно увеличить, если нужен внутренний отступ от краёв
 
-  const enterFree = () => {
-    dot.classList.add("dot-free");
-    const r = getDotRect();
-    dot.style.left = `${r.left}px`;
-    dot.style.top = `${r.top}px`;
-    dot.style.transform = "translate(0,0)";
+  return {
+    minX: pad,
+    minY: pad,
+    maxX: Math.max(pad, vw - r.width - pad),
+    maxY: Math.max(pad, vh - r.height - pad),
+    width: r.width,
+    height: r.height,
   };
+}
 
-  dot.addEventListener("pointerdown", (e) => {
-    if (getState() !== "idle") return;
-    if (document.body.classList.contains("dot-drag-off")) return;
+function getCurrentTranslate(el) {
+  const tr = getComputedStyle(el).transform;
+  if (!tr || tr === "none") return { x: 0, y: 0 };
+  const m = new DOMMatrixReadOnly(tr);
+  return { x: m.m41 || 0, y: m.m42 || 0 };
+}
 
+export function initDotDrag() {
+  const el = document.getElementById("dot-core");
+  if (!el) return;
+
+  // стартовая коррекция положения (на случай SSR/начальных классов)
+  clampIntoViewport(el);
+
+  const onPointerDown = (e) => {
+    if (e.button !== 0) return;
     dragging = true;
-    moved = false;
-    suppressClickOnce = false;
-
-    dot.setPointerCapture(e.pointerId);
-
-    const r = getDotRect();
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    const t = getCurrentTranslate(el);
     startX = e.clientX;
     startY = e.clientY;
-    originLeft = r.left;
-    originTop  = r.top;
+    origX = t.x;
+    origY = t.y;
+  };
 
-    enterFree();
-    e.stopPropagation();
-  });
-
-  dot.addEventListener("pointermove", (e) => {
+  const onPointerMove = (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
 
-    dot.style.left = `${originLeft + dx}px`;
-    dot.style.top  = `${originTop + dy}px`;
-  });
+    const b = getBounds(el);
+    const nx = clamp(origX + dx, b.minX, b.maxX);
+    const ny = clamp(origY + dy, b.minY, b.maxY);
 
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    dot.releasePointerCapture(e.pointerId);
-
-    if (moved) {
-      // Остаёмся там, где отпустили (никакого returnToCenter).
-      suppressClickOnce = true;
-    }
+    // Без переходов: просто ставим позицию
+    el.style.willChange = "transform";
+    el.style.transform = `translate(${nx}px, ${ny}px)`;
   };
 
-  dot.addEventListener("pointerup", endDrag);
-  dot.addEventListener("pointercancel", endDrag);
+  const onPointerUp = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+    // Финальный «кламп» — если окно изменилось во время перетаскивания
+    clampIntoViewport(el);
+    // убираем will-change, чтобы не держать композитор
+    requestAnimationFrame(() => { el.style.willChange = ""; });
+  };
 
-  dot.addEventListener("click", (e) => {
-    if (suppressClickOnce) {
-      e.stopPropagation();
-      suppressClickOnce = false;
-    }
-  });
+  const onResize = () => {
+    clampIntoViewport(el);
+  };
 
-  // Держим Dot в видимой области при ресайзе, если он в свободном положении
-  window.addEventListener("resize", () => {
-    if (dot.classList.contains("dot-free")) {
-      const r = getDotRect();
-      const vw = window.innerWidth, vh = window.innerHeight;
-      const x = Math.max(8, Math.min(r.left, vw - r.width - 8));
-      const y = Math.max(8, Math.min(r.top,  vh - r.height - 8));
-      dot.style.left = `${x}px`;
-      dot.style.top  = `${y}px`;
-    }
-  });
+  el.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
+  window.addEventListener("pointerup", onPointerUp, { passive: true });
+  window.addEventListener("resize", onResize);
+}
+
+function clampIntoViewport(el) {
+  const t = getCurrentTranslate(el);
+  const b = getBounds(el);
+  const fx = clamp(t.x, b.minX, b.maxX);
+  const fy = clamp(t.y, b.minY, b.maxY);
+  el.style.transform = `translate(${fx}px, ${fy}px)`;
 }
