@@ -1,195 +1,53 @@
-/* css/theme/light-dark.css
-   Тематические переменные + инвертированный топ-бар.
-   DOT не красим (фон прозрачный) — им рулит JS.
-*/
-
-/* Глобальные размеры */
-:root {
-  --topbar-h: 48px;
-  --composer-h: 56px;
+/* === DOT visibility patch: high-contrast buttons === */
+button,
+.btn,
+[role="button"],
+.dot-button,
+.dot-popover__tile,
+.dot-menu button,
+#topbar button,
+#bottom-panel button {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #1f1f22;
+  color: #ffffff;
+  border: 1px solid #3a3a3f;
+  border-radius: 12px;
+  padding: 10px 12px;
+  line-height: 1.2;
+  font: inherit;
+  cursor: pointer;
 }
-
-/* Плавные переходы */
-body, .top-bar, .bottom-panel, .drawer-trigger, #chat-input,
-.drawer-add-btn, .logout-btn, .chat-send-btn {
-  transition: background-color .18s cubic-bezier(.2,.8,.2,1),
-              color .18s cubic-bezier(.2,.8,.2,1),
-              box-shadow .18s cubic-bezier(.2,.8,.2,1),
-              border-color .18s cubic-bezier(.2,.8,.2,1);
+button:hover,
+.btn:hover,
+[role="button"]:hover,
+.dot-button:hover,
+.dot-popover__tile:hover,
+.dot-menu button:hover,
+#topbar button:hover,
+#bottom-panel button:hover {
+  background: #2a2a2e;
+  border-color: #4a4a4f;
 }
-
-/* LIGHT */
-body.theme-light {
-  --bg: #f6f7f9;
-  --fg: #111;
-
-  /* инвертированный топ-бар: тёмный */
-  --topbar-bg: #171717;
-  --topbar-fg: #fff;
-
-  --panel-bg: #ffffff;
-  --panel-fg: #111;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.10);
-  --panel-border: 1px solid rgba(0,0,0,0.06);
-  --backdrop: rgba(0,0,0,0.15);
-
-  --input-bg: #f1f1f3;
-  --input-fg: #111;
-  --input-border: 1px solid rgba(0,0,0,0.12);
-  --input-ph: rgba(0,0,0,0.45);
-  --input-focus-ring: 0 0 0 3px rgba(17,17,17,0.12);
-
-  --btn-bg: #111;
-  --btn-fg: #fff;
-  --btn-bg-hover: #333;
-
-  background: var(--bg);
-  color: var(--fg);
+button:active,
+.btn:active,
+[role="button"]:active,
+.dot-button:active,
+.dot-popover__tile:active {
+  background: #2f2f34;
 }
-
-/* DARK */
-body.theme-dark {
-  --bg: #121315;
-  --fg: #fff;
-
-  /* топ-бар «молочный» */
-  --topbar-bg: #f2f2f3;
-  --topbar-fg: #111;
-
-  --panel-bg: #161616;
-  --panel-fg: #fff;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.45);
-  --panel-border: 1px solid rgba(255,255,255,0.06);
-  --backdrop: rgba(0,0,0,0.45);
-
-  --input-bg: #1e1f21;
-  --input-fg: #fff;
-  --input-border: 1px solid rgba(255,255,255,0.16);
-  --input-ph: rgba(255,255,255,0.55);
-  --input-focus-ring: 0 0 0 3px rgba(255,255,255,0.14);
-
-  --btn-bg: #fff;
-  --btn-fg: #000;
-  --btn-bg-hover: #e9e9e9;
-
-  background: var(--bg);
-  color: var(--fg);
+button:disabled,
+.btn:disabled,
+[role="button"][aria-disabled="true"] {
+  opacity: .5;
+  cursor: not-allowed;
 }
-
-/* Топ-бар */
-.top-bar {
-  background: var(--topbar-bg);
-  color: var(--topbar-fg);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
-  height: var(--topbar-h);
+button:focus-visible,
+.btn:focus-visible,
+[role="button"]:focus-visible,
+.dot-button:focus-visible,
+.dot-popover__tile:focus-visible {
+  outline: 2px solid #ffd400;
+  outline-offset: 2px;
 }
-
-/* DOT — фон прозрачный, цвет отдаём JS */
-.top-bar .dot-core, .dot-core {
-  background: transparent;
-}
-
-/* Drawer */
-.contacts-drawer {
-  background: var(--panel-bg);
-  color: var(--panel-fg);
-  box-shadow: var(--panel-shadow);
-  border-right: var(--panel-border);
-}
-.contacts-drawer-backdrop { background: var(--backdrop); }
-
-/* Триггер (desktop) */
-.drawer-trigger {
-  background: color-mix(in oklab, var(--panel-bg), transparent 10%);
-  color: var(--panel-fg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  border: 1px solid color-mix(in oklab, var(--panel-fg), transparent 92%);
-}
-
-/* Кнопки */
-.drawer-add-btn, .logout-btn, .chat-send-btn {
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  border: 1px solid var(--btn-bg);
-}
-.drawer-add-btn:hover, .logout-btn:hover, .chat-send-btn:hover {
-  background: var(--btn-bg-hover);
-  border-color: var(--btn-bg-hover);
-}
-
-/* Bottom panel */
-.bottom-panel {
-  background: var(--panel-bg);
-  color: var(--panel-fg);
-  box-shadow: 0 -1px 8px rgba(0,0,0,0.12);
-  border-top: var(--panel-border);
-  min-height: var(--composer-h);
-}
-
-/* Инпуты */
-#chat-input, .chat-input, .contacts-input {
-  background: var(--input-bg);
-  color: var(--input-fg);
-  border: var(--input-border);
-}
-#chat-input::placeholder, .chat-input::placeholder,
-.contacts-input::placeholder { color: var(--input-ph); }
-#chat-input:focus, .chat-input:focus, .contacts-input:focus {
-  outline: none; border-color: currentColor; box-shadow: var(--input-focus-ring);
-}
-:root {
-  --topbar-h: 48px;
-  --composer-h: 56px;
-}
-
-/* transitions */
-body, .top-bar, .bottom-panel, .drawer-trigger, #chat-input,
-.drawer-add-btn, .logout-btn, .chat-send-btn {
-  transition: background-color .18s cubic-bezier(.2,.8,.2,1),
-              color .18s cubic-bezier(.2,.8,.2,1),
-              box-shadow .18s cubic-bezier(.2,.8,.2,1),
-              border-color .18s cubic-bezier(.2,.8,.2,1);
-}
-
-/* LIGHT */
-body.theme-light {
-  --bg: #f6f7f9;
-  --fg: #111;
-  --topbar-bg: #171717; --topbar-fg: #fff;
-  --panel-bg: #ffffff;  --panel-fg: #111;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.10);
-  --panel-border: 1px solid rgba(0,0,0,0.06);
-  --backdrop: rgba(0,0,0,0.15);
-  --input-bg: #f1f1f3;  --input-fg: #111;
-  --input-border: 1px solid rgba(0,0,0,0.12);
-  --input-ph: rgba(0,0,0,0.45);
-  --input-focus-ring: 0 0 0 3px rgba(17,17,17,0.12);
-  --btn-bg: #111; --btn-fg: #fff; --btn-bg-hover: #333;
-  background: var(--bg); color: var(--fg);
-}
-
-/* DARK */
-body.theme-dark {
-  --bg: #121315;
-  --fg: #fff;
-  --topbar-bg: #f2f2f3; --topbar-fg: #111; /* «молочный» бар */
-  --panel-bg: #161616;  --panel-fg: #fff;
-  --panel-shadow: 0 6px 28px rgba(0,0,0,0.45);
-  --panel-border: 1px solid rgba(255,255,255,0.06);
-  --backdrop: rgba(0,0,0,0.45);
-  --input-bg: #1e1f21;  --input-fg: #fff;
-  --input-border: 1px solid rgba(255,255,255,0.16);
-  --input-ph: rgba(255,255,255,0.55);
-  --input-focus-ring: 0 0 0 3px rgba(255,255,255,0.14);
-  --btn-bg: #fff; --btn-fg: #000; --btn-bg-hover: #e9e9e9;
-  background: var(--bg); color: var(--fg);
-}
-
-/* Top bar */
-.top-bar {
-  background: var(--topbar-bg);
-  color: var(--topbar-fg);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
-  height: var(--topbar-h);
-}
-
+svg, svg * { fill: currentColor; stroke: currentColor; }
