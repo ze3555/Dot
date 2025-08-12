@@ -1,0 +1,33 @@
+/* css/no-animations.css
+   Полное отключение анимаций и переходов по всему приложению.
+   Подключайте ПОСЛЕ основных CSS, чтобы эти правила имели приоритет.
+*/
+
+/* Глобально отключаем анимации и транзишны */
+*,
+*::before,
+*::after {
+  animation: none !important;
+  transition-property: none !important;
+  transition-duration: 0ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* На всякий случай обнуляем «боевые» классы */
+.dot-morph,
+.dot-swap-in,
+.is-live {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Если нужно оставить минимальную плавность для цвета/непрозрачности,
+   замените блок выше на это (и удалите строгий запрет):
+   * { transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease, transform 120ms ease; animation: none !important; }
+*/
+
+/* Уважение системной настройки */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
