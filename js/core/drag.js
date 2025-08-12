@@ -1,4 +1,4 @@
-// js/core/drag.js (patched): constrain #dot-core strictly within <body>, no inertia/animations
+// js/core/drag.js (patched: clamp #dot-core within BODY)
 let dragging = false;
 let startX = 0, startY = 0;
 let origX = 0, origY = 0;
@@ -38,8 +38,8 @@ function clampIntoContainer(container, el) {
   const t = getCurrentTranslate(el);
   const e = el.getBoundingClientRect();
   const b = computeBoundsForTranslate(container, el, t, e);
-  const fx = clamp(t.x, b.minX, b.maxX);
-  const fy = clamp(t.y, b.minY, b.maxY);
+  const fx = Math.min(Math.max(t.x, b.minX), b.maxX);
+  const fy = Math.min(Math.max(t.y, b.minY), b.maxY);
   el.style.transform = `translate(${fx}px, ${fy}px)`;
 }
 
