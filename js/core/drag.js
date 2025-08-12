@@ -1,28 +1,15 @@
 // js/core/drag.js
-// Перетаскивание #dot-core в пределах окна без инерции и без анимаций.
+// Перетаскивание #dot-core строго внутри <body>.
+// Без инерции, без анимаций. Ограничение по getBoundingClientRect() BODY.
 
 let dragging = false;
 let startX = 0, startY = 0;
 let origX = 0, origY = 0;
 
-const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+// Границы, рассчитанные на момент pointerdown
+let minX = 0, maxX = 0, minY = 0, maxY = 0;
 
-function getBounds(el) {
-  const r = el.getBoundingClientRect();
-  const vw = window.innerWidth || document.documentElement.clientWidth || 0;
-  const vh = window.innerHeight || document.documentElement.clientHeight || 0;
-
-  const pad = 0; // можно увеличить, если нужен внутренний отступ от краёв
-
-  return {
-    minX: pad,
-    minY: pad,
-    maxX: Math.max(pad, vw - r.width - pad),
-    maxY: Math.max(pad, vh - r.height - pad),
-    width: r.width,
-    height: r.height,
-  };
-}
+const clamp = (val, a, b) => Math.min(Math.max(val, a), b);
 
 function getCurrentTranslate(el) {
   const tr = getComputedStyle(el).transform;
@@ -31,34 +18,80 @@ function getCurrentTranslate(el) {
   return { x: m.m41 || 0, y: m.m42 || 0 };
 }
 
+function computeBoundsForTranslate(container, el, baseTranslate, elRectAtDown) {
+  const c = container.getBoundingClientRect();
+  const e = elRectAtDown;
+
+  let minTranslateX = baseTranslate.x + (c.left - e.left);
+  let maxTranslateX = baseTranslate.x + (c.right - e.right);
+  let minTranslateY = baseTranslate.y + (c.top - e.top);
+  let maxTranslateY = baseTranslate.y + (c.bottom - e.bottom);
+
+  // Если контейнер меньше элемента — фиксируем на месте
+  if (minTranslateX > maxTranslateX) {
+    const midX = (minTranslateX + maxTranslateX) / 2;
+    minTranslateX = maxTranslateX = midX;
+  }
+  if (minTranslateY > maxTranslateY) {
+    const midY = (minTranslateY + maxTranslateY) / 2;
+    minTranslateY = maxTranslateY = midY;
+  }
+
+  return {
+    minX: minTranslateX,
+    maxX: maxTranslateX,
+    minY: minTranslateY,
+    maxY: maxTranslateY
+  };
+}
+
+function clampIntoContainer(container, el) {
+  const t = getCurrentTranslate(el);
+  const e = el.getBoundingClientRect();
+  const b = computeBoundsForTranslate(container, el, t, e);
+  const fx = clamp(t.x, b.minX, b.maxX);
+  const fy = clamp(t.y, b.minY, b.maxY);
+  el.style.transform = `translate(${fx}px, ${fy}px)`;
+}
+
 export function initDotDrag() {
   const el = document.getElementById("dot-core");
   if (!el) return;
 
-  // стартовая коррекция положения (на случай SSR/начальных классов)
-  clampIntoViewport(el);
+  const container = document.body;
+
+  // Начальная коррекция — если элемент уже вышел за пределы body
+  clampIntoContainer(container, el);
 
   const onPointerDown = (e) => {
     if (e.button !== 0) return;
     dragging = true;
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
+
     const t = getCurrentTranslate(el);
     startX = e.clientX;
     startY = e.clientY;
     origX = t.x;
     origY = t.y;
+
+    const elRectAtDown = el.getBoundingClientRect();
+    const bounds = computeBoundsForTranslate(container, el, { x: origX, y: origY }, elRectAtDown);
+    minX = bounds.minX; maxX = bounds.maxX;
+    minY = bounds.minY; maxY = bounds.maxY;
   };
 
   const onPointerMove = (e) => {
     if (!dragging) return;
+
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    const b = getBounds(el);
-    const nx = clamp(origX + dx, b.minX, b.maxX);
-    const ny = clamp(origY + dy, b.minY, b.maxY);
+    let nx = origX + dx;
+    let ny = origY + dy;
 
-    // Без переходов: просто ставим позицию
+    nx = clamp(nx, minX, maxX);
+    ny = clamp(ny, minY, maxY);
+
     el.style.willChange = "transform";
     el.style.transform = `translate(${nx}px, ${ny}px)`;
   };
@@ -67,26 +100,16 @@ export function initDotDrag() {
     if (!dragging) return;
     dragging = false;
     try { el.releasePointerCapture(e.pointerId); } catch (_) {}
-    // Финальный «кламп» — если окно изменилось во время перетаскивания
-    clampIntoViewport(el);
-    // убираем will-change, чтобы не держать композитор
+    clampIntoContainer(container, el);
     requestAnimationFrame(() => { el.style.willChange = ""; });
   };
 
   const onResize = () => {
-    clampIntoViewport(el);
+    clampIntoContainer(container, el);
   };
 
   el.addEventListener("pointerdown", onPointerDown);
   window.addEventListener("pointermove", onPointerMove, { passive: true });
   window.addEventListener("pointerup", onPointerUp, { passive: true });
   window.addEventListener("resize", onResize);
-}
-
-function clampIntoViewport(el) {
-  const t = getCurrentTranslate(el);
-  const b = getBounds(el);
-  const fx = clamp(t.x, b.minX, b.maxX);
-  const fy = clamp(t.y, b.minY, b.maxY);
-  el.style.transform = `translate(${fx}px, ${fy}px)`;
 }
