@@ -6,10 +6,6 @@ import { renderContacts } from "./dot-contacts.js";
 import { renderSettings } from "./dot-settings.js";
 import { closePopover } from "./dot-popover.js";
 
-/**
- * Инициализация ядра DOT без анимаций.
- * Классы вида .dot-morph, .dot-swap-in и т.п. больше не используются.
- */
 export function initDot() {
   const dot = document.getElementById("dot-core");
   if (!dot) throw new Error("#dot-core not found");
@@ -18,10 +14,9 @@ export function initDot() {
 }
 
 function sync(dot, state) {
-  // Закрываем поповеры на смену состояния
   closePopover();
 
-  // Чистим классы и выставляем только состояние (без «морфов»)
+  // Базовый, предсказуемый класс — без «морфов» и swap-анимаций
   dot.className = "";
   dot.id = "dot-core";
   dot.classList.add(`dot-${state}`);
@@ -32,9 +27,7 @@ function sync(dot, state) {
   // Контейнер контента — без анимационных классов
   const host = document.createElement("div");
   host.className = "dot-content";
-  if (state !== "idle") {
-    host.addEventListener("click", (e) => e.stopPropagation());
-  }
+  if (state !== "idle") host.addEventListener("click", (e) => e.stopPropagation());
 
   switch (state) {
     case "idle": {
@@ -68,14 +61,7 @@ function sync(dot, state) {
       host.appendChild(m);
       break;
     }
-    default: {
-      // на случай неизвестного состояния просто чистим
-      host.innerHTML = "";
-    }
   }
-
-  mount(dot, host);
-}
 
   mount(dot, host);
 }
